@@ -1,17 +1,15 @@
-// src/middleware/auth.rs - Authentication middleware (Phase 2 placeholder)
+// src/middleware/auth.rs - JWT Authentication middleware
 use axum::{
-    extract::Request,
+    extract::{Request, State},
     middleware::Next,
     response::Response,
-    // http::StatusCode,
 };
-use crate::middleware::error_handler::ApiError;
+use crate::{middleware::error_handler::ApiError, AppState};
 
-/// Authentication middleware - will be fully implemented in Phase 2.1
-/// 
-/// For now, this is a placeholder that allows all requests through
-/// and extracts basic authentication context when available
+/// JWT Authentication middleware
+/// Validates JWT tokens and extracts user context for protected endpoints
 pub async fn auth_middleware(
+    State(state): State<AppState>,
     mut request: Request,
     next: Next,
 ) -> Result<Response, ApiError> {
@@ -25,23 +23,39 @@ pub async fn auth_middleware(
         .get("authorization")
         .and_then(|h| h.to_str().ok());
 
-    // For Phase 1.3, we'll just log the presence of auth and continue
-    // In Phase 2.1, this will perform full JWT validation and Web3 signature verification
     match auth_header {
         Some(auth) if auth.starts_with("Bearer ") => {
-            tracing::debug!("JWT token present, will validate in Phase 2.1");
+            let token = &auth[7..]; // Remove "Bearer " prefix
             
-            // TODO: Use real JWT decoding instead of mocks (Phase 2.1)
-            // In Phase 2.1, this will decode and validate the JWT
-            add_mock_user_context(&mut request);
+            // Validate JWT token
+            match state.auth_service.jwt_manager.verify_token(token).await {
+                Ok(claims) => {
+                    tracing::debug!("JWT token validated for user: {}", claims.user_id);
+                    
+                    // Add user context to request headers
+                    let headers = request.headers_mut();
+                    headers.insert("x-user-id", claims.user_id.to_string().parse().unwrap());
+                    headers.insert("x-wallet-address", claims.wallet_address.parse().unwrap());
+                    headers.insert("x-chain-type", claims.chain_type.to_string().parse().unwrap());
+                    headers.insert("x-session-id", claims.session_id.parse().unwrap());
+                    
+                    // Set user tier based on wallet type or other criteria
+                    let user_tier = determine_user_tier(&claims.wallet_address);
+                    headers.insert("x-user-tier", user_tier.parse().unwrap());
+                },
+                Err(e) => {
+                    tracing::warn!("JWT token validation failed: {}", e);
+                    return Err(ApiError::unauthorized("Invalid or expired token"));
+                }
+            }
         },
         Some(_) => {
             tracing::warn!("Invalid authorization header format");
-            // For now, continue - in Phase 2.1 this will return an error
+            return Err(ApiError::unauthorized("Invalid authorization header format"));
         },
         None => {
             tracing::debug!("No authorization header for protected endpoint");
-            // For now, continue - in Phase 2.1 this will return 401 for protected routes
+            return Err(ApiError::unauthorized("Authentication required"));
         }
     }
 
@@ -79,19 +93,19 @@ fn is_public_endpoint(path: &str) -> bool {
     }
 }
 
-/// TODO: Use real JWT decoding instead of mocks (Phase 2.1)
-/// Add mock user context for Phase 1.3 testing
-/// This will be replaced with real JWT decoding in Phase 2.1
-fn add_mock_user_context(request: &mut Request) {
-    let headers = request.headers_mut();
-    
-    // Mock user ID for testing
-    headers.insert("x-user-id", "mock-user-123".parse().unwrap());
-    headers.insert("x-user-tier", "premium".parse().unwrap());
-    headers.insert("x-wallet-address", "0x742d35Cc6634C0532925a3b8D".parse().unwrap());
-    headers.insert("x-session-id", "session-456".parse().unwrap());
-    
-    tracing::debug!("Added mock user context for Phase 1.3 testing");
+/// Determine user tier based on wallet address or other criteria
+/// This is a simple implementation - in production you might check:
+/// - Wallet balance, transaction history, KYC status, etc.
+fn determine_user_tier(wallet_address: &str) -> &'static str {
+    // For now, simple logic based on wallet address
+    // In production, this would query the database for user preferences/tier
+    if wallet_address.starts_with("0x000") || wallet_address.starts_with("admin") {
+        "admin"
+    } else if wallet_address.len() > 42 || wallet_address.ends_with("premium") {
+        "premium" 
+    } else {
+        "free"
+    }
 }
 
 /// Extract user ID from request headers (set by auth middleware)

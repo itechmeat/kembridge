@@ -121,6 +121,12 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
 
         // API v1 routes
         .nest("/api/v1", create_v1_routes())
+        
+        // JWT Authentication middleware for all API routes
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            middleware::auth::auth_middleware
+        ))
 
         // WebSocket for real-time updates
         .route("/ws", get(handlers::websocket::websocket_handler))
@@ -128,7 +134,7 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
         // OpenAPI documentation (enabled conditionally)
         .merge(create_docs_routes(&state.config))
 
-        // Global middleware stack (minimal for Phase 1.3)
+        // Global middleware stack
         .layer(middleware::cors::create_cors_layer(&state.config))
         .layer(RequestBodyLimitLayer::new(1024 * 1024)) // 1MB limit
         .layer(CompressionLayer::new())
@@ -156,10 +162,6 @@ fn create_v1_routes() -> Router<AppState> {
 
         // Admin routes (protected)
         .nest("/admin", routes::admin::create_routes())
-
-        // TODO: Add authentication middleware in Phase 2.1
-        // Authentication middleware for protected routes  
-        // .layer(from_fn(middleware::auth::auth_middleware))
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {

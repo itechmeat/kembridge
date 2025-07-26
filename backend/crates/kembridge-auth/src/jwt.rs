@@ -14,8 +14,9 @@ const JWT_EXPIRY_HOURS: i64 = 24;
 pub struct JwtClaims {
     pub sub: String,           // User ID
     pub wallet_address: String,
-    pub chain_type: String,
-    pub user_id: String,
+    pub chain_type: ChainType,
+    pub user_id: uuid::Uuid,
+    pub session_id: String,    // Session identifier
     pub iat: i64,             // Issued at
     pub exp: i64,             // Expiry
     pub iss: String,          // Issuer
@@ -52,11 +53,14 @@ impl JwtManager {
         let now = Utc::now();
         let expires_at = now + Duration::hours(JWT_EXPIRY_HOURS);
 
+        let session_id = uuid::Uuid::new_v4().to_string();
+        
         let claims = JwtClaims {
             sub: user_id.to_string(),
             wallet_address: wallet_address.to_string(),
-            chain_type: chain_type.to_string(),
-            user_id: user_id.to_string(),
+            chain_type,
+            user_id,
+            session_id,
             iat: now.timestamp(),
             exp: expires_at.timestamp(),
             iss: self.issuer.clone(),
@@ -91,20 +95,10 @@ impl JwtManager {
         let claims = self.verify_token(token).await?;
         
         // Generate new token with same user data but new expiry
-        let user_id = Uuid::parse_str(&claims.user_id)
-            .map_err(|_| AuthError::JwtError(jsonwebtoken::errors::Error::from(
-                jsonwebtoken::errors::ErrorKind::InvalidToken
-            )))?;
-        
-        let chain_type = ChainType::from_str(&claims.chain_type)?;
-        
-        self.generate_token(user_id, &claims.wallet_address, chain_type).await
+        self.generate_token(claims.user_id, &claims.wallet_address, claims.chain_type).await
     }
 
     pub fn extract_user_id(&self, claims: &JwtClaims) -> Result<Uuid, AuthError> {
-        Uuid::parse_str(&claims.user_id)
-            .map_err(|_| AuthError::JwtError(jsonwebtoken::errors::Error::from(
-                jsonwebtoken::errors::ErrorKind::InvalidToken
-            )))
+        Ok(claims.user_id)
     }
 }
