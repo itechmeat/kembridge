@@ -141,6 +141,42 @@ curl -X POST http://localhost:4000/api/v1/auth/logout \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+### 6. Test User Management Endpoints
+
+```bash
+# Get user profile (requires valid JWT token)
+curl -X GET http://localhost:4000/api/v1/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update user profile
+curl -X PUT http://localhost:4000/api/v1/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "new_username", "profile_data": {"email": "user@example.com"}}'
+
+# Get user wallets
+curl -X GET http://localhost:4000/api/v1/user/wallets \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Add new wallet
+curl -X POST http://localhost:4000/api/v1/user/wallets \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"wallet_address": "0x...", "chain_type": "ethereum", "signature": "0x...", "message": "verification message"}'
+
+# Set primary wallet
+curl -X PUT http://localhost:4000/api/v1/user/wallets/0x.../primary \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Remove wallet
+curl -X DELETE http://localhost:4000/api/v1/user/wallets/0x... \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Soft delete user account
+curl -X DELETE http://localhost:4000/api/v1/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ### 5. Verify Database & Redis
 
 ```sql
@@ -233,7 +269,7 @@ WHERE tablename IN ('users', 'transactions', 'audit_logs');
 
 ## Current Implementation Status
 
-### ✅ Completed (Phase 1, 2.1 & 2.2)
+### ✅ Completed (Phase 1, 2.1, 2.2 & 2.3)
 
 - PostgreSQL 18 database with advanced features
 - Rust backend with Axum 0.8.4 framework
@@ -242,12 +278,19 @@ WHERE tablename IN ('users', 'transactions', 'audit_logs');
 - Advanced Auth extractors (AuthUser, OptionalAuth, AdminAuth, PremiumAuth)
 - Logout & refresh token functionality
 - Redis nonce management
+- **User Management System:**
+  - GET/PUT/DELETE `/api/v1/user/profile` endpoints
+  - Multi-wallet support (add/remove/set primary)
+  - Soft delete functionality
+  - User statistics and profile data
+  - UserService integration with AppState
 - Comprehensive audit logging
 - API documentation with Swagger UI
 
-### ⏸️ In Progress (Phase 2.3)
+### ⏸️ In Progress (Phase 2.3 - Final Tasks)
 
-- User management endpoints
+- Automatic user creation on first authentication
+- Input validation for user data
 - NEAR signature verification (postponed to Phase 4.2)
 
 ### 🔄 Next Steps

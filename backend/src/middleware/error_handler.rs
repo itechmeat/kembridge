@@ -67,6 +67,24 @@ impl ApiError {
         Self::Authentication(message.into())
     }
 
+    /// Create a not found error (convenience method)
+    pub fn not_found(resource: impl Into<String>) -> Self {
+        Self::NotFound { resource: resource.into() }
+    }
+
+    /// Create an internal server error (convenience method)
+    pub fn internal_server_error(message: impl Into<String>) -> Self {
+        Self::Internal(message.into())
+    }
+
+    /// Create a bad request error (convenience method)
+    pub fn bad_request(message: impl Into<String>) -> Self {
+        Self::Validation { 
+            field: "request".to_string(), 
+            message: message.into() 
+        }
+    }
+
     /// Convert error to HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {
