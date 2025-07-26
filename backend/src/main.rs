@@ -101,8 +101,8 @@ async fn main() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     tracing::info!("🚀 KEMBridge API Gateway starting on {}", addr);
-    tracing::info!("📋 Health check available at http://{}/health", addr);
-    tracing::info!("📖 API documentation at http://{}/docs", addr);
+    tracing::info!("📋 Health check available at http://localhost:{}/health", config.port);
+    tracing::info!("📖 API documentation at http://localhost:{}/docs", config.port);
 
     // Graceful shutdown handling
     axum::serve(listener, app)
@@ -168,26 +168,86 @@ fn create_docs_routes(config: &AppConfig) -> Router<AppState> {
             .route("/api-docs/openapi.json", get(|| async { 
                 Json(ApiDoc::openapi()) 
             }))
-            // Simple docs endpoint for now - will improve in next iteration
-            .route("/docs", get(|| async {
-                axum::response::Html(r#"
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>KEMBridge API Documentation</title>
-                        <meta charset="utf-8">
-                    </head>
-                    <body>
-                        <h1>KEMBridge API Documentation</h1>
-                        <p>OpenAPI JSON: <a href="/api-docs/openapi.json">/api-docs/openapi.json</a></p>
-                        <p>Swagger UI integration will be completed in next iteration.</p>
-                    </body>
-                    </html>
-                "#)
-            }))
+            // Full Swagger UI implementation
+            .route("/docs", get(swagger_ui_handler))
+            .route("/docs/", get(swagger_ui_handler))
+            .route("/docs/swagger-ui-bundle.js", get(swagger_ui_bundle_js))
+            .route("/docs/swagger-ui-standalone-preset.js", get(swagger_ui_standalone_preset_js))
+            .route("/docs/swagger-ui.css", get(swagger_ui_css))
     } else {
         Router::new()
     }
+}
+
+async fn swagger_ui_handler() -> axum::response::Html<&'static str> {
+    axum::response::Html(r#"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KEMBridge API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="/docs/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin:0;
+            background: #fafafa;
+        }
+        .swagger-ui .topbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="/docs/swagger-ui-bundle.js" charset="UTF-8"></script>
+    <script src="/docs/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: '/api-docs/openapi.json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                onComplete: function() {
+                    console.log('KEMBridge Swagger UI loaded successfully');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
+    "#)
+}
+
+async fn swagger_ui_bundle_js() -> impl axum::response::IntoResponse {
+    // Using CDN instead of embedded files for simplicity
+    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js")
+}
+
+async fn swagger_ui_standalone_preset_js() -> impl axum::response::IntoResponse {
+    // Using CDN instead of embedded files for simplicity
+    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js")
+}
+
+async fn swagger_ui_css() -> impl axum::response::IntoResponse {
+    // Using CDN instead of embedded files for simplicity
+    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css")
 }
 
 

@@ -60,9 +60,9 @@
 - [x] **1.3.7** Добавление middleware для обработки ошибок
 - [x] **1.3.8** Создание основных структур данных (User, Session, etc.)
 - [x] **1.3.9** Интеграция OpenAPI/Swagger документации с utoipa
-- [ ] **1.3.10** Настройка интерактивного Swagger UI интерфейса (частично: есть HTML + JSON, но нет полноценного Swagger UI)
+- [x] **1.3.10** Настройка интерактивного Swagger UI интерфейса
 
-**Checkpoint 1.3:** ✅ Axum backend полностью работает в Docker с Rust 1.88+ и Axum 0.8.4, подключен к PostgreSQL 18/Redis, отвечает на /health и /ready, OpenAPI JSON доступен по /api-docs/openapi.json, базовая HTML документация по /docs, все endpoints возвращают корректные mock responses для будущих фаз. ⚠️ Полноценный Swagger UI требует доработки.
+**Checkpoint 1.3:** ✅ ЗАВЕРШЕНО - Axum backend полностью работает в Docker с Rust 1.88+ и Axum 0.8.4, подключен к PostgreSQL 18/Redis, отвечает на /health и /ready, полноценный интерактивный Swagger UI доступен по /docs с CDN-интеграцией, OpenAPI JSON по /api-docs/openapi.json, все endpoints возвращают корректные mock responses для будущих фаз, система мигрирована на порты 4xxx
 
 ---
 
@@ -428,4 +428,4 @@
 - Performance requirements должны соблюдаться
 - Security требования не подлежат компромиссу
 
-**Общий прогресс:** 32/149 задач выполнено (21.5%)
+**Общий прогресс:** 33/149 задач выполнено (22.1%) - Phase 1 Foundation & Infrastructure полностью завершен

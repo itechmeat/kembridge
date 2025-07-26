@@ -99,9 +99,9 @@ sqlx migrate run
 
 - Frontend: http://localhost:4001
 - Backend API: http://localhost:4000
-- AI Engine: http://localhost:8000
+- AI Engine: http://localhost:4003
 - Grafana: http://localhost:4002 (admin:admin)
-- Prometheus: http://localhost:9090
+- Prometheus: http://localhost:4004
 
 ## Key Technologies
 

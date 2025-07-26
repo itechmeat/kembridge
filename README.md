@@ -40,11 +40,11 @@ After successful startup, you can access:
 
 | Service         | URL                   | Description                         |
 | --------------- | --------------------- | ----------------------------------- |
-| **Frontend**    | http://localhost:3001 | React app with quantum bridge UI    |
-| **Backend API** | http://localhost:3000 | Rust API with health endpoint       |
-| **AI Engine**   | http://localhost:8000 | Python ML risk analysis             |
-| **Grafana**     | http://localhost:3002 | Monitoring dashboards (admin:admin) |
-| **Prometheus**  | http://localhost:9090 | Metrics collection                  |
+| **Frontend**    | http://localhost:4001 | React app with quantum bridge UI    |
+| **Backend API** | http://localhost:4000 | Rust API with health endpoint       |
+| **AI Engine**   | http://localhost:4003 | Python ML risk analysis             |
+| **Grafana**     | http://localhost:4002 | Monitoring dashboards (admin:admin) |
+| **Prometheus**  | http://localhost:4004 | Metrics collection                  |
 
 ### Verify Installation
 
@@ -59,12 +59,12 @@ After successful startup, you can access:
 2. **Test health endpoints:**
 
    ```bash
-   curl http://localhost:3000/health
-   curl http://localhost:8000/health
+   curl http://localhost:4000/health
+   curl http://localhost:4003/health
    ```
 
 3. **View frontend:**
-   Open http://localhost:3001 in your browser.
+   Open http://localhost:4001 in your browser.
 
 ### Expected Results
 
@@ -184,7 +184,7 @@ KEMBridge includes comprehensive monitoring with **Prometheus** and **Grafana**:
 
 ```bash
 # Open Grafana in your browser
-open http://localhost:3002
+open http://localhost:4002
 
 # Default credentials:
 # Username: admin
@@ -201,7 +201,7 @@ open http://localhost:3002
 
 #### Prometheus Metrics
 
-Access raw metrics at: http://localhost:9090
+Access raw metrics at: http://localhost:4004
 
 **Key metrics monitored:**
 
@@ -244,8 +244,8 @@ Currently available endpoints:
    - `POST /api/risk/analyze` - Risk analysis for transactions
 
 3. **Monitoring:**
-   - **Grafana:** http://localhost:3002 (admin:admin)
-   - **Prometheus:** http://localhost:9090
+   - **Grafana:** http://localhost:4002 (admin:admin)
+   - **Prometheus:** http://localhost:4004
 
 ### Architecture
 
@@ -275,7 +275,7 @@ The system runs 8 Docker containers:
 
 **Common Issues:**
 
-1. **Port conflicts:** Ensure ports 3000, 3001, 5432, 6379, 8000, 9090, 3002 are free
+1. **Port conflicts:** Ensure ports 4000, 4001, 4002, 4003, 4004, 5432, 6379 are free
 2. **Docker memory:** Ensure Docker has at least 4GB RAM allocated
 3. **Build failures:** Run `docker-compose down -v && docker-compose up --build`
 4. **Node-gyp/bufferutil errors:** Fixed by installing build dependencies in Alpine and using WS_NO_BUFFER_UTIL=1

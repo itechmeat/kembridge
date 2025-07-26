@@ -15,8 +15,8 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* .npmrc* ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-EXPOSE 3000
-CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
+EXPOSE 4001
+CMD ["pnpm", "run", "dev"]
 
 # Build stage
 FROM base AS build
