@@ -8,6 +8,13 @@ use redis::aio::ConnectionManager;
 /// Authentication service - Web3 wallet authentication with JWT
 pub use kembridge_auth::AuthService;
 
+/// User management service - implemented in Phase 2.3
+pub mod user;
+pub use user::UserService;
+
+#[cfg(test)]
+mod user_service_tests;
+
 /// Bridge service - will be implemented in Phase 4.3
 /// TODO: Phase 4.3 - Replace with real cross-chain bridge orchestration
 pub struct BridgeService;

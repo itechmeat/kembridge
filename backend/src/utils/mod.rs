@@ -5,3 +5,4 @@
 pub mod crypto;
 pub mod validation;
 pub mod constants;
+pub mod authorization;

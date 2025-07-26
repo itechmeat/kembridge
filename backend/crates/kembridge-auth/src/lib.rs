@@ -137,7 +137,7 @@ impl AuthService {
             SELECT u.id 
             FROM users u
             JOIN user_auth_methods uam ON u.id = uam.user_id
-            WHERE uam.wallet_address = $1 AND uam.auth_provider = $2
+            WHERE uam.wallet_address = $1 AND uam.chain_type = $2 AND uam.auth_type = 'web3_wallet'
             "#,
         )
         .bind(wallet_address)
@@ -154,8 +154,8 @@ impl AuthService {
 
         let user_id: uuid::Uuid = sqlx::query_scalar(
             r#"
-            INSERT INTO users (email, name, user_type, kyc_status)
-            VALUES (NULL, NULL, 'individual', 'pending')
+            INSERT INTO users (username, profile_data, risk_profile)
+            VALUES (NULL, '{}', '{"score": 0.0, "level": "new_user"}')
             RETURNING id
             "#
         )
@@ -166,8 +166,8 @@ impl AuthService {
         sqlx::query(
             r#"
             INSERT INTO user_auth_methods (
-                user_id, auth_type, auth_provider, wallet_address, is_primary
-            ) VALUES ($1, 'direct_wallet', $2, $3, true)
+                user_id, auth_type, chain_type, wallet_address, is_primary, is_verified, first_used_at
+            ) VALUES ($1, 'web3_wallet', $2, $3, true, true, NOW())
             "#,
         )
         .bind(user_id)

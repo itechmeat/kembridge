@@ -300,6 +300,7 @@ pub struct AppState {
     pub redis: ConnectionManager,
     pub config: AppConfig,
     pub auth_service: std::sync::Arc<services::AuthService>,
+    pub user_service: std::sync::Arc<services::UserService>,
     pub bridge_service: std::sync::Arc<services::BridgeService>,
     pub quantum_service: std::sync::Arc<services::QuantumService>,
     pub ai_client: std::sync::Arc<services::AiClient>,
@@ -321,6 +322,10 @@ impl AppState {
                 redis.clone(), 
                 config.jwt_secret.clone()
             ).await?
+        );
+
+        let user_service = Arc::new(
+            services::UserService::new(db.clone())
         );
 
         let quantum_service = Arc::new(
@@ -349,6 +354,7 @@ impl AppState {
             redis,
             config,
             auth_service,
+            user_service,
             bridge_service,
             quantum_service,
             ai_client,
