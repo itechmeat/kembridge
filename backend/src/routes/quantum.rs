@@ -10,7 +10,7 @@ use crate::AppState;
 pub fn create_routes() -> Router<AppState> {
     Router::new()
         // Generate ML-KEM-1024 keypair (Phase 3.2.4)
-        .route("/generate", post(crate::handlers::quantum::generate_keypair))
+        .route("/generate-keys", post(crate::handlers::quantum::generate_keypair))
         
         // Encapsulate data (Phase 3.2.5)
         .route("/encapsulate", post(crate::handlers::quantum::encapsulate))

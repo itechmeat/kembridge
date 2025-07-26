@@ -1,7 +1,7 @@
 [package]
 name = "kembridge-crypto"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Post-quantum cryptography module for KEMBridge using ML-KEM-1024"
 keywords = ["cryptography", "post-quantum", "ml-kem", "quantum-safe"]

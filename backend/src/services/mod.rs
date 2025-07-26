@@ -12,6 +12,10 @@ pub use kembridge_auth::AuthService;
 pub mod user;
 pub use user::UserService;
 
+/// Quantum cryptography service - implemented in Phase 3.2
+pub mod quantum;
+pub use quantum::{QuantumService, QuantumServiceError};
+
 #[cfg(test)]
 mod user_service_tests;
 
@@ -29,18 +33,6 @@ impl BridgeService {
     }
 }
 
-/// Quantum cryptography service - will be implemented in Phase 3.2
-/// TODO: Phase 3.2 - Replace with real ML-KEM-1024 quantum crypto service
-pub struct QuantumService;
-
-impl QuantumService {
-    pub async fn new(
-        _db: sqlx::PgPool,
-        _config: &AppConfig,
-    ) -> Result<Self> {
-        Ok(Self)
-    }
-}
 
 /// AI risk engine client - will be implemented in Phase 5.1
 /// TODO: Phase 5.1 - Replace with real FastAPI ML risk analysis client

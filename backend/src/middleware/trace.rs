@@ -114,10 +114,11 @@ pub fn on_response<B>(response: &Response<B>, latency: std::time::Duration, span
         _ => ("🤔", Level::WARN, "Unusual status code"),
     };
 
-    // Use Rust 1.88+ let chains for elegant conditional logging
-    if let Some(error_header) = response.headers().get("x-error-code")
-        && let Ok(error_code) = error_header.to_str() {
-        span.record("error_code", error_code);
+    // Use traditional nested conditional logging (compatible with edition 2021)
+    if let Some(error_header) = response.headers().get("x-error-code") {
+        if let Ok(error_code) = error_header.to_str() {
+            span.record("error_code", error_code);
+        }
     }
 
     match level {
