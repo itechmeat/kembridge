@@ -1,0 +1,40 @@
+[package]
+name = "kembridge-blockchain"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Internal crates
+kembridge-crypto.workspace = true
+
+# Blockchain
+ethers.workspace = true
+near-sdk.workspace = true
+near-jsonrpc-client.workspace = true
+
+# Async
+tokio.workspace = true
+futures.workspace = true
+
+# HTTP client
+reqwest.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time
+chrono.workspace = true
+
+# UUID
+uuid.workspace = true
+
+# Crypto
+secp256k1.workspace = true

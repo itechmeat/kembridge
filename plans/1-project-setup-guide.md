@@ -9,9 +9,7 @@
 ### Backend Framework: Axum
 
 #### Выбор Axum для KEMBridge
-
 **Стратегические преимущества:**
-
 - ✅ **Production-ready**: Зрелый фреймворк с активной разработкой от команды Tokio
 - ✅ **Performance**: Высокая производительность за счет zero-cost abstractions
 - ✅ **Ecosystem**: Отличная интеграция с sqlx, serde, tower middleware
@@ -20,14 +18,12 @@
 - ✅ **Middleware ecosystem**: Богатая экосистема middleware для CORS, аутентификации, логирования
 
 **Преимущества для хакатона:**
-
 - 🚀 **Быстрый старт**: Обширная документация и примеры
 - 🔧 **Интеграция**: Seamless работа с PostgreSQL через sqlx
 - 📦 **Модульность**: Легкое создание модульных API с помощью Router::nest
 - 🛡️ **Безопасность**: Встроенная поддержка CORS, rate limiting, authentication middleware
 
 **Специфика для KEMBridge:**
-
 - **Web3 integration**: Отличная поддержка JSON-RPC для работы с блокчейнами
 - **Quantum crypto**: Эффективная работа с бинарными данными (ключи, подписи)
 - **Real-time updates**: WebSocket поддержка для live transaction monitoring
@@ -36,9 +32,7 @@
 ### Database Layer: PostgreSQL 18 Beta 1 + sqlx
 
 #### Выбор PostgreSQL 18 Beta 1
-
 **Стратегические преимущества для KEMBridge:**
-
 - ✅ **Встроенная OAuth 2.0 поддержка**: Упрощает интеграцию с Web3Auth в будущих версиях
 - ✅ **Улучшенная JSON/JSONB производительность**: Критично для хранения квантовых ключей и метаданных
 - ✅ **Расширенные возможности аудита**: Встроенные механизмы для compliance
@@ -46,9 +40,7 @@
 - ✅ **Future-ready**: К production релизу PostgreSQL 18 будет стабильной версией
 
 #### sqlx Integration Benefits
-
 **Преимущества для Rust разработки:**
-
 - 🚀 **Compile-time проверка SQL**: Ошибки в запросах выявляются на этапе компиляции
 - 🔧 **Async/await support**: Нативная поддержка асинхронного кода Rust
 - ⚡ **Connection pooling**: Автоматическое управление пулом соединений
@@ -56,9 +48,7 @@
 - 📈 **Миграции**: Автоматическое применение schema изменений
 
 #### Architecture Benefits для KEMBridge
-
 **Специфические преимущества для проекта:**
-
 - **Quantum keys storage**: Безопасное хранение ML-KEM-1024 ключей в JSONB
 - **Transaction tracking**: Полное логирование всех кросс-чейн операций
 - **Risk analysis data**: Эффективное хранение ML признаков и risk scores
@@ -70,14 +60,13 @@
 ### Frontend: React + TypeScript + Vite + SCSS (Dockerized)
 
 #### Пример использования TanStack Query
-
 **Реализация для KEMBridge:**
 
 ```typescript
 // Простое и эффективное управление server state
 export const useWalletBalance = (address: string) => {
   return useQuery({
-    queryKey: ["wallet", "balance", address],
+    queryKey: ['wallet', 'balance', address],
     queryFn: () => api.getBalance(address),
     staleTime: 30000, // 30 секунд
     refetchInterval: 60000, // Обновлять каждую минуту
@@ -89,7 +78,6 @@ export const useWalletBalance = (address: string) => {
 ```
 
 #### Модульная архитектура (MobileFirst) с TanStack Query
-
 ```
 frontend/
 ├── Dockerfile              # Multi-stage Docker build
@@ -121,9 +109,7 @@ frontend/
 ```
 
 #### TanStack Query для управления server state
-
 **Преимущества TanStack Query для KEMBridge:**
-
 - ✅ **Server state специализация**: Создан специально для работы с server state
 - ✅ **Автоматическое кеширование**: Умное кеширование API запросов без дополнительной настройки
 - ✅ **Background refetching**: Автоматическое обновление данных в фоне
@@ -133,7 +119,6 @@ frontend/
 - ✅ **Web3 совместимость**: Идеально подходит для Web3 приложений с частыми blockchain запросами
 
 **Специфика для KEMBridge:**
-
 - **Real-time updates**: Автоматическое обновление transaction status
 - **Price feeds**: Эффективное кеширование price oracle данных
 - **Wallet state**: Управление состоянием подключенных кошельков
@@ -142,7 +127,6 @@ frontend/
 ### Backend: Rust + Axum + PostgreSQL (Fully Dockerized)
 
 #### Модульная Cargo Workspace структура (Multi-container)
-
 ```
 backend/
 ├── Cargo.toml             # Workspace configuration
@@ -187,16 +171,13 @@ backend/
 ```
 
 #### Преимущества Cargo Workspace
-
 **Организационные:**
-
 - 🔧 **Модульность**: Каждый крейт отвечает за отдельную область
 - 🚀 **Переиспользование**: Общие типы и утилиты в отдельных крейтах
 - 🧪 **Тестирование**: Изолированное тестирование каждого модуля
 - 📦 **Dependency management**: Централизованное управление зависимостями
 
 **Технические:**
-
 - ⚡ **Compile time**: Параллельная компиляция крейтов
 - 🛡️ **Type safety**: Compile-time проверки между модулями
 - 🔄 **Hot reload**: Изменения в одном крейте не пересобирают все
@@ -205,9 +186,7 @@ backend/
 ## 🐳 Containerized Architecture Overview
 
 ### Docker-first подход для всех компонентов
-
 **Преимущества полной докеризации:**
-
 - ✅ **Consistency**: Одинаковое окружение для всех разработчиков
 - ✅ **Isolation**: Изоляция сервисов и их зависимостей
 - ✅ **Scalability**: Легкое горизонтальное масштабирование
@@ -298,7 +277,6 @@ graph TB
 ```
 
 ### Контейнерная архитектура
-
 ```
 kembridge/
 ├── docker-compose.yml           # Основной compose файл (8 сервисов)
@@ -326,7 +304,6 @@ kembridge/
 ### 1.1 Project Setup & Development Environment
 
 #### 1.1.1 Quick Start (One Command)
-
 ```bash
 # 🚀 Полный старт системы одной командой!
 git clone <kembridge-repo>
@@ -354,7 +331,6 @@ make clean        # Очистить всё
 ```
 
 #### 1.1.2 Project Structure & Repository Setup
-
 ```bash
 # 📁 Полная структура проекта
 kembridge/
@@ -391,10 +367,9 @@ mkdir -p backend/crates/{kembridge-auth,kembridge-crypto,kembridge-bridge,kembri
 ```
 
 #### 1.1.3 Core Docker Compose Configuration
-
 ```yaml
 # docker-compose.yml - Полная контейнерная архитектура
-version: "3.8"
+version: '3.8'
 
 services:
   # ========== DATABASE LAYER ==========
@@ -464,7 +439,7 @@ services:
       - CORS_ORIGINS=http://localhost:3001
     volumes:
       - ./backend:/app
-      - backend_target:/app/target # Cache Rust builds
+      - backend_target:/app/target  # Cache Rust builds
     depends_on:
       postgres:
         condition: service_healthy
@@ -509,7 +484,7 @@ services:
     container_name: kembridge_frontend
     restart: unless-stopped
     ports:
-      - "3001:3000" # Vite dev server
+      - "3001:3000"  # Vite dev server
     environment:
       - VITE_API_BASE_URL=http://localhost:3000/api/v1
       - VITE_AI_ENGINE_URL=http://localhost:8000
@@ -557,12 +532,12 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/etc/prometheus/console_libraries"
-      - "--web.console.templates=/etc/prometheus/consoles"
-      - "--storage.tsdb.retention.time=200h"
-      - "--web.enable-lifecycle"
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
     networks:
       - kembridge-network
 
@@ -603,7 +578,6 @@ networks:
 #### 1.1.4 Individual Service Dockerfiles
 
 ##### Backend Dockerfile (Multi-stage Rust)
-
 ```dockerfile
 # backend/Dockerfile
 FROM rust:1.75 AS chef
@@ -646,7 +620,6 @@ CMD ["/app/kembridge-backend"]
 ```
 
 ##### Frontend Dockerfile (Node.js + Nginx multi-stage)
-
 ```dockerfile
 # frontend/Dockerfile
 FROM node:18-alpine AS base
@@ -680,7 +653,6 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ##### AI Engine Dockerfile (Python FastAPI)
-
 ```dockerfile
 # ai-engine/Dockerfile
 FROM python:3.11-slim AS base
@@ -709,7 +681,6 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ##### Nginx Dockerfile (Reverse Proxy)
-
 ```dockerfile
 # nginx/Dockerfile
 FROM nginx:alpine
@@ -732,7 +703,7 @@ CMD ["nginx", "-g", "daemon off;"]
 [workspace]
 members = [
     "crates/kembridge-auth",
-    "crates/kembridge-crypto",
+    "crates/kembridge-crypto", 
     "crates/kembridge-bridge",
     "crates/kembridge-database",
     "crates/kembridge-blockchain",
@@ -1040,7 +1011,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Setup database connection pool
     let db_pool = database::create_pool(&config.database_url).await?;
-
+    
     // Run migrations
     database::run_migrations(&db_pool).await?;
 
@@ -1060,9 +1031,9 @@ async fn main() -> anyhow::Result<()> {
     // Run our application
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("KEMBridge backend listening on {}", listener.local_addr()?);
-
+    
     axum::serve(listener, app).await?;
-
+    
     Ok(())
 }
 
@@ -1070,10 +1041,10 @@ async fn create_router(state: AppState) -> anyhow::Result<Router> {
     let app = Router::new()
         // Health check
         .route("/health", get(health_check))
-
+        
         // Auth routes (будут добавлены в следующих фазах)
         .nest("/api/v1/auth", auth::routes())
-
+        
         // CORS layer
         .layer(
             CorsLayer::new()
@@ -1227,7 +1198,6 @@ pub fn routes() -> Router {
 После запуска `docker-compose up --build` система должна:
 
 ### ✅ All Services Running
-
 ```bash
 # Полный запуск всех сервисов
 docker-compose up -d
@@ -1241,7 +1211,7 @@ curl http://localhost:3000/health
 # Ожидаемый ответ:
 {
   "status": "healthy",
-  "service": "kembridge-backend",
+  "service": "kembridge-backend", 
   "version": "0.1.0",
   "timestamp": "2024-01-XX...",
   "containers": {
@@ -1259,7 +1229,6 @@ curl http://localhost:3001
 ```
 
 ### ✅ Full Stack Validation
-
 ```bash
 # Проверка всех сервисов
 docker-compose logs
@@ -1283,7 +1252,6 @@ docker-compose exec backend sqlx database info
 ```
 
 ### ✅ Database & Cache Validation
-
 ```bash
 # Подключение к PostgreSQL через Docker
 docker-compose exec postgres psql -U postgres -d kembridge_dev -c "SELECT version();"
@@ -1302,10 +1270,9 @@ docker-compose exec backend ping redis
 #### 1.1.6 Development & Production Overrides
 
 ##### Development Docker Compose Override
-
 ```yaml
 # docker-compose.override.yml - Автоматически применяется в development
-version: "3.8"
+version: '3.8'
 
 services:
   backend:
@@ -1339,10 +1306,9 @@ volumes:
 ```
 
 ##### Production Docker Compose
-
 ```yaml
 # docker-compose.prod.yml - Production overrides
-version: "3.8"
+version: '3.8'
 
 services:
   backend:
@@ -1386,7 +1352,6 @@ volumes:
 ```
 
 ##### Nginx Configuration
-
 ```nginx
 # nginx/default.conf
 upstream backend {
@@ -1417,7 +1382,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
+        
         # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -1436,7 +1401,6 @@ server {
 ```
 
 ##### Quick Start Commands
-
 ```bash
 # Полный старт системы (одна команда)
 make dev
@@ -1460,7 +1424,6 @@ docker-compose down -v
 ```
 
 ##### Makefile для упрощения
-
 ```makefile
 # Makefile
 .PHONY: dev prod build clean logs test
@@ -1503,23 +1466,22 @@ health:
 
 ## ✅ Статус докеризации компонентов
 
-| Компонент             | Статус             | Контейнер            | Порт       | Комментарий                         |
-| --------------------- | ------------------ | -------------------- | ---------- | ----------------------------------- |
-| **Frontend**          | 🐳 100% Dockerized | kembridge_frontend   | 3001       | React + Vite + Hot Reload           |
-| **Backend**           | 🐳 100% Dockerized | kembridge_backend    | 3000       | Rust + Axum + Live Rebuild          |
-| **AI Engine**         | 🐳 100% Dockerized | kembridge_ai_engine  | 8000       | Python + FastAPI + Auto Reload      |
-| **Database**          | 🐳 100% Dockerized | kembridge_postgres   | 5432       | PostgreSQL 18β1 + Migrations        |
-| **Cache**             | 🐳 100% Dockerized | kembridge_redis      | 6379       | Redis 7 + Persistence               |
-| **Reverse Proxy**     | 🐳 100% Dockerized | kembridge_nginx      | 80, 443    | Nginx + SSL Ready                   |
-| **Monitoring**        | 🐳 100% Dockerized | prometheus + grafana | 9090, 3002 | Metrics + Dashboards                |
-| **Development Tools** | 🐳 100% Dockerized | -                    | -          | Hot reload, cargo watch, npm dev    |
-| **Dependencies**      | 🐳 100% Dockerized | -                    | -          | Rust crates, npm packages в volumes |
-| **Build Process**     | 🐳 100% Dockerized | -                    | -          | Multi-stage builds                  |
+| Компонент | Статус | Контейнер | Порт | Комментарий |
+|-----------|--------|-----------|------|-------------|
+| **Frontend** | 🐳 100% Dockerized | kembridge_frontend | 3001 | React + Vite + Hot Reload |
+| **Backend** | 🐳 100% Dockerized | kembridge_backend | 3000 | Rust + Axum + Live Rebuild |
+| **AI Engine** | 🐳 100% Dockerized | kembridge_ai_engine | 8000 | Python + FastAPI + Auto Reload |
+| **Database** | 🐳 100% Dockerized | kembridge_postgres | 5432 | PostgreSQL 18β1 + Migrations |
+| **Cache** | 🐳 100% Dockerized | kembridge_redis | 6379 | Redis 7 + Persistence |
+| **Reverse Proxy** | 🐳 100% Dockerized | kembridge_nginx | 80, 443 | Nginx + SSL Ready |
+| **Monitoring** | 🐳 100% Dockerized | prometheus + grafana | 9090, 3002 | Metrics + Dashboards |
+| **Development Tools** | 🐳 100% Dockerized | - | - | Hot reload, cargo watch, npm dev |
+| **Dependencies** | 🐳 100% Dockerized | - | - | Rust crates, npm packages в volumes |
+| **Build Process** | 🐳 100% Dockerized | - | - | Multi-stage builds |
 
 ### 🎯 Полная докеризация: 100%
 
 **Всё работает в Docker без исключений:**
-
 - ✅ **Zero host dependencies** - не нужно устанавливать Rust, Node.js, PostgreSQL на хост
 - ✅ **Complete isolation** - каждый сервис изолирован в своём контейнере
 - ✅ **Development parity** - dev и prod используют одинаковые образы
@@ -1532,23 +1494,22 @@ health:
 - ✅ **Graceful shutdown** - корректное завершение всех сервисов
 
 **Внешние зависимости (НЕ в Docker, по дизайну):**
-
 - 🌐 **Blockchain networks** - Ethereum Sepolia, NEAR Testnet (внешние сети)
 - 🔗 **External APIs** - Chainlink, 1inch, Infura (внешние сервисы)
 - 💾 **User wallets** - MetaMask, NEAR Wallet (браузерные расширения)
 
 ## 📊 Technology Decision Summary
 
-| Component                | Выбранная технология                  | Причина выбора                                             |
-| ------------------------ | ------------------------------------- | ---------------------------------------------------------- |
-| **Containerization**     | Docker + Docker Compose               | Полная изоляция, консистентность, масштабируемость         |
-| **Backend Framework**    | Axum                                  | Зрелая экосистема, высокая производительность, type safety |
-| **Backend Architecture** | Cargo Workspace с модульными крейтами | Модульность, type safety, параллельная разработка          |
-| **Database Layer**       | PostgreSQL 18 Beta 1 + sqlx           | OAuth 2.0 поддержка, производительность JSON/JSONB         |
-| **Frontend**             | React + Vite + TypeScript + SCSS      | Проверенный стек, MobileFirst подход                       |
-| **State Management**     | TanStack Query                        | Server state специализация, автоматическое кеширование     |
-| **Styling**              | SCSS с модульной архитектурой         | Гибкость, MobileFirst подход                               |
-| **Cryptography**         | pqcrypto-kyber + AES-GCM              | ML-KEM-1024 + гибридная схема                              |
+| Component | Выбранная технология | Причина выбора |
+|-----------|---------------------|----------------|
+| **Containerization** | Docker + Docker Compose | Полная изоляция, консистентность, масштабируемость |
+| **Backend Framework** | Axum | Зрелая экосистема, высокая производительность, type safety |
+| **Backend Architecture** | Cargo Workspace с модульными крейтами | Модульность, type safety, параллельная разработка |
+| **Database Layer** | PostgreSQL 18 Beta 1 + sqlx | OAuth 2.0 поддержка, производительность JSON/JSONB |
+| **Frontend** | React + Vite + TypeScript + SCSS | Проверенный стек, MobileFirst подход |
+| **State Management** | TanStack Query | Server state специализация, автоматическое кеширование |
+| **Styling** | SCSS с модульной архитектурой | Гибкость, MobileFirst подход |
+| **Cryptography** | pqcrypto-kyber + AES-GCM | ML-KEM-1024 + гибридная схема |
 
 ## 🚀 Next Steps
 
