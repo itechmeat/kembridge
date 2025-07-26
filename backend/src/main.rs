@@ -48,6 +48,11 @@ use config::AppConfig;
     paths(
         handlers::health::health_check,
         handlers::health::readiness_check,
+        handlers::quantum::generate_keypair,
+        handlers::quantum::encapsulate,
+        handlers::quantum::decapsulate,
+        handlers::quantum::get_user_keys,
+        handlers::quantum::export_public_key,
     ),
     components(
         schemas(
@@ -56,6 +61,13 @@ use config::AppConfig;
             handlers::health::ReadinessResponse,
             handlers::health::ServiceStatus,
             handlers::health::ReadinessFeatures,
+            models::quantum::CreateQuantumKeyRequest,
+            models::quantum::QuantumKeyResponse,
+            models::quantum::QuantumKeysListResponse,
+            models::quantum::EncapsulateRequest,
+            models::quantum::EncapsulateResponse,
+            models::quantum::DecapsulateRequest,
+            models::quantum::DecapsulateResponse,
         )
     ),
     tags(
@@ -155,7 +167,7 @@ fn create_v1_routes() -> Router<AppState> {
         .nest("/bridge", routes::bridge::create_routes())
 
         // Quantum cryptography routes
-        .nest("/quantum", routes::quantum::create_routes())
+        .nest("/crypto", routes::quantum::create_routes())
 
         // User management routes
         .nest("/user", routes::user::create_routes())

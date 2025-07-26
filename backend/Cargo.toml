@@ -30,6 +30,7 @@ serde_json = "1.0"
 # Authentication & Cryptography
 jsonwebtoken = "9.2"
 sha2 = "0.10.8"
+base64 = "0.22"
 secp256k1 = "0.28"
 ed25519-dalek = "2.0"
 rand = "0.8"
@@ -100,7 +101,7 @@ kembridge-blockchain = { path = "crates/kembridge-blockchain" }
 [package]
 name = "kembridge-backend"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 rust-version = "1.88"
 
 [[bin]]
@@ -141,6 +142,10 @@ validator.workspace = true
 # Time & UUID
 chrono.workspace = true
 uuid.workspace = true
+
+# Cryptography
+sha2.workspace = true
+base64.workspace = true
 
 # Monitoring
 metrics.workspace = true
