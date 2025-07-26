@@ -37,4 +37,4 @@ hex = "0.4.3"
 base64 = "0.22.1"
 
 [dev-dependencies]
-tokio = { version = "1.42", features = ["macros", "rt"] }
+tokio = { version = "1.46.1", features = ["macros", "rt"] }

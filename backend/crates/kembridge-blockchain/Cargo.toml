@@ -8,10 +8,14 @@ edition = "2021"
 kembridge-crypto.workspace = true
 
 # Blockchain
-ethers.workspace = true
-# TODO: Use near-sdk only in contract crates, not in API gateway (Phase 4.1)
-# near-sdk.workspace = true
+ethers = { version = "2.0.14", features = ["rustls", "ws"] }
+
+# NEAR Protocol dependencies (Phase 4.2) - Minimal set
 near-jsonrpc-client.workspace = true
+near-crypto.workspace = true
+# We'll use types from jsonrpc-client to avoid version conflicts
+# For Chain Signatures testing (near-workspaces will be feature-gated)
+near-workspaces = { version = "0.20.1", optional = true }
 
 # Async
 tokio.workspace = true
@@ -39,3 +43,14 @@ uuid.workspace = true
 
 # Crypto
 secp256k1.workspace = true
+
+# For Chain Signatures (base64 encoding)
+base64 = "0.22"
+hex = "0.4"
+
+[features]
+default = []
+# Feature for Chain Signatures testing
+chain-signatures = ["near-workspaces"]
+# Feature for 1Click API integration
+one-click = []

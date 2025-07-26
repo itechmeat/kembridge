@@ -18,23 +18,23 @@ pub struct EncryptedData {
 pub struct AesGcmCrypto;
 
 impl AesGcmCrypto {
-    /// Генерация случайного AES-256 ключа
+    /// Generate random AES-256 key
     pub fn generate_key() -> [u8; 32] {
         let mut key = [0u8; 32];
         thread_rng().fill(&mut key);
         key
     }
 
-    /// Генерация случайного nonce для AES-GCM
+    /// Generate random nonce for AES-GCM
     fn generate_nonce() -> GenericArray<u8, U12> {
         let mut nonce_bytes = [0u8; 12];
         thread_rng().fill(&mut nonce_bytes);
         *GenericArray::from_slice(&nonce_bytes)
     }
 
-    /// Шифрование данных с AES-256-GCM
+    /// Encrypt data with AES-256-GCM
     pub fn encrypt(
-        key: &[u8; 32], 
+        key: &[u8; 32],
         data: &[u8]
     ) -> Result<EncryptedData, QuantumCryptoError> {
         let cipher = Aes256Gcm::new(GenericArray::from_slice(key));
@@ -49,7 +49,7 @@ impl AesGcmCrypto {
         })
     }
 
-    /// Расшифрование данных с AES-256-GCM
+    /// Decrypt data with AES-256-GCM
     pub fn decrypt(
         key: &[u8; 32],
         encrypted_data: &EncryptedData
@@ -102,10 +102,10 @@ mod tests {
         let key = AesGcmCrypto::generate_key();
         let data = b"Hello, KEMBridge!";
 
-        // Шифрование
+        // Encryption
         let encrypted = AesGcmCrypto::encrypt(&key, data).unwrap();
         
-        // Расшифрование
+        // Decryption
         let decrypted = AesGcmCrypto::decrypt(&key, &encrypted).unwrap();
         
         assert_eq!(data, decrypted.as_slice());
@@ -119,7 +119,7 @@ mod tests {
         // Key should be accessible
         assert_eq!(secure_key.as_bytes(), &key_data);
         
-        // After drop, memory should be zeroed (можем проверить только концептуально)
+        // After drop, memory should be zeroed (can only check conceptually)
         drop(secure_key);
     }
 
@@ -131,10 +131,10 @@ mod tests {
         let encrypted1 = AesGcmCrypto::encrypt(&key, data).unwrap();
         let encrypted2 = AesGcmCrypto::encrypt(&key, data).unwrap();
 
-        // Nonces должны быть разными
+        // Nonces should be different
         assert_ne!(encrypted1.nonce, encrypted2.nonce);
         
-        // Но расшифрование должно работать для обоих
+        // But decryption should work for both
         let decrypted1 = AesGcmCrypto::decrypt(&key, &encrypted1).unwrap();
         let decrypted2 = AesGcmCrypto::decrypt(&key, &encrypted2).unwrap();
         

@@ -191,6 +191,7 @@ This is a hackathon version with simplified architecture. Production deployment 
 - Configuration files
 - Error messages
 - Log outputs
+- README files and technical documentation
 
 **Exceptions**:
 
@@ -211,3 +212,38 @@ When work is completed:
 1. Report what files were changed and summarize the work done
 2. Allow the user to review changes and create commits manually
 3. Never attempt to automatically stage or commit changes
+
+## Maintenance & Cleanup
+
+### Regular Cleanup Commands
+
+**IMPORTANT**: The project can accumulate large build artifacts and caches. Perform regular cleanup to free disk space:
+
+```bash
+# Clean local project build artifacts (run from project root)
+cargo clean
+
+# Clean Cargo global caches (WARNING: will re-download dependencies)
+cargo install cargo-cache
+cargo cache --autoclean
+
+# Alternative manual cleanup of Cargo caches
+rm -rf ~/.cargo/registry/cache
+rm -rf ~/.cargo/git/db
+
+# Clean Docker build artifacts if using Docker development
+docker system prune -f
+docker volume prune -f
+
+# Clean frontend node_modules if needed
+rm -rf frontend/node_modules
+cd frontend && pnpm install
+```
+
+**Typical Space Usage:**
+- Local project build artifacts: 1-3 GB (`cargo clean` to remove)
+- Cargo registry cache: 1-5 GB (shared across all Rust projects)
+- Docker cache: 1-10 GB (`docker system prune` to clean)
+- Frontend node_modules: 200-500 MB (`rm -rf node_modules` to clean)
+
+**Recommendation:** Run `cargo clean` after major dependency changes or when disk space is low.
