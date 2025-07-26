@@ -127,6 +127,8 @@ sqlx migrate run
 2. Use version overrides in Cargo.toml if needed
 3. Only ask for permission to downgrade if no other solution exists
 
+**CRITICAL**: NEVER change edition = "2024" to any other version. If compilation errors occur due to edition 2024, find alternative solutions or use nightly Rust toolchain.
+
 ## Architecture Patterns
 
 ### Rust Backend Structure

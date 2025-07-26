@@ -2790,12 +2790,16 @@ name = "kembridge-auth"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "axum 0.8.4",
+ "bs58 0.5.1",
  "chrono",
  "ed25519-dalek",
  "futures",
+ "hex",
  "jsonwebtoken 9.3.1",
  "rand 0.8.5",
+ "redis",
  "secp256k1 0.28.2",
  "serde",
  "serde_json",

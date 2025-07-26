@@ -1,24 +1,12 @@
-// src/services/mod.rs - Service layer modules (placeholder for future phases)
-// TODO: These are temporary mock services - will be replaced with real implementations in respective phases
+// src/services/mod.rs - Service layer modules
 #![allow(dead_code)]
 
 use crate::config::AppConfig;
 use anyhow::Result;
 use redis::aio::ConnectionManager;
 
-/// Authentication service - will be implemented in Phase 2.1
-/// TODO: Phase 2.1 - Replace with real Web3 wallet authentication service
-pub struct AuthService;
-
-impl AuthService {
-    pub async fn new(
-        _db: sqlx::PgPool,
-        _redis: ConnectionManager,
-        _config: &AppConfig,
-    ) -> Result<Self> {
-        Ok(Self)
-    }
-}
+/// Authentication service - Web3 wallet authentication with JWT
+pub use kembridge_auth::AuthService;
 
 /// Bridge service - will be implemented in Phase 4.3
 /// TODO: Phase 4.3 - Replace with real cross-chain bridge orchestration
