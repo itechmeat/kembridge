@@ -9,6 +9,7 @@ KEMBridge is a quantum-secure cross-chain bridge built for the NEAR hackathon. I
 ## Core Architecture
 
 - **Backend**: Rust workspace with Axum web framework, organized into domain-specific crates:
+
   - `kembridge-auth`: Web3 wallet authentication and JWT
   - `kembridge-crypto`: Post-quantum cryptography (ML-KEM, Dilithium)
   - `kembridge-bridge`: Cross-chain bridge orchestration
@@ -24,6 +25,7 @@ KEMBridge is a quantum-secure cross-chain bridge built for the NEAR hackathon. I
 ## Development Commands
 
 ### Primary Commands (Use Makefile)
+
 ```bash
 # Start all services with hot reload
 make dev
@@ -49,6 +51,7 @@ make clean
 ```
 
 ### Docker Compose Commands
+
 ```bash
 # Build and start all services
 docker-compose up --build
@@ -64,6 +67,7 @@ docker-compose restart ai-engine
 ```
 
 ### Frontend Commands (within container)
+
 ```bash
 # Development server
 pnpm run dev
@@ -76,6 +80,7 @@ pnpm run lint
 ```
 
 ### Backend Commands (within container)
+
 ```bash
 # Run specific binary
 cargo run --bin kembridge-backend
@@ -92,10 +97,10 @@ sqlx migrate run
 
 ## Service Endpoints
 
-- Frontend: http://localhost:3001
-- Backend API: http://localhost:3000
+- Frontend: http://localhost:4001
+- Backend API: http://localhost:4000
 - AI Engine: http://localhost:8000
-- Grafana: http://localhost:3002 (admin:admin)
+- Grafana: http://localhost:4002 (admin:admin)
 - Prometheus: http://localhost:9090
 
 ## Key Technologies
@@ -108,9 +113,24 @@ sqlx migrate run
 - **NEAR Protocol**: Chain Signatures, 1Click API integration
 - **1inch Fusion+**: Atomic swap integration
 
+## Critical Version Requirements
+
+**MANDATORY**: These exact versions MUST be used throughout the project:
+
+- **Rust**: Version 1.88.0 (no exceptions - required for latest language features)
+- **Axum**: Version 0.8.4 (no exceptions - required for modern async patterns)
+- **Edition**: 2024 (using latest Rust 1.88.0 features like let chains, naked functions)
+
+**DO NOT downgrade these versions under any circumstances.** If dependency conflicts arise:
+
+1. Research proper solutions online first
+2. Use version overrides in Cargo.toml if needed
+3. Only ask for permission to downgrade if no other solution exists
+
 ## Architecture Patterns
 
 ### Rust Backend Structure
+
 - Workspace-based multi-crate organization
 - Domain-driven crate separation
 - Shared dependencies in workspace.dependencies
@@ -119,12 +139,14 @@ sqlx migrate run
 - JWT-based authentication for Web3 wallets
 
 ### Frontend Structure
+
 - Component-based architecture with feature modules
 - SCSS with modular structure (abstracts, base, components, layouts)
 - React Query for server state management
 - Wallet integration through RainbowKit and NEAR Wallet Selector
 
 ### Database Schema
+
 - PostgreSQL with JSONB for flexible metadata storage
 - Quantum key storage with encryption
 - Audit logging for all operations
@@ -133,6 +155,7 @@ sqlx migrate run
 ## Environment Variables
 
 The project uses environment variables defined in docker-compose.yml:
+
 - Database connections (PostgreSQL, Redis)
 - Blockchain RPC URLs (Ethereum, NEAR)
 - JWT secrets and CORS origins
@@ -160,6 +183,7 @@ This is a hackathon version with simplified architecture. Production deployment 
 ## Language Guidelines
 
 **IMPORTANT**: All project files (code, configuration, documentation except MD files) MUST contain ONLY English language content, including:
+
 - Code comments
 - Variable and function names
 - Configuration files
@@ -167,6 +191,7 @@ This is a hackathon version with simplified architecture. Production deployment 
 - Log outputs
 
 **Exceptions**:
+
 - Markdown (.md) files: Can be written in the language requested by the user
 - Chat communication: Should be conducted in the user's preferred language
 
