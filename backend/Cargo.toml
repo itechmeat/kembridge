@@ -9,64 +9,80 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-# Web framework
-axum = "0.8.0"
-tokio = { version = "1.40.0", features = ["full"] }
-tower = "0.5.0"
-tower-http = { version = "0.6.0", features = ["cors", "trace"] }
+# Web framework (latest stable)
+axum = { version = "0.8.4", features = ["ws", "macros", "tracing"] }
+tokio = { version = "1.40", features = ["full"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.6", features = [
+    "cors", "trace", "compression-gzip", "limit", "request-id", "sensitive-headers"
+] }
 
-# Database
-sqlx = { version = "0.8.0", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "json"] }
+# Database & Cache
+sqlx = { version = "0.8", features = [
+    "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "migrate"
+] }
+redis = { version = "0.26", features = ["tokio-comp", "connection-manager"] }
 
-# Serialization
-serde = { version = "1.0.207", features = ["derive"] }
-serde_json = "1.0.124"
+# Serialization & JSON
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-# Authentication & Crypto
-jsonwebtoken = "9.3.1"
-rand = "0.9.1"
+# Authentication & Cryptography
+jsonwebtoken = "9.2"
 sha2 = "0.10.8"
-secp256k1 = "0.31.1"
-ed25519-dalek = "2.1.1"
+secp256k1 = "0.28"
+ed25519-dalek = "2.0"
+rand = "0.8"
 
-# Post-quantum cryptography
-pqcrypto = "0.18.0"
-pqcrypto-kyber = "0.8.0"
+# HTTP client & networking
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
-# HTTP client
-reqwest = { version = "0.12.22", features = ["json"] }
+# Async & Concurrency
+futures = "0.3"
+async-trait = "0.1"
 
-# Blockchain
-ethers = "2.0.14"
-near-sdk = "5.3.0"
-near-jsonrpc-client = "0.17.0"
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
-# Async
-futures = "0.3.30"
+# Configuration & Environment
+config = "0.13"
+dotenvy = "0.15"
 
-# Logging
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+# Time & UUID
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.10", features = ["v4", "v7", "serde"] }
 
-# Configuration
-config = "0.15.13"
-dotenvy = "0.15.7"
-
-# Time
-chrono = { version = "0.4.38", features = ["serde"] }
-
-# UUID
-uuid = { version = "1.17.0", features = ["v4", "serde"] }
-
-# Redis
-redis = { version = "0.32.3", features = ["tokio-comp"] }
-
-# Validation
-validator = { version = "0.20.0", features = ["derive"] }
+# Validation & Parsing
+validator = { version = "0.18", features = ["derive"] }
 
 # Error handling
-anyhow = "1.0.86"
-thiserror = "2.0.12"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Monitoring & Metrics
+metrics = "0.23"
+metrics-exporter-prometheus = "0.15"
+
+# API Documentation
+utoipa = "5.0.1"
+utoipa-swagger-ui = { version = "8.0.2", features = ["axum"] }
+utoipa-axum = "0.1.0"
+
+# Post-quantum cryptography
+pqcrypto = "0.18"
+pqcrypto-kyber = "0.7"
+
+# Blockchain integration
+ethers = "2.0"
+# TODO: Use near-sdk only in contract crates, not in API gateway (Phase 4.1)
+# near-sdk = "5.4" 
+near-jsonrpc-client = "0.12"
+
+# Security & Rate limiting
+tower_governor = "0.4"
+headers = "0.4"
+
 
 # KEMBridge internal crates
 kembridge-auth = { path = "crates/kembridge-auth" }
@@ -75,39 +91,80 @@ kembridge-bridge = { path = "crates/kembridge-bridge" }
 kembridge-database = { path = "crates/kembridge-database" }
 kembridge-blockchain = { path = "crates/kembridge-blockchain" }
 
-# Main backend binary
+
+# Main gateway binary
 [package]
 name = "kembridge-backend"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.88"
 
 [[bin]]
 name = "kembridge-backend"
 path = "src/main.rs"
 
 [dependencies]
-# Web framework
+# Core framework
 axum.workspace = true
 tokio.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 
-# Internal crates
-kembridge-auth.workspace = true
-kembridge-database.workspace = true
-
-# Database
+# State management
 sqlx.workspace = true
-
-# Redis
 redis.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
 
 # Configuration
 dotenvy.workspace = true
 config.workspace = true
-anyhow.workspace = true
+
+# Logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
-serde.workspace = true
-serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Validation
+validator.workspace = true
+
+# Time & UUID
 chrono.workspace = true
+uuid.workspace = true
+
+# Monitoring
+metrics.workspace = true
+metrics-exporter-prometheus.workspace = true
+
+# API Documentation
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
+utoipa-axum.workspace = true
+
+# Security
+tower_governor.workspace = true
+headers.workspace = true
+
+# Internal crates
+kembridge-auth.workspace = true
+kembridge-database.workspace = true
+kembridge-crypto.workspace = true
+kembridge-bridge.workspace = true
+kembridge-blockchain.workspace = true
+
+[features]
+default = ["production"]
+development = ["tracing-subscriber/env-filter"]
+production = ["tower-http/compression-gzip"]
+
+# Performance optimizations for production
+[profile.release]
+lto = true              # Link-time optimization
+codegen-units = 1       # Single codegen unit for better optimization
+panic = "abort"         # Smaller binary size
+strip = true           # Strip symbols

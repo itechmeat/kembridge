@@ -1,3 +1,6 @@
+// TODO: This is mock implementation - Phase 4.3 will add real bridge logic
+#![allow(unused_variables)]
+
 pub mod types;
 pub mod executor;
 

@@ -1,0 +1,6 @@
+// src/routes/mod.rs - Route modules
+pub mod auth;
+pub mod bridge;
+pub mod quantum;
+pub mod user;
+pub mod admin;
