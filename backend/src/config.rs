@@ -52,7 +52,7 @@ pub enum Environment {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            port: 3000,
+            port: 4000,
             host: "0.0.0.0".to_string(),
             environment: Environment::Development,
 
@@ -66,11 +66,11 @@ impl Default for AppConfig {
             jwt_secret: "dev-secret-change-in-production".to_string(),
             jwt_expiration_hours: 24,
             cors_origins: vec![
-                "http://localhost:3001".to_string(),
-                "http://localhost:3000".to_string(),
+                "http://localhost:4001".to_string(),
+                "http://localhost:4000".to_string(),
             ],
 
-            ai_engine_url: "http://localhost:8000".to_string(),
+            ai_engine_url: "http://localhost:4003".to_string(),
             ethereum_rpc_url: "https://sepolia.infura.io/v3/YOUR_PROJECT_ID".to_string(),
             near_rpc_url: "https://rpc.testnet.near.org".to_string(),
 
@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = AppConfig::default();
-        assert_eq!(config.port, 3000);
+        assert_eq!(config.port, 4000);
         assert_eq!(config.host, "0.0.0.0");
         assert!(config.enable_quantum_crypto);
         assert!(config.enable_ai_risk_analysis);

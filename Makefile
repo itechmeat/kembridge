@@ -32,6 +32,6 @@ shell-frontend:
 
 health:
 	@echo "Checking all services..."
-	@curl -f http://localhost:3000/health || echo "Backend: FAIL"
-	@curl -f http://localhost:8000/health || echo "AI Engine: FAIL"
-	@curl -f http://localhost:3001 || echo "Frontend: FAIL"
+	@curl -f http://localhost:4000/health || echo "Backend: FAIL"
+	@curl -f http://localhost:4003/health || echo "AI Engine: FAIL"
+	@curl -f http://localhost:4001 || echo "Frontend: FAIL"
