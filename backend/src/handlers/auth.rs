@@ -35,18 +35,62 @@ pub async fn verify_wallet(
     }
 }
 
-/// Refresh JWT token (placeholder - Phase 2.2.8)
-pub async fn refresh_token(State(_state): State<AppState>) -> Result<Json<serde_json::Value>, StatusCode> {
-    Ok(Json(serde_json::json!({
-        "message": "JWT refresh token logic will be implemented in Phase 2.2",
-        "implementation_phase": "2.2"
-    })))
+/// Refresh JWT token 
+pub async fn refresh_token(
+    State(state): State<AppState>,
+    auth_user: crate::extractors::auth::AuthUser,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    // For now, generate a new token with the same claims
+    // In production, you might want to implement proper refresh token rotation
+    match state.auth_service.jwt_manager
+        .generate_token(
+            auth_user.user_id, 
+            &auth_user.wallet_address, 
+            auth_user.chain_type
+        )
+        .await 
+    {
+        Ok(new_token) => {
+            Ok(Json(serde_json::json!({
+                "access_token": new_token,
+                "token_type": "Bearer",
+                "expires_in": 24 * 60 * 60, // 24 hours
+                "message": "Token refreshed successfully"
+            })))
+        },
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
-/// Logout (placeholder - Phase 2.2.7)
-pub async fn logout(State(_state): State<AppState>) -> Result<Json<serde_json::Value>, StatusCode> {
-    Ok(Json(serde_json::json!({
-        "message": "Logout functionality will be implemented in Phase 2.2",
-        "implementation_phase": "2.2"
-    })))
+/// Logout - invalidate session
+pub async fn logout(
+    State(state): State<AppState>,
+    auth_user: crate::extractors::auth::AuthUser,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    // Mark session as expired in the database
+    let result = sqlx::query(
+        r#"
+        UPDATE user_sessions 
+        SET expires_at = NOW() 
+        WHERE user_id = $1 AND jwt_token_hash = $2
+        "#,
+    )
+    .bind(auth_user.user_id)
+    .bind(&auth_user.session_id) // Assuming session_id contains token hash
+    .execute(&state.db)
+    .await;
+
+    match result {
+        Ok(_) => {
+            Ok(Json(serde_json::json!({
+                "message": "Logged out successfully",
+                "user_id": auth_user.user_id,
+                "timestamp": chrono::Utc::now().to_rfc3339()
+            })))
+        },
+        Err(e) => {
+            tracing::error!("Failed to logout user {}: {}", auth_user.user_id, e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }

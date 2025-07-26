@@ -3,6 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
+use std::str::FromStr;
 use crate::errors::AuthError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -27,6 +28,14 @@ impl ChainType {
             "near" => Ok(ChainType::Near),
             _ => Err(AuthError::UnsupportedChainType(s.to_string())),
         }
+    }
+}
+
+impl FromStr for ChainType {
+    type Err = AuthError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_str(s)
     }
 }
 

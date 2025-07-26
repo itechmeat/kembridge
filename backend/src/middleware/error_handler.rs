@@ -62,6 +62,11 @@ pub enum ApiError {
 }
 
 impl ApiError {
+    /// Create an unauthorized error (convenience method)
+    pub fn unauthorized(message: impl Into<String>) -> Self {
+        Self::Authentication(message.into())
+    }
+
     /// Convert error to HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {
