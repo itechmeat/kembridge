@@ -12,6 +12,12 @@ readme = "README.md"
 # Post-quantum cryptography - FIPS 203 ML-KEM
 ml-kem = "0.2.1"                    # Pure Rust ML-KEM-1024 implementation
 
+# Classical cryptography for hybrid scheme
+aes-gcm = "0.10.3"                  # AES-256-GCM implementation
+hkdf = "0.12.4"                     # HKDF key derivation function
+hmac = "0.12.1"                     # HMAC for data integrity
+sha2 = "0.10.8"                     # SHA-256 for hashing
+
 # Core utilities  
 rand = "0.8"                        # Cryptographically secure RNG
 rand_core = "0.6.4"                 # RNG core traits (совместимость с ml-kem)

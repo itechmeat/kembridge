@@ -4,7 +4,7 @@
 //! for post-quantum key encapsulation with 256-bit security level.
 
 use crate::error::{QuantumCryptoError, QuantumResult};
-use ml_kem::{MlKem1024, KemCore};
+use ml_kem::{MlKem1024, KemCore, EncodedSizeUser};
 use ml_kem::kem::{Encapsulate, Decapsulate};
 use rand::thread_rng;
 
@@ -20,10 +20,80 @@ impl MlKemCrypto {
         let mut rng = thread_rng();
         let (dk, ek) = MlKem1024::generate(&mut rng);
         
+        // Convert to byte arrays for storage
+        let dk_bytes = dk.as_bytes();
+        let ek_bytes = ek.as_bytes();
+        
+        // Copy bytes to fixed-size arrays
+        let mut dk_array = [0u8; 3168];
+        let mut ek_array = [0u8; 1568];
+        dk_array.copy_from_slice(&dk_bytes);
+        ek_array.copy_from_slice(&ek_bytes);
+        
         Ok(MlKemKeyPair {
-            decapsulation_key: dk,
-            encapsulation_key: ek,
+            decapsulation_key: dk_array,
+            encapsulation_key: ek_array,
         })
+    }
+
+    /// Perform ML-KEM encapsulation with public key bytes
+    pub fn encapsulate_with_bytes(
+        public_key_bytes: &[u8]
+    ) -> QuantumResult<(Vec<u8>, [u8; 32])> {
+        if public_key_bytes.len() != 1568 {
+            return Err(QuantumCryptoError::InvalidKeySize { 
+                expected: 1568, 
+                actual: public_key_bytes.len() 
+            });
+        }
+
+        let mut key_array = [0u8; 1568];
+        key_array.copy_from_slice(public_key_bytes);
+
+        // Import the encapsulation key from bytes
+        let ek: ml_kem::kem::EncapsulationKey<ml_kem::MlKem1024Params> = 
+            ml_kem::kem::EncapsulationKey::from_bytes(&key_array.into());
+
+        let mut rng = thread_rng();
+        let (ciphertext, shared_secret) = ek.encapsulate(&mut rng)
+            .map_err(|_| QuantumCryptoError::EncapsulationFailed)?;
+        
+        Ok((ciphertext.to_vec(), shared_secret.into()))
+    }
+
+    /// Perform ML-KEM decapsulation with private key bytes
+    pub fn decapsulate_with_bytes(
+        private_key_bytes: &[u8],
+        ciphertext_bytes: &[u8]
+    ) -> QuantumResult<[u8; 32]> {
+        if private_key_bytes.len() != 3168 {
+            return Err(QuantumCryptoError::InvalidKeySize { 
+                expected: 3168, 
+                actual: private_key_bytes.len() 
+            });
+        }
+
+        if ciphertext_bytes.len() != 1568 {
+            return Err(QuantumCryptoError::InvalidData(
+                format!("Invalid ciphertext size: {} bytes", ciphertext_bytes.len())
+            ));
+        }
+
+        let mut private_key_array = [0u8; 3168];
+        private_key_array.copy_from_slice(private_key_bytes);
+
+        let mut ciphertext_array = [0u8; 1568];
+        ciphertext_array.copy_from_slice(ciphertext_bytes);
+
+        // Import the decapsulation key and ciphertext from bytes
+        let dk: ml_kem::kem::DecapsulationKey<ml_kem::MlKem1024Params> = 
+            ml_kem::kem::DecapsulationKey::from_bytes(&private_key_array.into());
+        let ct = ciphertext_array.into();
+
+        let shared_secret = dk.decapsulate(&ct)
+            .map_err(|_| QuantumCryptoError::DecapsulationFailed)?;
+        
+        Ok(shared_secret.into())
     }
     
     /// Verify that the ML-KEM implementation works correctly
@@ -73,20 +143,30 @@ impl MlKemCrypto {
 /// Contains both the decapsulation key (private) and encapsulation key (public).
 /// The decapsulation key must be kept secret, while the encapsulation key can be shared.
 pub struct MlKemKeyPair {
-    /// Private key for decapsulation operations
-    pub decapsulation_key: ml_kem::kem::DecapsulationKey<ml_kem::MlKem1024Params>,
-    /// Public key for encapsulation operations  
-    pub encapsulation_key: ml_kem::kem::EncapsulationKey<ml_kem::MlKem1024Params>,
+    /// Private key for decapsulation operations (3168 bytes)
+    pub decapsulation_key: [u8; 3168],
+    /// Public key for encapsulation operations (1568 bytes)
+    pub encapsulation_key: [u8; 1568],
 }
 
 impl MlKemKeyPair {
-    /// Get the encapsulation key (public key)
-    pub fn public_key(&self) -> &ml_kem::kem::EncapsulationKey<ml_kem::MlKem1024Params> {
+    /// Get the encapsulation key (public key) as bytes
+    pub fn public_key(&self) -> &[u8; 1568] {
         &self.encapsulation_key
     }
     
-    /// Get the decapsulation key (private key)
-    pub fn private_key(&self) -> &ml_kem::kem::DecapsulationKey<ml_kem::MlKem1024Params> {
+    /// Get the decapsulation key (private key) as bytes
+    pub fn private_key(&self) -> &[u8; 3168] {
+        &self.decapsulation_key
+    }
+
+    /// Get public key as slice
+    pub fn public_key_bytes(&self) -> &[u8] {
+        &self.encapsulation_key
+    }
+
+    /// Get private key as slice
+    pub fn private_key_bytes(&self) -> &[u8] {
         &self.decapsulation_key
     }
 }
@@ -140,5 +220,37 @@ mod tests {
         assert_eq!(info.private_key_size, 3168);
         assert_eq!(info.ciphertext_size, 1568);
         assert_eq!(info.shared_secret_size, 32);
+    }
+
+    #[test]
+    fn test_key_sizes() {
+        // Generate keypair
+        let keypair = MlKemCrypto::generate_keypair().unwrap();
+        
+        // Verify key sizes
+        assert_eq!(keypair.public_key_bytes().len(), 1568);
+        assert_eq!(keypair.private_key_bytes().len(), 3168);
+    }
+
+    #[test]
+    fn test_encapsulation_decapsulation_with_bytes() {
+        // Generate keypair
+        let keypair = MlKemCrypto::generate_keypair().unwrap();
+        
+        // Test encapsulation with bytes
+        let (ciphertext_bytes, shared_secret1) = MlKemCrypto::encapsulate_with_bytes(
+            keypair.public_key_bytes()
+        ).unwrap();
+        
+        // Test decapsulation with bytes
+        let shared_secret2 = MlKemCrypto::decapsulate_with_bytes(
+            keypair.private_key_bytes(),
+            &ciphertext_bytes
+        ).unwrap();
+        
+        // Verify shared secrets match
+        assert_eq!(shared_secret1, shared_secret2);
+        assert_eq!(shared_secret1.len(), 32);
+        assert_eq!(ciphertext_bytes.len(), 1568);
     }
 }
