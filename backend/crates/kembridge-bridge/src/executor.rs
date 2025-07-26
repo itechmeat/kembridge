@@ -4,6 +4,7 @@ use chrono::Utc;
 use anyhow::Result;
 
 pub struct BridgeExecutor {
+    // INFO: Placeholder implementation for next features
     // Placeholder for bridge execution logic
 }
 

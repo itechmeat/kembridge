@@ -1,11 +1,16 @@
-// TODO: These are mock implementations - Phase 4.1-4.2 will add real blockchain adapters
-#![allow(unused_variables, dead_code)]
+// Phase 4.1: Real blockchain adapters implementation
+#![allow(unused_variables, dead_code)] // Temporary for Phase 4.1
 
 pub mod ethereum;
+pub mod ethereum_legacy;
 pub mod near;
 pub mod types;
 
-pub use ethereum::*;
+// Re-export Ethereum adapter
+pub use ethereum::{EthereumAdapter, EthereumConfig, EthereumError, WalletInfo, TokenBalance, TransactionStatus, ERC20Contract};
+
+// Keep legacy exports for compatibility  
+pub use ethereum_legacy::EthereumClient;
 pub use near::*;
 pub use types::*;
 

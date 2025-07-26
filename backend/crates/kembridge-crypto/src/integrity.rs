@@ -1,7 +1,7 @@
 // src/integrity.rs - Data integrity protection using HMAC-SHA256
 use hmac::{Hmac, Mac};
 use sha2::{Sha256, Digest};
-// use zeroize::Zeroize;  // Будет использоваться в полной реализации
+// use zeroize::Zeroize;  // Will be used in full implementation
 
 use crate::error::QuantumCryptoError;
 
@@ -11,7 +11,7 @@ type HmacSha256 = Hmac<Sha256>;
 pub struct IntegrityProtection;
 
 impl IntegrityProtection {
-    /// Генерация HMAC для проверки целостности зашифрованных данных
+    /// Generate HMAC for encrypted data integrity verification
     pub fn generate_mac(
         key: &[u8],
         data: &[u8]
@@ -23,7 +23,7 @@ impl IntegrityProtection {
         Ok(mac.finalize().into_bytes().to_vec())
     }
 
-    /// Верификация целостности данных
+    /// Verify data integrity
     pub fn verify_integrity(
         key: &[u8],
         data: &[u8],
@@ -31,18 +31,18 @@ impl IntegrityProtection {
     ) -> Result<bool, QuantumCryptoError> {
         let computed_mac = Self::generate_mac(key, data)?;
         
-        // Constant-time comparison для защиты от timing attacks
+        // Constant-time comparison to protect against timing attacks
         Ok(constant_time_eq(&computed_mac, expected_mac))
     }
 
-    /// Генерация SHA-256 хеша для дополнительной проверки
+    /// Generate SHA-256 hash for additional verification
     pub fn hash_data(data: &[u8]) -> [u8; 32] {
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.finalize().into()
     }
 
-    /// Комбинированная защита: HMAC + hash
+    /// Combined protection: HMAC + hash
     pub fn create_integrity_proof(
         key: &[u8],
         data: &[u8]
@@ -56,16 +56,16 @@ impl IntegrityProtection {
         })
     }
 
-    /// Верификация комбинированной защиты
+    /// Verify combined protection
     pub fn verify_integrity_proof(
         key: &[u8],
         data: &[u8],
         proof: &IntegrityProof
     ) -> Result<bool, QuantumCryptoError> {
-        // Проверка HMAC
+        // Verify HMAC
         let hmac_valid = Self::verify_integrity(key, data, &proof.hmac)?;
         
-        // Проверка hash
+        // Verify hash
         let computed_hash = Self::hash_data(data);
         let hash_valid = constant_time_eq(&computed_hash, &proof.sha256_hash);
         
@@ -73,7 +73,7 @@ impl IntegrityProtection {
     }
 }
 
-/// Структура для хранения доказательства целостности
+/// Structure for storing integrity proof
 #[derive(Debug, Clone)]
 pub struct IntegrityProof {
     pub hmac: Vec<u8>,
@@ -81,14 +81,14 @@ pub struct IntegrityProof {
 }
 
 impl IntegrityProof {
-    /// Сериализация в байты для хранения
+    /// Serialize to bytes for storage
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut result = Vec::with_capacity(4 + self.hmac.len() + 32);
         
-        // Длина HMAC (4 bytes)
+        // HMAC length (4 bytes)
         result.extend_from_slice(&(self.hmac.len() as u32).to_le_bytes());
         
-        // HMAC данные
+        // HMAC data
         result.extend_from_slice(&self.hmac);
         
         // SHA-256 hash (32 bytes)
@@ -97,7 +97,7 @@ impl IntegrityProof {
         result
     }
 
-    /// Десериализация из байтов
+    /// Deserialize from bytes
     pub fn from_bytes(data: &[u8]) -> Result<Self, QuantumCryptoError> {
         if data.len() < 4 + 32 {
             return Err(QuantumCryptoError::InvalidData(
@@ -105,7 +105,7 @@ impl IntegrityProof {
             ));
         }
 
-        // Чтение длины HMAC
+        // Read HMAC length
         let hmac_len = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
         
         if data.len() != 4 + hmac_len + 32 {
@@ -114,10 +114,10 @@ impl IntegrityProof {
             ));
         }
 
-        // Извлечение HMAC
+        // Extract HMAC
         let hmac = data[4..4 + hmac_len].to_vec();
         
-        // Извлечение SHA-256 hash
+        // Extract SHA-256 hash
         let mut sha256_hash = [0u8; 32];
         sha256_hash.copy_from_slice(&data[4 + hmac_len..4 + hmac_len + 32]);
         
@@ -128,7 +128,7 @@ impl IntegrityProof {
     }
 }
 
-/// Constant-time comparison для защиты от timing attacks
+/// Constant-time comparison to protect against timing attacks
 fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
@@ -154,14 +154,14 @@ mod tests {
         
         let data = b"Test data for HMAC verification";
         
-        // Генерация MAC
+        // Generate MAC
         let mac = IntegrityProtection::generate_mac(&key, data).unwrap();
         
-        // Верификация
+        // Verification
         let is_valid = IntegrityProtection::verify_integrity(&key, data, &mac).unwrap();
         assert!(is_valid);
         
-        // Проверка с неправильными данными
+        // Check with wrong data
         let wrong_data = b"Wrong data";
         let is_invalid = IntegrityProtection::verify_integrity(&key, wrong_data, &mac).unwrap();
         assert!(!is_invalid);
@@ -174,18 +174,18 @@ mod tests {
         
         let data = b"Test data for integrity proof";
         
-        // Создание proof
+        // Create proof
         let proof = IntegrityProtection::create_integrity_proof(&key, data).unwrap();
         
-        // Верификация
+        // Verification
         let is_valid = IntegrityProtection::verify_integrity_proof(&key, data, &proof).unwrap();
         assert!(is_valid);
         
-        // Сериализация и десериализация
+        // Serialization and deserialization
         let serialized = proof.to_bytes();
         let deserialized = IntegrityProof::from_bytes(&serialized).unwrap();
         
-        // Верификация после десериализации
+        // Verification after deserialization
         let is_still_valid = IntegrityProtection::verify_integrity_proof(&key, data, &deserialized).unwrap();
         assert!(is_still_valid);
     }
@@ -205,7 +205,7 @@ mod tests {
         let data1 = vec![1, 2, 3, 4];
         let data2 = vec![1, 2, 3, 4];
         let data3 = vec![1, 2, 3, 5];
-        let data4 = vec![1, 2, 3]; // Разная длина
+        let data4 = vec![1, 2, 3]; // Different length
         
         assert!(constant_time_eq(&data1, &data2));
         assert!(!constant_time_eq(&data1, &data3));

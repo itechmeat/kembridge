@@ -5,13 +5,13 @@ use zeroize::Zeroize;
 
 use crate::error::QuantumCryptoError;
 
-/// HKDF-SHA256 для расширения ML-KEM shared secret в AES ключи
+/// HKDF-SHA256 for extending ML-KEM shared secret to AES keys
 pub struct KeyDerivation;
 
 impl KeyDerivation {
-    /// Расширение ML-KEM shared secret в AES-256 ключ
+    /// Extend ML-KEM shared secret to AES-256 key
     pub fn derive_encryption_key(
-        shared_secret: &[u8; 32], 
+        shared_secret: &[u8; 32],
         context: &[u8]
     ) -> Result<[u8; 32], QuantumCryptoError> {
         let hk = Hkdf::<Sha256>::new(None, shared_secret);
@@ -23,13 +23,13 @@ impl KeyDerivation {
         Ok(aes_key)
     }
 
-    /// Расширение shared secret в несколько ключей (AES + HMAC)
+    /// Extend shared secret to multiple keys (AES + HMAC)
     pub fn derive_multiple_keys(
         shared_secret: &[u8; 32],
         context: &[u8]
     ) -> Result<DerivedKeys, QuantumCryptoError> {
         let hk = Hkdf::<Sha256>::new(None, shared_secret);
-        let mut output = [0u8; 64]; // 32 bytes для AES + 32 bytes для HMAC
+        let mut output = [0u8; 64]; // 32 bytes for AES + 32 bytes for HMAC
         
         hk.expand(context, &mut output)
             .map_err(|e| QuantumCryptoError::KeyDerivationFailed(e.to_string()))?;
@@ -40,7 +40,7 @@ impl KeyDerivation {
         aes_key.copy_from_slice(&output[0..32]);
         hmac_key.copy_from_slice(&output[32..64]);
         
-        // Очистка промежуточного буфера
+        // Clear intermediate buffer
         output.zeroize();
         
         Ok(DerivedKeys {
@@ -49,13 +49,13 @@ impl KeyDerivation {
         })
     }
 
-    /// Генерация context строки для HKDF
+    /// Generate context string for HKDF
     pub fn create_context(purpose: &str, version: u8) -> Vec<u8> {
         format!("KEMBridge-v{}-{}", version, purpose).into_bytes()
     }
 }
 
-/// Производные ключи для hybrid схемы
+/// Derived keys for hybrid scheme
 #[derive(Debug)]
 pub struct DerivedKeys {
     pub encryption_key: [u8; 32],
@@ -69,21 +69,21 @@ impl Drop for DerivedKeys {
     }
 }
 
-/// Предопределенные контексты для различных операций
+/// Predefined contexts for various operations
 pub mod contexts {
     use super::KeyDerivation;
 
-    /// Контекст для шифрования bridge транзакций
+    /// Context for bridge transaction encryption
     pub fn bridge_transaction() -> Vec<u8> {
         KeyDerivation::create_context("bridge-tx", 1)
     }
 
-    /// Контекст для key exchange между чейнами
+    /// Context for key exchange between chains
     pub fn key_exchange() -> Vec<u8> {
         KeyDerivation::create_context("key-exchange", 1)
     }
 
-    /// Контекст для session ключей
+    /// Context for session keys
     pub fn session_keys() -> Vec<u8> {
         KeyDerivation::create_context("session", 1)
     }
@@ -101,7 +101,7 @@ mod tests {
         
         let context = contexts::bridge_transaction();
         
-        // Два вызова с одинаковыми параметрами должны дать одинаковый результат
+        // Two calls with same parameters should give identical results
         let key1 = KeyDerivation::derive_encryption_key(&shared_secret, &context).unwrap();
         let key2 = KeyDerivation::derive_encryption_key(&shared_secret, &context).unwrap();
         
@@ -130,7 +130,7 @@ mod tests {
         let context = contexts::session_keys();
         let derived = KeyDerivation::derive_multiple_keys(&shared_secret, &context).unwrap();
         
-        // Ключи должны быть разными
+        // Keys should be different
         assert_ne!(derived.encryption_key, derived.authentication_key);
     }
 
@@ -140,10 +140,10 @@ mod tests {
         let context2 = KeyDerivation::create_context("test", 2);
         let context3 = KeyDerivation::create_context("other", 1);
         
-        assert_ne!(context1, context2); // Разные версии
-        assert_ne!(context1, context3); // Разные purpose
+        assert_ne!(context1, context2); // Different versions
+        assert_ne!(context1, context3); // Different purposes
         
-        // Проверим что контекст читабельный
+        // Check that context is readable
         let context_str = String::from_utf8(context1).unwrap();
         assert!(context_str.contains("KEMBridge"));
         assert!(context_str.contains("test"));

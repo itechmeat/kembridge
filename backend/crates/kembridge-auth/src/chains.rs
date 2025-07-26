@@ -79,8 +79,7 @@ impl EthereumVerifier {
         let mut hasher = sha2::Sha256::new();
         hasher.update(prefixed_message.as_bytes());
         let message_hash = hasher.finalize();
-        let message = Message::from_digest_slice(&message_hash)
-            .map_err(|_| AuthError::InvalidSignature)?;
+        let message = Message::from_digest(message_hash.into());
 
         // Parse signature (65 bytes: r + s + v)
         let sig_bytes = Self::hex_decode(signature)?;
@@ -89,13 +88,12 @@ impl EthereumVerifier {
         }
 
         let recovery_id = sig_bytes[64];
-        let recovery_id = secp256k1::ecdsa::RecoveryId::from_i32(recovery_id as i32)
-            .map_err(|_| AuthError::InvalidSignature)?;
+        let recovery_id = secp256k1::ecdsa::RecoveryId::from_u8_masked(recovery_id);
 
         let signature = RecoverableSignature::from_compact(&sig_bytes[0..64], recovery_id)
             .map_err(|_| AuthError::InvalidSignature)?;
 
-        secp.recover_ecdsa(&message, &signature)
+        secp.recover_ecdsa(message, &signature)
             .map_err(|_| AuthError::InvalidSignature)
     }
 
