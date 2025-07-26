@@ -8,7 +8,7 @@ edition = "2024"
 axum.workspace = true
 
 # Crypto
-secp256k1.workspace = true
+secp256k1 = { workspace = true, features = ["recovery"] }
 ed25519-dalek.workspace = true
 sha2.workspace = true
 rand.workspace = true
@@ -24,6 +24,7 @@ chrono.workspace = true
 # Async
 tokio.workspace = true
 futures.workspace = true
+async-trait.workspace = true
 
 # Serialization
 serde.workspace = true
@@ -35,3 +36,10 @@ thiserror.workspace = true
 
 # Validation
 validator.workspace = true
+
+# Additional dependencies for Web3 crypto
+hex = "0.4"
+bs58 = "0.5"
+
+# Redis for nonce management
+redis.workspace = true

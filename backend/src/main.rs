@@ -314,7 +314,11 @@ impl AppState {
 
         // Initialize services with dependency injection
         let auth_service = Arc::new(
-            services::AuthService::new(db.clone(), redis.clone(), &config).await?
+            services::AuthService::new(
+                db.clone(), 
+                redis.clone(), 
+                config.jwt_secret.clone()
+            ).await?
         );
 
         let quantum_service = Arc::new(
