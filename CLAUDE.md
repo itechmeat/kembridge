@@ -198,3 +198,16 @@ This is a hackathon version with simplified architecture. Production deployment 
 - Chat communication: Should be conducted in the user's preferred language
 
 This ensures code maintainability and international collaboration while respecting user communication preferences.
+
+## Git Workflow Guidelines
+
+**IMPORTANT**: Claude Code MUST NOT create git commits automatically.
+
+- **FORBIDDEN**: Using `git commit`, `git add .`, or any other git commands that modify repository state
+- **ALLOWED**: Reading git status, logs, and other read-only git operations for informational purposes
+- **REASON**: The user manages git workflow manually to maintain full control over version history
+
+When work is completed:
+1. Report what files were changed and summarize the work done
+2. Allow the user to review changes and create commits manually
+3. Never attempt to automatically stage or commit changes

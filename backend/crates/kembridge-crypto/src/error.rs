@@ -44,6 +44,36 @@ pub enum QuantumCryptoError {
     /// Generic internal error
     #[error("Internal error: {0}")]
     InternalError(String),
+    
+    // === Hybrid Cryptography Errors (Phase 3.3) ===
+    
+    /// AES encryption failed
+    #[error("AES encryption failed: {0}")]
+    EncryptionFailed(String),
+    
+    /// AES decryption failed
+    #[error("AES decryption failed: {0}")]
+    DecryptionFailed(String),
+    
+    /// Key derivation function failed
+    #[error("Key derivation failed: {0}")]
+    KeyDerivationFailed(String),
+    
+    /// HMAC generation or verification failed
+    #[error("MAC operation failed: {0}")]
+    MacError(String),
+    
+    /// Invalid key size for cryptographic operation
+    #[error("Invalid key size: expected {expected}, got {actual}")]
+    InvalidKeySize { expected: usize, actual: usize },
+    
+    /// Invalid data format or structure
+    #[error("Invalid data format: {0}")]
+    InvalidData(String),
+    
+    /// Hybrid scheme operation failed
+    #[error("Hybrid cryptography operation failed: {0}")]
+    HybridOperationFailed(String),
 }
 
 impl QuantumCryptoError {

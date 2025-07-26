@@ -281,19 +281,12 @@ async fn check_redis_health(manager: &ConnectionManager) -> anyhow::Result<Redis
 }
 
 async fn check_quantum_crypto_health() -> anyhow::Result<()> {
-    // TODO: Use real ML-KEM-1024 health check instead of mocks (Phase 3.1)
-    // Test quantum crypto module availability
-    // This is a placeholder - actual implementation would test ML-KEM-1024
-    // key generation and basic operations
+    // Phase 3.4 - Real ML-KEM-1024 health check integration
+    use kembridge_crypto::MlKemCrypto;
     
-    // Simulate quantum crypto check
-    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-    
-    // TODO: Use real quantum crypto health check instead of mocks (Phase 3.1)
-    // In real implementation, this would:
-    // 1. Generate a test ML-KEM-1024 keypair
-    // 2. Perform encapsulation/decapsulation test
-    // 3. Verify Dilithium-5 signature generation
+    // Perform actual ML-KEM-1024 round-trip verification
+    MlKemCrypto::verify_round_trip()
+        .map_err(|e| anyhow::anyhow!("ML-KEM-1024 health check failed: {}", e))?;
     
     Ok(())
 }
