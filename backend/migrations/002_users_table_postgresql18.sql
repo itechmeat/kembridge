@@ -130,10 +130,10 @@ CREATE POLICY users_system_access ON users
     FOR ALL TO postgres
     USING (true);
 
--- Future policy placeholder for user self-access
-CREATE POLICY users_self_access ON users
-    FOR ALL TO authenticated_user
-    USING (id = current_setting('app.current_user_id')::UUID);
+-- TODO: Future policy placeholder for user self-access (Phase 2.1 Authentication)
+-- CREATE POLICY users_self_access ON users
+--     FOR ALL TO authenticated_user
+--     USING (id = current_setting('app.current_user_id')::UUID);
 
 -- =====================================================
 -- PostgreSQL 18: Advanced Triggers and Functions

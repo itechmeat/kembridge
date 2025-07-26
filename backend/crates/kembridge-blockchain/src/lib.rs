@@ -1,3 +1,6 @@
+// TODO: These are mock implementations - Phase 4.1-4.2 will add real blockchain adapters
+#![allow(unused_variables, dead_code)]
+
 pub mod ethereum;
 pub mod near;
 pub mod types;

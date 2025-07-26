@@ -1,3 +1,6 @@
+// TODO: These are mock implementations - Phase 3.1 will add real post-quantum crypto
+#![allow(unused_variables)]
+
 pub mod kyber;
 pub mod dilithium;
 pub mod sphincs;
