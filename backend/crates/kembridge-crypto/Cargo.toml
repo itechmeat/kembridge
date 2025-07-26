@@ -2,26 +2,33 @@
 name = "kembridge-crypto"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Post-quantum cryptography module for KEMBridge using ML-KEM-1024"
+keywords = ["cryptography", "post-quantum", "ml-kem", "quantum-safe"]
+categories = ["cryptography"]
+readme = "README.md"
 
 [dependencies]
-# Post-quantum cryptography
-pqcrypto.workspace = true
-pqcrypto-kyber.workspace = true
+# Post-quantum cryptography - FIPS 203 ML-KEM
+ml-kem = "0.2.1"                    # Pure Rust ML-KEM-1024 implementation
 
-# Standard crypto
-sha2.workspace = true
-rand.workspace = true
-ed25519-dalek.workspace = true
-secp256k1.workspace = true
+# Core utilities  
+rand = "0.8"                        # Cryptographically secure RNG
+rand_core = "0.6.4"                 # RNG core traits (совместимость с ml-kem)
+zeroize = { version = "1.8.1", features = ["derive"] }  # Secure memory zeroing
 
-# Serialization
-serde.workspace = true
-serde_json.workspace = true
+# Serialization and data handling
+serde = { version = "1.0.217", features = ["derive"] }
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.38", features = ["serde"] }
 
 # Error handling
-anyhow.workspace = true
-thiserror.workspace = true
+thiserror = "2.0.11"               # Specialized error types
+anyhow = "1.0"                     # For legacy compatibility
 
-# Encoding
+# Encoding (for backward compatibility)
 hex = "0.4.3"
 base64 = "0.22.1"
+
+[dev-dependencies]
+tokio = { version = "1.42", features = ["macros", "rt"] }
