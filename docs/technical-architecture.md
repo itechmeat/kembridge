@@ -67,26 +67,26 @@ graph TB
     GATEWAY --> CRYPTO
     GATEWAY --> BRIDGE
     GATEWAY --> AI
-
+    
     BRIDGE --> ETH
     BRIDGE --> NEAR
     BRIDGE --> ONEINCH
-
+    
     CRYPTO --> PG
     BRIDGE --> PG
     AI --> PG
     ORACLE --> PG
-
+    
     GATEWAY --> REDIS
-
+    
     BRIDGE --> IPFS
-
+    
     %% Monitoring connections
     GATEWAY -.-> METRICS
     CRYPTO -.-> METRICS
     BRIDGE -.-> METRICS
     AI -.-> METRICS
-
+    
     METRICS --> LOGS
 ```
 
@@ -111,28 +111,28 @@ sequenceDiagram
     UI->>GW: POST /swap {from: ETH, to: NEAR, amount: 1}
     GW->>Auth: Проверка JWT токена
     Auth-->>GW: ✓ Авторизован
-
+    
     GW->>Oracle: Получить курс ETH/NEAR
     Oracle-->>GW: Курс: 1 ETH = 2,500 NEAR
-
+    
     GW->>AI: Анализ риска операции
     AI->>DB: Получить историю пользователя
     DB-->>AI: История транзакций
     AI-->>GW: Риск: НИЗКИЙ (score: 0.15)
-
+    
     GW->>QC: Генерация квантовых ключей
     QC-->>GW: {publicKey, encryptedPrivateKey}
-
+    
     GW->>Bridge: Инициализация свопа
     Bridge->>DB: Создать запись транзакции
     DB-->>Bridge: TX_ID: 0x1234...
-
+    
     Bridge->>ETH: Блокировка 1 ETH
     ETH-->>Bridge: ETH заблокирован (tx_hash)
-
+    
     Bridge->>NEAR: Минт 2,500 NEAR
     NEAR-->>Bridge: NEAR заминчен (tx_hash)
-
+    
     Bridge->>DB: Обновить статус: COMPLETED
     Bridge->>UI: Уведомление о завершении
     UI->>User: ✓ Своп завершен успешно
@@ -148,39 +148,39 @@ graph TB
             DILI[Dilithium-5<br/>Digital Signatures]
             HYBRID[Hybrid Crypto<br/>Classical + Quantum]
         end
-
+        
         subgraph "AI Security"
             ANOMALY[Anomaly Detection<br/>Real-time Analysis]
             RISK[Risk Scoring<br/>ML Models]
             ADAPTIVE[Adaptive Protection<br/>Dynamic Thresholds]
         end
-
+        
         subgraph "Traditional Security"
             OAUTH[OAuth 2.0<br/>PostgreSQL 18]
             JWT[JWT Tokens<br/>Session Management]
             RBAC[Role-Based Access<br/>Permissions]
         end
     end
-
+    
     subgraph "Threat Detection"
         MONITOR[Transaction Monitor<br/>Real-time Analysis]
         THREAT[Threat Intelligence<br/>Known Attack Patterns]
         ALERT[Alert System<br/>Automated Response]
     end
-
+    
     %% Connections
     MLKEM --> HYBRID
     DILI --> HYBRID
     HYBRID --> MONITOR
-
+    
     ANOMALY --> RISK
     RISK --> ADAPTIVE
     ADAPTIVE --> ALERT
-
+    
     OAUTH --> JWT
     JWT --> RBAC
     RBAC --> MONITOR
-
+    
     MONITOR --> THREAT
     THREAT --> ALERT
 ```
@@ -197,7 +197,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-
+    
     transactions {
         uuid id PK
         uuid user_id FK
@@ -213,7 +213,7 @@ erDiagram
         timestamp created_at
         timestamp completed_at
     }
-
+    
     risk_profiles {
         uuid id PK
         uuid user_id FK
@@ -222,7 +222,7 @@ erDiagram
         jsonb ml_features
         timestamp updated_at
     }
-
+    
     audit_logs {
         uuid id PK
         uuid transaction_id FK
@@ -230,7 +230,7 @@ erDiagram
         jsonb event_data
         timestamp created_at
     }
-
+    
     quantum_keys {
         uuid id PK
         uuid transaction_id FK
@@ -239,7 +239,7 @@ erDiagram
         string algorithm
         timestamp created_at
     }
-
+    
     users ||--o{ transactions : "creates"
     users ||--o{ risk_profiles : "has"
     transactions ||--o{ audit_logs : "generates"
@@ -255,35 +255,35 @@ graph LR
         SHADE[Shade Agent<br/>AI Security]
         QUANTUM[Quantum Crypto<br/>ML-KEM]
     end
-
+    
     subgraph "NEAR Protocol"
         CHAIN_SIG[Chain Signatures<br/>Cross-chain Control]
         CLICK_API[1Click API<br/>Simplified UX]
         CONTRACT[Smart Contract<br/>Bridge Logic]
     end
-
+    
     subgraph "External Chains"
         ETH[Ethereum<br/>ERC-20 Tokens]
         POLYGON[Polygon<br/>Future Support]
     end
-
+    
     subgraph "1inch Integration"
         FUSION[Fusion+<br/>Atomic Swaps]
         ROUTING[Route Optimization<br/>Best Prices]
     end
-
+    
     %% Connections
     BRIDGE --> CHAIN_SIG
     BRIDGE --> CLICK_API
     SHADE --> CONTRACT
     QUANTUM --> CONTRACT
-
+    
     CHAIN_SIG --> ETH
     CHAIN_SIG --> POLYGON
-
+    
     CLICK_API --> FUSION
     FUSION --> ROUTING
-
+    
     CONTRACT --> FUSION
 ```
 
@@ -388,19 +388,16 @@ graph TD
 ### Преимущества микросервисной архитектуры:
 
 **🚀 Масштабируемость:**
-
 - Независимое масштабирование каждого домена
 - Event Bus для асинхронной обработки
 - Горизонтальное масштабирование адаптеров
 
 **🔧 Гибкость разработки:**
-
 - Четкие границы доменов (Auth, Swap, Chain IO)
 - Простое добавление новых блокчейнов
 - Независимые команды разработки
 
 **🛡️ Надежность:**
-
 - Изоляция сбоев
 - Circuit breakers между сервисами
 - Распределенный мониторинг
@@ -413,30 +410,30 @@ graph TB
         DEV[Local Development<br/>Docker Compose]
         TEST[Unit Tests<br/>Integration Tests]
     end
-
+    
     subgraph "Hackathon Demo"
         DEMO[Demo Environment<br/>AWS/Digital Ocean]
         FRONTEND[React Frontend<br/>Vercel/Netlify]
         BACKEND[Rust Backend<br/>Docker Containers]
     end
-
+    
     subgraph "Blockchain Testnets"
         ETH_TEST[Ethereum Sepolia<br/>Testnet]
         NEAR_TEST[NEAR Testnet<br/>Testnet]
     end
-
+    
     subgraph "External Services"
         CHAINLINK[Chainlink<br/>Price Feeds]
         IPFS_NODE[IPFS Node<br/>Pinata/Fleek]
     end
-
+    
     %% Connections
     DEV --> TEST
     TEST --> DEMO
-
+    
     DEMO --> FRONTEND
     DEMO --> BACKEND
-
+    
     BACKEND --> ETH_TEST
     BACKEND --> NEAR_TEST
     BACKEND --> CHAINLINK
@@ -455,7 +452,6 @@ graph TB
 4. **Лучшая поддержка шифрования** - совместимость с постквантовыми алгоритмами
 
 **Применение в KEMBridge:**
-
 - Аутентификация пользователей через OAuth 2.0
 - Хранение зашифрованных квантовых ключей
 - Журналирование всех операций для аудита

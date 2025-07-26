@@ -7,7 +7,6 @@ KEMBridge реализует гибридную систему авториза�
 ## 🎯 Хакатон версия - только Web3 авторизация
 
 **Для хакатона (2-3 недели) мы реализуем ТОЛЬКО прямую Web3-авторизацию через кошельки:**
-
 - ✅ MetaMask
 - ✅ NEAR Wallet
 - ✅ WalletConnect
@@ -25,31 +24,31 @@ graph TB
         %% SOCIAL[Social Users - Future]
         %% ENTERPRISE[Enterprise Users - Future]
     end
-
+    
     subgraph "Authentication Layer"
         DIRECT[Direct Wallet Auth<br/>Signature Verification]
         %% WEB3AUTH[Web3Auth - Future]
         %% CORP_OAUTH[Corporate OAuth - Future]
     end
-
+    
     subgraph "PostgreSQL 18 - Ready for Future"
         OAUTH_CORE[Built-in OAuth 2.0<br/>Token Management]
         TOKEN_STORE[Token Storage<br/>Secure & Encrypted]
         USER_MAPPING[User Mapping<br/>Future-Ready Schema]
     end
-
+    
     subgraph "KEMBridge Backend"
         UNIFIED_AUTH[Auth API<br/>Web3 Only for Hackathon]
         BRIDGE_SERVICE[Bridge Service<br/>Quantum-Safe Operations]
         RISK_ENGINE[AI Risk Engine<br/>Behavioral Analysis]
     end
-
+    
     subgraph "Data Layer"
         USER_PROFILES[User Profiles<br/>Wallet-Based]
         TRANSACTION_HISTORY[Transaction History<br/>Per Wallet]
         AUDIT_LOGS[Audit Logs<br/>Compliance Ready]
     end
-
+    
     %% Active connections for hackathon
     CRYPTO --> DIRECT
     DIRECT --> OAUTH_CORE
@@ -73,49 +72,49 @@ graph TB
         SOCIAL[Social Users<br/>Google/Twitter/Discord]
         ENTERPRISE[Enterprise Users<br/>Corporate OAuth]
     end
-
+    
     subgraph "Authentication Layer - Full Version"
         DIRECT[Direct Wallet Auth<br/>Signature Verification]
         WEB3AUTH[Web3Auth<br/>Social → Wallet]
         CORP_OAUTH[Corporate OAuth<br/>Azure AD/Auth0]
     end
-
+    
     subgraph "PostgreSQL 18 OAuth Engine - Full Version"
         OAUTH_CORE[Built-in OAuth 2.0<br/>Token Management]
         TOKEN_STORE[Token Storage<br/>Secure & Encrypted]
         USER_MAPPING[User Mapping<br/>Multiple Auth Methods]
     end
-
+    
     subgraph "KEMBridge Backend - Full Version"
         UNIFIED_AUTH[Unified Auth API<br/>All Auth Methods]
         BRIDGE_SERVICE[Bridge Service<br/>Quantum-Safe Operations]
         RISK_ENGINE[AI Risk Engine<br/>Behavioral Analysis]
     end
-
+    
     subgraph "Data Layer - Full Version"
         USER_PROFILES[User Profiles<br/>Multi-Auth Support]
         TRANSACTION_HISTORY[Transaction History<br/>Per User/Wallet]
         AUDIT_LOGS[Audit Logs<br/>Compliance Ready]
     end
-
+    
     %% Connections for full version
     CRYPTO --> DIRECT
     SOCIAL --> WEB3AUTH
     ENTERPRISE --> CORP_OAUTH
-
+    
     DIRECT --> OAUTH_CORE
     WEB3AUTH --> OAUTH_CORE
     CORP_OAUTH --> OAUTH_CORE
-
+    
     OAUTH_CORE --> TOKEN_STORE
     OAUTH_CORE --> USER_MAPPING
-
+    
     TOKEN_STORE --> UNIFIED_AUTH
     USER_MAPPING --> UNIFIED_AUTH
-
+    
     UNIFIED_AUTH --> BRIDGE_SERVICE
     UNIFIED_AUTH --> RISK_ENGINE
-
+    
     BRIDGE_SERVICE --> USER_PROFILES
     BRIDGE_SERVICE --> TRANSACTION_HISTORY
     RISK_ENGINE --> AUDIT_LOGS
@@ -403,7 +402,6 @@ sequenceDiagram
 ## Схема базы данных (готова для будущих версий)
 
 **Для хакатона используются только:**
-
 - ✅ `users` - базовая информация о пользователях
 - ✅ `user_auth_methods` - только `auth_type = 'direct_wallet'`
 - ✅ `user_sessions` - JWT токены для Web3 авторизации

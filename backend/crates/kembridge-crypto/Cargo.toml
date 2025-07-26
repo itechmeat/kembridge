@@ -1,0 +1,27 @@
+[package]
+name = "kembridge-crypto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Post-quantum cryptography
+pqcrypto.workspace = true
+pqcrypto-kyber.workspace = true
+
+# Standard crypto
+sha2.workspace = true
+rand.workspace = true
+ed25519-dalek.workspace = true
+secp256k1.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Encoding
+hex = "0.4.3"
+base64 = "0.22.1"
