@@ -25,6 +25,7 @@ mod services;
 mod utils;
 mod state;
 mod websocket;
+mod monitoring;
 
 // Services are used via full paths in AppState
 
@@ -227,6 +228,9 @@ fn create_v1_routes() -> Router<AppState> {
 
         // Admin routes (protected)
         .nest("/admin", routes::admin::create_routes())
+
+        // Monitoring dashboard routes (protected)
+        .nest("/monitoring", routes::monitoring::monitoring_routes())
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {
