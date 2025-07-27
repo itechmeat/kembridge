@@ -35,7 +35,7 @@ impl FeeCalculator {
     ) -> Result<FeeBreakdown, DynamicPricingError> {
         info!("Calculating bridge fees for {} {} -> {} on {}", amount, from_token, to_token, to_chain);
 
-        // TODO: Implement real fee calculation logic
+        // TODO (feat): Implement real fee calculation logic (P3.1)
         // This should include:
         // 1. Base bridge fee calculation
         // 2. Gas fee estimation for both chains
@@ -75,7 +75,7 @@ impl FeeCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating base fee for {} {}", amount, token);
 
-        // TODO: Implement dynamic base fee calculation
+        // TODO (feat): Implement dynamic base fee calculation (P3.1)
         // This should consider:
         // 1. Bridge operation complexity
         // 2. Security requirements
@@ -98,7 +98,7 @@ impl FeeCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating gas fees for {} -> {} on {}", from_token, to_token, to_chain);
 
-        // TODO: Implement real gas fee calculation
+        // TODO (feat): Implement real gas fee calculation (P3.1)
         // This should include:
         // 1. Current gas prices on both chains
         // 2. Transaction complexity estimation
@@ -126,7 +126,7 @@ impl FeeCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating protocol fee for {} {}", amount, token);
 
-        // TODO: Implement dynamic protocol fee calculation
+        // TODO (feat): Implement dynamic protocol fee calculation (P3.1)
         // This should consider:
         // 1. Protocol treasury requirements
         // 2. Governance decisions
@@ -148,7 +148,7 @@ impl FeeCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating slippage protection fee for {} {}", amount, token);
 
-        // TODO: Implement dynamic slippage protection fee calculation
+        // TODO (feat): Implement dynamic slippage protection fee calculation (P3.1)
         // This should consider:
         // 1. Market volatility
         // 2. Liquidity conditions
@@ -170,7 +170,7 @@ impl FeeCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating volume discount for user {} with amount {}", user_id, amount);
 
-        // TODO: Implement volume-based discount calculation
+        // TODO (feat): Implement volume-based discount calculation (P3.1)
         // This should consider:
         // 1. User's historical trading volume
         // 2. Tier-based discount structure
@@ -188,25 +188,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_fee_calculator_creation() {
-        // TODO: Implement proper tests with mocked price oracle
+        // TODO (test): Implement proper tests with mocked price oracle (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_base_fee_calculation() {
-        // TODO: Test base fee calculation with different amounts
+        // TODO (test): Test base fee calculation with different amounts (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_gas_fee_calculation() {
-        // TODO: Test gas fee calculation with different chains
+        // TODO (test): Test gas fee calculation with different chains (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_protocol_fee_calculation() {
-        // TODO: Test protocol fee calculation
+        // TODO (test): Test protocol fee calculation (E4.1)
         assert_eq!(1, 1);
     }
 }

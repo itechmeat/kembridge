@@ -264,7 +264,7 @@ async fn get_system_health_stats(state: &AppState) -> SystemHealthStats {
     let memory_usage_mb = get_memory_usage();
     
     SystemHealthStats {
-        api_uptime_seconds: 3600, // TODO: Implement actual uptime tracking
+        api_uptime_seconds: 3600, // TODO (feat): Implement actual uptime tracking (E3.1)
         redis_connected,
         database_connected,
         ai_engine_connected,
@@ -299,7 +299,7 @@ async fn check_ai_engine_connection(state: &AppState) -> bool {
 
 /// Get memory usage
 fn get_memory_usage() -> u64 {
-    // TODO: Implement actual memory usage monitoring
+    // TODO (MOCK WARNING): Implement actual memory usage monitoring
     // For now, return mock value
     256
 }
@@ -311,7 +311,7 @@ pub async fn get_real_time_events(
 ) -> Result<Json<Vec<RealtimeEvent>>, StatusCode> {
     info!("Getting real-time events for dashboard");
     
-    // TODO: Implement actual event streaming
+    // TODO (MOCK WARNING): Implement actual event streaming
     // For now, return mock events
     let events = vec![
         RealtimeEvent {

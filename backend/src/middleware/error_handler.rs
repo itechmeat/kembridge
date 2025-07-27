@@ -305,7 +305,7 @@ mod tests {
         assert_eq!(ApiError::Authorization.status_code(), StatusCode::FORBIDDEN);
         assert_eq!(ApiError::NotFound { resource: "user".to_string() }.status_code(), StatusCode::NOT_FOUND);
         assert_eq!(ApiError::RateLimit { limit: 100, window: 60 }.status_code(), StatusCode::TOO_MANY_REQUESTS);
-        assert_eq!(ApiError::Internal.status_code(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(ApiError::Internal("test error".to_string()).status_code(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[test]
@@ -323,6 +323,6 @@ mod tests {
         
         // Server errors should log as errors
         assert!(ApiError::Database(sqlx::Error::RowNotFound).should_log_as_error());
-        assert!(ApiError::Internal.should_log_as_error());
+        assert!(ApiError::Internal("test error".to_string()).should_log_as_error());
     }
 }

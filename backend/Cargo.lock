@@ -1208,9 +1208,9 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "4.2.0"
+version = "4.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "373b7c5dbd637569a2cca66e8d66b8c446a1e7bf064ea321d265d7b3dfe7c97e"
+checksum = "97fb8b7c4503de7d6ae7b42ab72a5a59857b4c937ec27a3d4539dba95b5ab2be"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -1286,6 +1286,36 @@ name = "data-encoding"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a2330da5de22e8a3cb63252ce2abb30116bf5265e89c0e01bc17015ce30a476"
+
+[[package]]
+name = "deadpool"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ed5957ff93768adf7a65ab167a17835c3d2c3c50d084fe305174c112f468e2f"
+dependencies = [
+ "deadpool-runtime",
+ "num_cpus",
+ "tokio",
+]
+
+[[package]]
+name = "deadpool-redis"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfae6799b68a735270e4344ee3e834365f707c72da09c9a8bb89b45cc3351395"
+dependencies = [
+ "deadpool",
+ "redis 0.27.6",
+]
+
+[[package]]
+name = "deadpool-runtime"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
+dependencies = [
+ "tokio",
+]
 
 [[package]]
 name = "der"
@@ -1512,7 +1542,7 @@ version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70e796c081cee67dc755e1a36a0a172b897fab85fc3f6bc48307991f64e4eca9"
 dependencies = [
- "curve25519-dalek 4.2.0",
+ "curve25519-dalek 4.1.3",
  "ed25519 2.2.3",
  "rand_core 0.6.4",
  "serde",
@@ -1897,6 +1927,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "winapi",
  "ws_stream_wasm",
 ]
 
@@ -1990,9 +2021,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.3.0"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24"
+checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "filetime"
@@ -3035,6 +3066,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3176,7 +3216,7 @@ dependencies = [
  "hex",
  "jsonwebtoken 9.3.1",
  "rand 0.8.5",
- "redis",
+ "redis 0.32.4",
  "secp256k1 0.31.1",
  "serde",
  "serde_json",
@@ -3200,6 +3240,7 @@ dependencies = [
  "bigdecimal",
  "chrono",
  "config",
+ "deadpool-redis",
  "dotenvy",
  "futures-util",
  "headers",
@@ -3211,7 +3252,7 @@ dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
  "rand 0.8.5",
- "redis",
+ "redis 0.32.4",
  "reqwest 0.12.22",
  "serde",
  "serde_json",
@@ -3290,6 +3331,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "chrono",
+ "ethers",
  "hex",
  "hkdf",
  "hmac",
@@ -3300,6 +3342,7 @@ dependencies = [
  "sha2 0.10.9",
  "thiserror 2.0.12",
  "tokio",
+ "tracing",
  "uuid 1.17.0",
  "zeroize",
 ]
@@ -3312,7 +3355,7 @@ dependencies = [
  "bigdecimal",
  "chrono",
  "config",
- "redis",
+ "redis 0.32.4",
  "serde",
  "serde_json",
  "sqlx",
@@ -3677,9 +3720,9 @@ dependencies = [
 
 [[package]]
 name = "near-account-id"
-version = "1.1.2"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4826896a974cd6d1c0d805cb8c177481e1d8d655cfeb3cc258f912b25649d2d3"
+checksum = "8542f031adc257a27ba46ad904c241a88470ee95130663a9e5c08cf8e124f4d4"
 dependencies = [
  "borsh 1.5.7",
  "serde",
@@ -3769,11 +3812,11 @@ dependencies = [
  "blake2 0.10.6",
  "borsh 1.5.7",
  "bs58 0.4.0",
- "curve25519-dalek 4.2.0",
+ "curve25519-dalek 4.1.3",
  "derive_more 1.0.0",
  "ed25519-dalek 2.2.0",
  "hex",
- "near-account-id 1.1.2",
+ "near-account-id 1.1.3",
  "near-config-utils 0.30.3",
  "near-schema-checker-lib",
  "near-stdx 0.30.3",
@@ -3850,7 +3893,7 @@ checksum = "3e364f850512d7f1ee1eb398e1da85fd3ef95eb3cbce8db2d505eed054bbe848"
 dependencies = [
  "borsh 1.5.7",
  "enum-map",
- "near-account-id 1.1.2",
+ "near-account-id 1.1.3",
  "near-primitives-core",
  "near-schema-checker-lib",
  "num-rational",
@@ -3915,7 +3958,7 @@ dependencies = [
  "bs58 0.4.0",
  "derive_more 1.0.0",
  "enum-map",
- "near-account-id 1.1.2",
+ "near-account-id 1.1.3",
  "near-schema-checker-lib",
  "num-rational",
  "serde",
@@ -4004,7 +4047,7 @@ dependencies = [
  "json-patch",
  "libc",
  "near-abi-client",
- "near-account-id 1.1.2",
+ "near-account-id 1.1.3",
  "near-crypto 0.30.3",
  "near-gas",
  "near-jsonrpc-client",
@@ -5065,6 +5108,28 @@ dependencies = [
 
 [[package]]
 name = "redis"
+version = "0.27.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09d8f99a4090c89cc489a94833c901ead69bfbf3877b4867d5482e321ee875bc"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "bytes",
+ "combine",
+ "futures-util",
+ "itertools 0.13.0",
+ "itoa",
+ "num-bigint 0.4.6",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
 version = "0.32.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1f66bf4cac9733a23bcdf1e0e01effbaaad208567beba68be8f67e5f4af3ee1"
@@ -5505,15 +5570,15 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.0.7"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c71e83d6afe7ff64890ec6b71d6a69bb8a610ab78ce364b3352876bb4c801266"
+checksum = "11181fbabf243db407ef8df94a6ce0b2f9a733bd8be4ad02b4eda9602296cac8"
 dependencies = [
  "bitflags 2.9.1",
  "errno",
  "libc",
  "linux-raw-sys 0.9.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6647,7 +6712,7 @@ dependencies = [
  "fastrand",
  "getrandom 0.3.3",
  "once_cell",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "windows-sys 0.59.0",
 ]
 
@@ -8034,7 +8099,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af3a19837351dc82ba89f8a125e22a3c475f05aba604acc023d62b2739ae2909"
 dependencies = [
  "libc",
- "rustix 1.0.7",
+ "rustix 1.0.8",
 ]
 
 [[package]]

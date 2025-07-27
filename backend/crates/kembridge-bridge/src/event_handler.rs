@@ -323,7 +323,7 @@ impl BridgeEventHandler {
             "Creating incoming swap from Ethereum event"
         );
 
-        // TODO: Implement creation of incoming swap operation
+        // TODO (feat): Implement creation of incoming swap operation (P2.1)
         // This would involve:
         // 1. Create a new user if address doesn't exist
         // 2. Create SwapOperation with detected parameters
@@ -352,7 +352,7 @@ impl BridgeEventHandler {
             "Creating incoming swap from NEAR event"
         );
 
-        // TODO: Implement creation of incoming swap operation for NEAR → ETH
+        // TODO (feat): Implement creation of incoming swap operation (P2.1) for NEAR → ETH
         // Similar to Ethereum version but for NEAR side
 
         warn!("Incoming NEAR swap creation not yet implemented - would create swap for quantum_hash: {}", quantum_hash);

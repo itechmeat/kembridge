@@ -202,8 +202,12 @@ async fn main() -> anyhow::Result<()> {
         redis::Client::open(config.redis_url.as_str())?
     ).await?;
 
+    // Initialize Redis connection pool for rate limiting
+    let redis_pool = deadpool_redis::Config::from_url(&config.redis_url)
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))?;
+
     // Create application state with dependency injection
-    let app_state = AppState::new(db_pool, redis_manager, config.clone()).await?;
+    let app_state = AppState::new(db_pool, redis_manager, redis_pool, config.clone()).await?;
 
     // Build application with comprehensive middleware stack
     let app = create_application(app_state).await?;

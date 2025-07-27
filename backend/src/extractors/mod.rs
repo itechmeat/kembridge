@@ -1,5 +1,5 @@
 // src/extractors/mod.rs - Custom Axum extractors (Future implementation)
-// TODO: These are placeholder extractors for future phases
+// TODO (info): These are placeholder extractors for future phases
 #![allow(dead_code)]
 
 pub mod auth;

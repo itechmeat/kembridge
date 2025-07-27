@@ -114,9 +114,9 @@ impl RiskIntegrationService {
                 if self.fallback_to_allow {
                     warn!(
                         swap_id = %swap_operation.swap_id,
-                        "Risk analysis failed, falling back to allow (fail-open mode)"
+                        "Risk analysis failed, falling back to allow (fail-open mode)" // TODO (MOCK WARNING): Remove fallback mode
                     );
-                    Ok(self.create_fallback_response(swap_operation))
+                    Ok(self.create_fallback_response(swap_operation)) // TODO (MOCK WARNING): Remove fallback response
                 } else {
                     Err(BridgeError::ValidationError(format!("Risk analysis failed: {}", e)))
                 }
@@ -375,7 +375,7 @@ impl RiskIntegrationService {
             source_chain: swap_operation.from_chain.clone(),
             destination_chain: swap_operation.to_chain.clone(),
             amount: amount_f64,
-            source_address: None, // TODO: Extract from transaction data
+            source_address: None, // TODO (check): Extract from transaction data
             destination_address: Some(swap_operation.recipient.clone()),
             transaction_metadata,
         })
@@ -394,7 +394,7 @@ impl RiskIntegrationService {
         }
     }
 
-    /// Create fallback response when risk analysis fails
+    /// TODO (MOCK WARNING): Create fallback response when risk analysis fails - remove this fallback mechanism
     fn create_fallback_response(&self, swap_operation: &SwapOperation) -> RiskAnalysisResponse {
         RiskAnalysisResponse {
             transaction_id: swap_operation.swap_id,
@@ -419,7 +419,7 @@ impl RiskIntegrationService {
         *thresholds = new_thresholds;
     }
 
-    /// Update transaction risk score in database (Phase 5.2.5)
+    /// TODO (check): Update transaction risk score in database
     async fn update_transaction_risk_score(
         &self,
         swap_operation: &SwapOperation,

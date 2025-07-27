@@ -82,6 +82,11 @@ services:
       - CHAINLINK_ETH_USD_FEED=${CHAINLINK_ETH_USD_FEED:-0x694AA1769357215DE4FAC081bf1f309aDC325306}
       - CHAINLINK_NEAR_USD_FEED=${CHAINLINK_NEAR_USD_FEED:-0x0000000000000000000000000000000000000000}
       
+      # Bridge Contract Configuration (H4: Real Bridge Integration)
+      # These must be set in .env file after contract deployment
+      - BRIDGE_CONTRACT_ADDRESS=${BRIDGE_CONTRACT_ADDRESS}
+      - BRIDGE_CONTRACT_DEPLOYED_BLOCK=${BRIDGE_CONTRACT_DEPLOYED_BLOCK}
+      
       - RUST_LOG=${RUST_LOG:-debug}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:4001}
     volumes:

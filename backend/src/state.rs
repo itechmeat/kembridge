@@ -19,6 +19,7 @@ use kembridge_database::TransactionService;
 pub struct AppState {
     pub db: sqlx::PgPool,
     pub redis: ConnectionManager,
+    pub redis_pool: deadpool_redis::Pool,
     pub config: AppConfig,
     pub auth_service: Arc<AuthService>,
     pub user_service: Arc<UserService>,
@@ -42,6 +43,7 @@ impl AppState {
     pub async fn new(
         db: sqlx::PgPool,
         redis: ConnectionManager,
+        redis_pool: deadpool_redis::Pool,
         config: AppConfig,
     ) -> anyhow::Result<Self> {
         // Initialize services with dependency injection
@@ -78,7 +80,7 @@ impl AppState {
         );
 
         // Initialize bridge service with risk integration (Phase 5.2.7)
-        // TODO: Temporary fallback while fixing Ethereum adapter configuration
+        // TODO (MOCK WARNING): Temporary fallback while fixing Ethereum adapter configuration
         let bridge_service = match BridgeService::new(
             db.clone(),
             quantum_service.clone(),
@@ -151,6 +153,7 @@ impl AppState {
         Ok(Self {
             db,
             redis,
+            redis_pool,
             config,
             auth_service,
             user_service,

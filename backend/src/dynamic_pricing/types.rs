@@ -2,7 +2,7 @@
 
 use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
-// use utoipa::ToSchema; // TODO: Add back ToSchema when BigDecimal support is resolved
+// use utoipa::ToSchema; // TODO (fix): Add back ToSchema when BigDecimal support is resolved
 use uuid::Uuid;
 
 use crate::price_oracle::types::PriceError;

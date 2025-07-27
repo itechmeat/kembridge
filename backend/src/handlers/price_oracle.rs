@@ -271,7 +271,7 @@ pub async fn get_cache_stats(
     info!("Getting cache statistics");
     
     // For now, return static cache stats until full cache integration
-    // TODO: Add real cache statistics when full price oracle cache is integrated
+    // TODO (feat): Add real cache statistics when full price oracle cache is integrated (P4.2)
     let response = CacheStatsResponse {
         total_keys: CACHE_TOTAL_KEYS_DEFAULT,
         primary_prices: CACHE_PRIMARY_PRICES_DEFAULT,
@@ -304,7 +304,7 @@ pub async fn clear_cache(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     info!("Clearing price cache");
     
-    // TODO: Integrate with actual PriceOracleService cache clearing when full cache is implemented
+    // TODO (feat): Integrate with actual PriceOracleService cache clearing when full cache is implemented (P4.2)
     // For now, just return success since quick oracle doesn't have persistent cache
     Ok(Json(serde_json::json!({
         "message": "Cache cleared successfully (quick oracle mode)",
@@ -336,7 +336,7 @@ pub async fn create_price_alert(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     info!("Creating price alert for {} at ${}", request.symbol, request.target_price);
     
-    // TODO: Integrate with actual alert system
+    // TODO (feat): Integrate with actual alert system (P4.2)
     Ok(Json(serde_json::json!({
         "id": Uuid::new_v4(),
         "user_id": user.user_id,
@@ -355,7 +355,7 @@ pub async fn get_user_alerts(
 ) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
     info!("Getting price alerts for user {}", user.user_id);
     
-    // TODO: Integrate with actual alert system
+    // TODO (feat): Integrate with actual alert system (P4.2)
     let alerts = vec![
         serde_json::json!({
             "id": Uuid::new_v4(),
@@ -379,7 +379,7 @@ pub async fn delete_price_alert(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     info!("Deleting price alert {} for user {}", alert_id, user.user_id);
     
-    // TODO: Integrate with actual alert system
+    // TODO (feat): Integrate with actual alert system (P4.2)
     Ok(Json(serde_json::json!({
         "message": "Alert deleted successfully",
         "alert_id": alert_id,

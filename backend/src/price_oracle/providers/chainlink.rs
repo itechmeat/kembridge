@@ -16,7 +16,7 @@ use crate::price_oracle::types::{PriceProvider, PriceData, PriceError, TradingPa
 const ETH_USD_FEED: &str = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 const BTC_USD_FEED: &str = "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c";
 
-// TODO: Add support for other networks (testnet, arbitrum, polygon, etc.)
+// TODO (feat): Add support for other networks (testnet, arbitrum, polygon, etc.) (P4.1)
 
 /// Chainlink Price Feed data structure
 #[derive(Debug, Deserialize)]
@@ -49,7 +49,7 @@ impl ChainlinkProvider {
             .build()
             .map_err(|e| PriceError::ConfigError(format!("Failed to create HTTP client: {}", e)))?;
         
-        // TODO: Move feed addresses to configuration
+        // TODO (feat): Move feed addresses to configuration (P4.1)
         let mut feed_addresses = HashMap::new();
         feed_addresses.insert(TradingPair::EthUsd, ETH_USD_FEED.to_string());
         feed_addresses.insert(TradingPair::BtcUsd, BTC_USD_FEED.to_string());
@@ -73,14 +73,14 @@ impl ChainlinkProvider {
         let feed_address = self.feed_addresses.get(&pair)
             .ok_or_else(|| PriceError::InvalidSymbol(pair.to_symbol().to_string()))?;
         
-        // TODO: Implement real Chainlink aggregator contract calls
+        // TODO (MOCK WARNING): Implement real Chainlink aggregator contract calls (P4.1)
         // This requires Ethereum RPC integration and contract ABI
         Err(PriceError::ProviderUnavailable("Chainlink provider not yet fully implemented - requires contract integration".to_string()))
     }
     
-    // TODO: Remove dev-only mock functions when Chainlink integration is complete
+    // TODO (MOCK WARNING): Remove dev-only mock functions when Chainlink integration is complete
     
-    /// TODO: Remove when real Chainlink contract integration is implemented
+    /// TODO (MOCK WARNING): Remove when real Chainlink contract integration is implemented
     fn get_mock_price(&self, pair: TradingPair) -> PriceData {
         let (price, confidence) = match pair {
             TradingPair::EthUsd => (Decimal::from(2000), 0.95),
@@ -101,9 +101,9 @@ impl ChainlinkProvider {
         }
     }
     
-    /// TODO: Replace with real Chainlink aggregator contract calls
+    /// TODO (MOCK WARNING): Replace with real Chainlink aggregator contract calls
     async fn get_mock_price_from_api(&self, pair: TradingPair) -> Result<PriceData, PriceError> {
-        // TODO: Replace with Ethereum RPC calls to Chainlink aggregator contract
+        // TODO (MOCK WARNING): Replace with Ethereum RPC calls to Chainlink aggregator contract
         
         // Simulate network delay
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -134,7 +134,7 @@ impl ChainlinkProvider {
         })
     }
     
-    /// Real Chainlink contract call (for production)
+    /// Chainlink contract call
     #[allow(dead_code)]
     async fn call_chainlink_contract(&self, feed_address: &str) -> Result<PriceData, PriceError> {
         // This would implement actual Web3 calls to Chainlink aggregator contracts

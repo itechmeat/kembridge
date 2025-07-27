@@ -223,7 +223,7 @@ async fn check_database_health(pool: &sqlx::PgPool) -> anyhow::Result<String> {
     .fetch_one(pool)
     .await?;
 
-    // TODO: Verify PostgreSQL 18 specific features when UUIDv7 is available
+    // TODO (check): Verify PostgreSQL 18 specific features when UUIDv7 is available
     // let _uuid_test = sqlx::query!("SELECT generate_uuidv7() as test_uuid")
     //     .fetch_one(pool)
     //     .await?;
@@ -292,13 +292,14 @@ async fn check_quantum_crypto_health() -> anyhow::Result<()> {
 }
 
 async fn check_ai_engine_health(ai_url: &str) -> anyhow::Result<String> {
-    // TODO: Use real reqwest client instead of mocks (Phase 1.3.5)
+    // TODO (MOCK WARNING): Use real reqwest client instead of mocks (Phase 1.3.5)
     // For now, simulate the check
     let _ai_url = ai_url; // Avoid unused variable warning
     
     // Simulate successful check
     Ok("v1.0.0-mock".to_string())
     
+    // TODO (check): what the comments?
     /* Real implementation would be:
     let client = reqwest::Client::new();
     let health_url = format!("{}/health", ai_url);

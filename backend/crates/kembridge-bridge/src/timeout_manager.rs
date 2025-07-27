@@ -105,7 +105,7 @@ impl TimeoutManager {
     ) -> Result<(), BridgeError> {
         tracing::info!("Rolling back ETH lock for swap {}", operation.swap_id);
         
-        // Mock implementation for now - will be replaced with actual Ethereum contract calls
+        // TODO (MOCK WARNING): Mock implementation for now - will be replaced with actual Ethereum contract calls
         // This would normally:
         // 1. Call Ethereum bridge contract to unlock tokens
         // 2. Refund gas fees if necessary
@@ -124,7 +124,7 @@ impl TimeoutManager {
     ) -> Result<(), BridgeError> {
         tracing::info!("Rolling back NEAR mint and ETH lock for swap {}", operation.swap_id);
         
-        // Mock implementation for now - will be replaced with actual contract calls
+        // TODO (MOCK WARNING): Mock implementation for now - will be replaced with actual contract calls
         // This would normally:
         // 1. Call NEAR bridge contract to burn wrapped tokens
         // 2. Call Ethereum bridge contract to unlock tokens

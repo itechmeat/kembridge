@@ -22,6 +22,7 @@ sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "migrate", "bigdecimal"
 ] }
 redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
+deadpool-redis = "0.18.0"
 bigdecimal = { version = "0.4", features = ["serde"] }
 
 # Serialization & JSON
@@ -124,6 +125,7 @@ futures-util.workspace = true
 # State management
 sqlx.workspace = true
 redis.workspace = true
+deadpool-redis.workspace = true
 
 # Serialization
 serde.workspace = true
