@@ -288,7 +288,7 @@ fn create_v1_routes() -> Router<AppState> {
         .nest("/swap", routes::oneinch::create_oneinch_routes())
         
         // Bridge-1inch integration routes (protected)
-        .nest("/bridge", routes::bridge_oneinch::create_bridge_oneinch_routes())
+        .nest("/bridge-oneinch", routes::bridge_oneinch::create_bridge_oneinch_routes())
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {

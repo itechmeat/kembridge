@@ -5,7 +5,7 @@ use redis::aio::ConnectionManager;
 use crate::config::AppConfig;
 use crate::services::{
     AuthService, UserService, BridgeService, QuantumService, AiClient,
-    RiskIntegrationService, ManualReviewService,
+    RiskIntegrationService, ManualReviewService, BridgeIntegrationService,
 };
 use crate::websocket::WebSocketRegistry;
 use crate::monitoring::MonitoringService;
@@ -33,6 +33,7 @@ pub struct AppState {
     pub price_oracle_service: Arc<PriceOracleService>,
     pub oneinch_service: Arc<OneinchService>,
     pub dynamic_pricing_service: Arc<DynamicPricingService>,
+    pub bridge_integration_service: Arc<BridgeIntegrationService>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -134,9 +135,17 @@ impl AppState {
             )
         );
 
+        // Initialize bridge integration service (Phase 6.2.1)
+        let bridge_integration_service = Arc::new(
+            BridgeIntegrationService::new(
+                oneinch_service.clone(),
+                bridge_service.clone(),
+            )
+        );
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, and dynamic pricing service",
-            14 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, dynamic_pricing, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, dynamic pricing service, and bridge integration service",
+            15 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, dynamic_pricing, bridge_integration, metrics
         );
 
         Ok(Self {
@@ -156,6 +165,7 @@ impl AppState {
             price_oracle_service,
             oneinch_service,
             dynamic_pricing_service,
+            bridge_integration_service,
             metrics,
         })
     }

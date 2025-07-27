@@ -151,6 +151,7 @@ pub const CACHE_PROVIDER_PRICES_DEFAULT: usize = 5;
 pub const CACHE_HIT_RATE_DEFAULT: f64 = 0.85;
 
 // 1inch Fusion+ API configuration
+pub const ONEINCH_SWAP_API_BASE: &str = "https://api.1inch.dev/swap/v6.0";
 pub const ONEINCH_FUSION_API_BASE: &str = "https://api.1inch.dev/fusion";
 pub const ONEINCH_FUSION_API_VERSION: &str = "v1.0";
 pub const ONEINCH_FUSION_TIMEOUT_SEC: u64 = 30;

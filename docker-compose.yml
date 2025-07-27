@@ -60,14 +60,30 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
-      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
-      - REDIS_URL=redis://:dev_redis_password@redis:6379
-      - JWT_SECRET=hackathon-super-secret-key-change-in-production
-      - AI_ENGINE_URL=http://ai-engine:4003
-      - ETHEREUM_RPC_URL=https://rpc.sepolia.org
-      - NEAR_RPC_URL=https://rpc.testnet.near.org
-      - RUST_LOG=debug
-      - CORS_ORIGINS=http://localhost:4001
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:dev_password@postgres:5432/kembridge_dev}
+      - REDIS_URL=${REDIS_URL:-redis://:dev_redis_password@redis:6379}
+      - JWT_SECRET=${JWT_SECRET:-hackathon-super-secret-key-change-in-production}
+      - AI_ENGINE_URL=${AI_ENGINE_URL:-http://ai-engine:4003}
+      
+      # Ethereum Configuration
+      # Configure in .env file - see .env.example
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://rpc.sepolia.org}
+      - ETHEREUM_CHAIN_ID=${ETHEREUM_CHAIN_ID:-11155111}
+      
+      # NEAR Protocol Configuration  
+      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.testnet.near.org}
+      - NEAR_NETWORK_ID=${NEAR_NETWORK_ID:-testnet}
+      
+      # 1inch API Configuration
+      # Configure in .env file - see .env.example
+      - ONEINCH_API_KEY=${ONEINCH_API_KEY}
+      
+      # Chainlink Price Feeds (for price oracle)
+      - CHAINLINK_ETH_USD_FEED=${CHAINLINK_ETH_USD_FEED:-0x694AA1769357215DE4FAC081bf1f309aDC325306}
+      - CHAINLINK_NEAR_USD_FEED=${CHAINLINK_NEAR_USD_FEED:-0x0000000000000000000000000000000000000000}
+      
+      - RUST_LOG=${RUST_LOG:-debug}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:4001}
     volumes:
       - ./backend:/app
       - backend_target:/app/target # Cache Rust builds
@@ -91,8 +107,8 @@ services:
       - "4003:4003"
     environment:
       - PORT=4003
-      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
-      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:dev_password@postgres:5432/kembridge_dev}
+      - REDIS_URL=${REDIS_URL:-redis://:dev_redis_password@redis:6379}
       - PYTHONPATH=/app
       - MODEL_PATH=/app/models
     volumes:
@@ -119,11 +135,11 @@ services:
       - "4001:4001" # Vite dev server
     environment:
       - PORT=4001
-      - VITE_API_BASE_URL=http://localhost:4000/api/v1
-      - VITE_AI_ENGINE_URL=http://localhost:4003
-      - VITE_WALLET_CONNECT_PROJECT_ID=YOUR_WALLET_CONNECT_PROJECT_ID
-      - VITE_CHAIN_ID_ETHEREUM=11155111
-      - VITE_CHAIN_ID_NEAR=testnet
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:4000/api/v1}
+      - VITE_AI_ENGINE_URL=${VITE_AI_ENGINE_URL:-http://localhost:4003}
+      - VITE_WALLET_CONNECT_PROJECT_ID=${VITE_WALLET_CONNECT_PROJECT_ID}
+      - VITE_CHAIN_ID_ETHEREUM=${VITE_CHAIN_ID_ETHEREUM:-11155111}
+      - VITE_CHAIN_ID_NEAR=${VITE_CHAIN_ID_NEAR:-testnet}
       - WS_NO_BUFFER_UTIL=1
     volumes:
       - ./frontend:/app

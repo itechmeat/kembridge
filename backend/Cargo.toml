@@ -178,6 +178,11 @@ kembridge-crypto.workspace = true
 kembridge-bridge.workspace = true
 kembridge-blockchain.workspace = true
 
+# Test binaries
+[[bin]]
+name = "test_api_integration"
+path = "test_api_integration.rs"
+
 [features]
 default = ["production"]
 development = ["tracing-subscriber/env-filter"]

@@ -141,6 +141,35 @@ curl -X POST http://localhost:4000/api/v1/auth/logout \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+### 5. Test API Integrations
+
+Test external API connectivity (Ethereum RPC and 1inch API):
+
+```bash
+# Quick test of all external APIs
+cargo run --bin test_api_integration
+```
+
+Expected output:
+```
+🚀 KEMBridge API Integration Test
+==================================
+
+🔗 Testing Ethereum RPC Connection...
+   🔍 RPC URL: https://sepolia.infura.io/v3/...
+   ✅ Connected! Latest block: 0x85f4ea (8778986)
+   ✅ Network: Sepolia testnet ✓
+
+📱 Testing 1inch API Connection...
+   🔑 API Key: MrTcxGYJ...
+   ✅ Found 139 liquidity sources on Ethereum
+   📋 Examples: Uniswap V1, Uniswap V2, SushiSwap
+   ✅ API key validation successful
+
+✅ All API integrations tested successfully!
+Ready for bridge operations! 🌉
+```
+
 ### 6. Test User Management Endpoints
 
 ```bash
