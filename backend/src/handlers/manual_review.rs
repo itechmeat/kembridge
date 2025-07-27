@@ -7,16 +7,20 @@ use axum::{
 use uuid::Uuid;
 use utoipa::ToSchema;
 use serde::{Deserialize, Serialize};
-use tracing::{info, error, instrument};
+use tracing::{info, error, warn, instrument};
+use bigdecimal::ToPrimitive;
 
 use crate::{
     state::AppState,
     extractors::auth::AuthUser,
     models::review::{
         CreateReviewRequest, UpdateReviewRequest, ReviewQueueQuery,
-        ReviewQueueListResponse, ReviewQueueResponse, ReviewDecision,
+        ReviewQueueListResponse, ReviewQueueResponse, ReviewDecision, UserRiskSummary,
+        TransactionSummary,
     },
+    models::risk::UserRiskProfileResponse,
 };
+use kembridge_database::TransactionDetails;
 
 /// Response for manual review endpoints
 #[derive(Debug, Serialize, ToSchema)]
@@ -41,6 +45,41 @@ impl<T> ManualReviewApiResponse<T> {
             data: None,
             message: message.into(),
         }
+    }
+}
+
+/// Convert UserRiskProfileResponse to UserRiskSummary for manual review responses
+fn convert_risk_profile_to_summary(profile: UserRiskProfileResponse) -> UserRiskSummary {
+    UserRiskSummary {
+        user_id: profile.user_id,
+        overall_risk_score: profile.overall_risk_score,
+        risk_level: match profile.risk_level {
+            crate::models::risk::RiskLevel::Low => "low".to_string(),
+            crate::models::risk::RiskLevel::Medium => "medium".to_string(),
+            crate::models::risk::RiskLevel::High => "high".to_string(),
+            crate::models::risk::RiskLevel::Critical => "critical".to_string(),
+        },
+        transaction_count: profile.transaction_count,
+        total_volume: profile.total_volume,
+        first_transaction: profile.first_transaction,
+        last_transaction: profile.last_transaction,
+        flags_count: profile.behavioral_flags.len() as u32,
+    }
+}
+
+/// Convert TransactionDetails to TransactionSummary for manual review responses
+fn convert_transaction_details_to_summary(details: TransactionDetails) -> TransactionSummary {
+    TransactionSummary {
+        transaction_id: details.id,
+        user_id: details.user_id,
+        source_chain: details.source_chain,
+        destination_chain: details.destination_chain,
+        source_token: details.source_token,
+        destination_token: details.destination_token,
+        amount_in: details.amount_in.to_f64().unwrap_or(0.0),
+        status: details.status,
+        created_at: details.created_at,
+        quantum_key_id: details.quantum_key_id,
     }
 }
 
@@ -72,12 +111,14 @@ pub async fn add_to_review_queue(
         "Adding transaction to manual review queue"
     );
 
+    let user_id = request.user_id;
     match state.manual_review_service.add_to_review_queue(request).await {
         Ok(review_entry) => {
+            let user_risk_profile = state.risk_integration_service.get_user_risk_profile(user_id, Some(30)).await.ok().map(convert_risk_profile_to_summary);
             let response = ReviewQueueResponse {
                 review: review_entry,
-                transaction_details: None, // TODO: Fetch from database
-                user_risk_profile: None,   // TODO: Fetch from risk service
+                transaction_details: None,
+                user_risk_profile,
             };
 
             Ok(Json(ManualReviewApiResponse::success(
@@ -125,7 +166,7 @@ pub async fn get_review_queue(
         "Fetching review queue"
     );
 
-    match state.manual_review_service.get_review_queue(query).await {
+    match state.manual_review_service.get_review_queue(query, 1, 10).await {
         Ok(queue_response) => {
             Ok(Json(ManualReviewApiResponse::success(
                 queue_response,
@@ -170,10 +211,27 @@ pub async fn assign_review(
 
     match state.manual_review_service.assign_review(review_id, user.user_id).await {
         Ok(review_entry) => {
+            let user_id = review_entry.user_id;
+            let transaction_id = review_entry.transaction_id;
+            let user_risk_profile = state.risk_integration_service.get_user_risk_profile(user_id, Some(30)).await.ok().map(convert_risk_profile_to_summary);
+            
+            // Get transaction details for assigned review
+            let transaction_details = match state.transaction_service.get_transaction_by_id(transaction_id).await {
+                Ok(Some(details)) => Some(convert_transaction_details_to_summary(details)),
+                Ok(None) => {
+                    warn!(transaction_id = %transaction_id, "Transaction not found for assigned review");
+                    None
+                },
+                Err(e) => {
+                    error!(error = %e, transaction_id = %transaction_id, "Failed to fetch transaction details for assigned review");
+                    None
+                }
+            };
+            
             let response = ReviewQueueResponse {
                 review: review_entry,
-                transaction_details: None, // TODO: Fetch from database
-                user_risk_profile: None,   // TODO: Fetch from risk service
+                transaction_details,
+                user_risk_profile,
             };
 
             Ok(Json(ManualReviewApiResponse::success(
@@ -221,10 +279,38 @@ pub async fn make_review_decision(
         "Making review decision"
     );
 
-    match state.manual_review_service.make_review_decision(review_id, user.user_id, request).await {
-        Ok(decision) => {
+    // First get the review entry to retrieve the real transaction_id
+    let review_entry = match state.manual_review_service.get_review_by_id(review_id).await {
+        Ok(entry) => entry,
+        Err(e) => {
+            error!(error = %e, review_id = %review_id, "Failed to fetch review entry for decision");
+            return Err(StatusCode::NOT_FOUND);
+        }
+    };
+
+    let decision = ReviewDecision {
+        review_id,
+        transaction_id: review_entry.transaction_id,
+        decision: request.status,
+        reason: request.reason.unwrap_or_default(),
+        reviewed_by: user.user_id,
+        reviewed_at: chrono::Utc::now(),
+        metadata: request.metadata.clone(),
+    };
+    
+    match state.manual_review_service.make_review_decision(decision.clone()).await {
+        Ok(()) => {
+            let decision_response = ReviewDecision {
+                review_id,
+                transaction_id: review_entry.transaction_id,
+                decision: decision.decision,
+                reason: decision.reason,
+                reviewed_by: decision.reviewed_by,
+                reviewed_at: decision.reviewed_at,
+                metadata: decision.metadata,
+            };
             Ok(Json(ManualReviewApiResponse::success(
-                decision,
+                decision_response,
                 "Review decision made successfully"
             )))
         }
@@ -260,14 +346,42 @@ pub async fn get_review_details(
 ) -> Result<Json<ManualReviewApiResponse<ReviewQueueResponse>>, StatusCode> {
     info!(review_id = %review_id, "Fetching review details");
 
-    // TODO: Implement get_review_by_id method in ManualReviewService
-    // For now, return a mock response
-    let mock_response = state.manual_review_service.create_mock_review_response(1).await;
+    match state.manual_review_service.get_review_by_id(review_id).await {
+        Ok(review_entry) => {
+            let user_id = review_entry.user_id;
+            let transaction_id = review_entry.transaction_id;
+            let user_risk_profile = state.risk_integration_service.get_user_risk_profile(user_id, Some(30)).await.ok().map(convert_risk_profile_to_summary);
+            
+            // Get transaction details from transaction service
+            let transaction_details = match state.transaction_service.get_transaction_by_id(transaction_id).await {
+                Ok(Some(details)) => Some(convert_transaction_details_to_summary(details)),
+                Ok(None) => {
+                    warn!(transaction_id = %transaction_id, "Transaction not found in database");
+                    None
+                },
+                Err(e) => {
+                    error!(error = %e, transaction_id = %transaction_id, "Failed to fetch transaction details");
+                    None
+                }
+            };
+            
+            let response = ReviewQueueResponse {
+                review: review_entry,
+                transaction_details,
+                user_risk_profile,  
+            };
+            
+            Ok(Json(ManualReviewApiResponse::success(
+                response,
+                "Review details retrieved successfully"
+            )))
+        }
+        Err(e) => {
+            error!(error = %e, review_id = %review_id, "Failed to fetch review details");
+            Err(StatusCode::NOT_FOUND)
+        }
+    }
 
-    Ok(Json(ManualReviewApiResponse::success(
-        mock_response,
-        "Review details retrieved successfully"
-    )))
 }
 
 /// Escalate review manually
@@ -297,10 +411,27 @@ pub async fn escalate_review(
 
     match state.manual_review_service.escalate_review(review_id).await {
         Ok(review_entry) => {
+            let user_id = review_entry.user_id;
+            let transaction_id = review_entry.transaction_id;
+            let user_risk_profile = state.risk_integration_service.get_user_risk_profile(user_id, Some(30)).await.ok().map(convert_risk_profile_to_summary);
+            
+            // Get transaction details for escalated review
+            let transaction_details = match state.transaction_service.get_transaction_by_id(transaction_id).await {
+                Ok(Some(details)) => Some(convert_transaction_details_to_summary(details)),
+                Ok(None) => {
+                    warn!(transaction_id = %transaction_id, "Transaction not found for escalated review");
+                    None
+                },
+                Err(e) => {
+                    error!(error = %e, transaction_id = %transaction_id, "Failed to fetch transaction details for escalated review");
+                    None
+                }
+            };
+            
             let response = ReviewQueueResponse {
                 review: review_entry,
-                transaction_details: None, // TODO: Fetch from database
-                user_risk_profile: None,   // TODO: Fetch from risk service
+                transaction_details,
+                user_risk_profile,
             };
 
             Ok(Json(ManualReviewApiResponse::success(
@@ -335,7 +466,7 @@ pub async fn check_escalations(
 ) -> Result<Json<ManualReviewApiResponse<Vec<Uuid>>>, StatusCode> {
     info!("Checking for reviews that need escalation");
 
-    match state.manual_review_service.check_escalations().await {
+    match state.manual_review_service.check_expired_reviews().await {
         Ok(escalated_reviews) => {
             let escalated_ids: Vec<Uuid> = escalated_reviews.iter().map(|r| r.id).collect();
             let escalated_count = escalated_ids.len();

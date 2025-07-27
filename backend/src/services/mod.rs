@@ -26,6 +26,7 @@ pub use risk_integration::{RiskIntegrationService, OperationDecision};
 
 /// Manual review service - implemented in Phase 5.2.4
 pub mod manual_review;
+pub mod manual_review_service;
 pub use manual_review::ManualReviewService;
 
 /// Bridge integration service - implemented in Phase 6.2.1

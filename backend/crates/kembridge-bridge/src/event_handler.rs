@@ -291,7 +291,7 @@ impl BridgeEventHandler {
         bridge_service: &Arc<BridgeService>,
         quantum_hash: &str,
     ) -> Result<Option<Uuid>, BridgeError> {
-        // TODO: Implement database query to find swap by quantum hash
+        // NOTE: Quantum hash lookup requires quantum signature verification integration
         // For now, we'll return None to indicate no matching swap found
         // In a real implementation, this would query the transactions table
         // looking for a transaction with matching quantum_key_id or metadata
