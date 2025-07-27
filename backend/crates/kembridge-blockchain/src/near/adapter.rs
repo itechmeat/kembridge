@@ -302,6 +302,112 @@ impl NearAdapter {
         adapter.init_one_click_api()?;
         Ok(adapter)
     }
+
+    /// Mint wrapped tokens on NEAR (ETH → NEAR direction)
+    /// Implements Phase 4.3.4: NEAR mint/burn mechanism  
+    pub async fn mint_bridge_tokens(
+        &self,
+        bridge_contract_id: &str,
+        recipient: &str,
+        amount: u128,
+        eth_tx_proof: &str,
+        quantum_hash: &str,
+    ) -> Result<String> {
+        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // This will include:
+        // 1. Verify ETH lock transaction via Chain Signatures
+        // 2. Call NEAR bridge contract ft_mint(recipient, amount, eth_proof, quantum_hash)
+        // 3. Use self.rpc_client for transaction submission
+        // 4. Wait for transaction finality
+        // 5. Return real transaction hash
+
+        tracing::info!(
+            contract_id = %bridge_contract_id,
+            recipient = %recipient,
+            amount = %amount,
+            eth_tx_proof = %eth_tx_proof,
+            quantum_hash = %quantum_hash,
+            "MOCK: Minting wrapped tokens on NEAR"
+        );
+
+        // Simulate NEAR network delay
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+
+        // Generate mock transaction hash
+        let mock_tx_hash = format!("{}:{}", quantum_hash, hex::encode(recipient.as_bytes()));
+        
+        tracing::info!(tx_hash = %mock_tx_hash, "Mock NEAR mint transaction created");
+        Ok(mock_tx_hash)
+    }
+
+    /// Burn wrapped tokens on NEAR (NEAR → ETH direction)
+    /// Implements Phase 4.3.4: NEAR burn mechanism for NEAR → ETH
+    pub async fn burn_bridge_tokens(
+        &self,
+        bridge_contract_id: &str,
+        amount: u128,
+        eth_recipient: &str,
+        quantum_hash: &str,
+    ) -> Result<String> {
+        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // This will include:
+        // 1. Call NEAR bridge contract ft_burn(amount, eth_recipient, quantum_hash)
+        // 2. Use self.rpc_client for transaction submission
+        // 3. Generate proof for Ethereum unlock
+        // 4. Emit bridge event for Ethereum side
+        // 5. Return transaction hash
+
+        tracing::info!(
+            contract_id = %bridge_contract_id,
+            amount = %amount,
+            eth_recipient = %eth_recipient,
+            quantum_hash = %quantum_hash,
+            "MOCK: Burning wrapped tokens on NEAR"
+        );
+
+        // Simulate NEAR network delay
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+
+        // Generate mock transaction hash
+        let mock_tx_hash = format!("{}:{}", quantum_hash, hex::encode(eth_recipient.as_bytes()));
+        
+        tracing::info!(tx_hash = %mock_tx_hash, "Mock NEAR burn transaction created");
+        Ok(mock_tx_hash)
+    }
+
+    /// Lock NEAR tokens in bridge contract (NEAR → ETH direction)
+    /// Alternative to burn for non-wrapped NEAR tokens
+    pub async fn lock_near_tokens(
+        &self,
+        bridge_contract_id: &str,
+        amount: u128,
+        eth_recipient: &str,
+        quantum_hash: &str,
+    ) -> Result<String> {
+        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // This will include:
+        // 1. Call NEAR bridge contract near_lock(amount, eth_recipient, quantum_hash)
+        // 2. Lock native NEAR tokens in escrow
+        // 3. Generate proof for Ethereum mint
+        // 4. Return transaction hash
+
+        tracing::info!(
+            contract_id = %bridge_contract_id,
+            amount = %amount,
+            eth_recipient = %eth_recipient,
+            quantum_hash = %quantum_hash,
+            "MOCK: Locking NEAR tokens in bridge contract"
+        );
+
+        // Simulate NEAR network delay
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+
+        // Generate mock transaction hash
+        let mock_tx_hash = format!("{}:{}", quantum_hash, hex::encode(eth_recipient.as_bytes()));
+        
+        tracing::info!(tx_hash = %mock_tx_hash, "Mock NEAR lock transaction created");
+        Ok(mock_tx_hash)
+    }
 }
 
 #[cfg(test)]

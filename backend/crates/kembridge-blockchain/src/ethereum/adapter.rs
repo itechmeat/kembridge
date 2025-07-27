@@ -5,6 +5,7 @@ use ethers::{
 };
 use std::sync::Arc;
 use kembridge_crypto::QuantumKeyManager;
+use tokio::time::Duration;
 
 use super::{EthereumConfig, EthereumError, WalletInfo, TransactionStatus};
 
@@ -142,6 +143,84 @@ impl EthereumAdapter {
             .map_err(|e| EthereumError::NetworkError(e.to_string()))?;
         
         Ok((chain_id.as_u64(), block_number.as_u64()))
+    }
+
+    /// Lock ETH tokens in bridge contract
+    /// Implements Phase 4.3.3: ETH lock/unlock mechanism with quantum wallet integration
+    pub async fn lock_eth_tokens(
+        &self,
+        bridge_contract_address: Address,
+        amount: U256,
+        recipient_chain: &str,
+        quantum_hash: &str,
+        user_wallet: Address,
+    ) -> Result<H256, EthereumError> {
+        // TODO [Phase 4.3.3]: Complete implementation with real bridge contract
+        // This will include:
+        // 1. Load bridge contract ABI
+        // 2. Prepare transaction with lock_tokens(amount, recipient_chain, quantum_hash)
+        // 3. Sign transaction with quantum-protected private key
+        // 4. Send transaction and wait for confirmation
+        // 5. Return real transaction hash
+        
+        tracing::info!(
+            contract_address = %bridge_contract_address,
+            amount = %amount,
+            recipient_chain = %recipient_chain,
+            quantum_hash = %quantum_hash,
+            user_wallet = %user_wallet,
+            "MOCK: Locking ETH tokens in bridge contract"
+        );
+        
+        // Simulate network delay
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        
+        // Generate mock transaction hash
+        let mock_tx_hash = format!("0x{:0>64}", hex::encode(quantum_hash.as_bytes()));
+        let tx_hash = mock_tx_hash.parse::<H256>()
+            .map_err(|e| EthereumError::InvalidTransaction(e.to_string()))?;
+        
+        tracing::info!(tx_hash = %tx_hash, "Mock ETH lock transaction created");
+        Ok(tx_hash)
+    }
+
+    /// Unlock ETH tokens from bridge contract  
+    /// Implements Phase 4.3.3: ETH unlock mechanism for NEAR -> ETH direction
+    pub async fn unlock_eth_tokens(
+        &self,
+        bridge_contract_address: Address,
+        amount: U256,
+        recipient: Address,
+        near_tx_proof: &str,
+        quantum_hash: &str,
+    ) -> Result<H256, EthereumError> {
+        // TODO [Phase 4.3.3]: Complete implementation with real bridge contract
+        // This will include:
+        // 1. Verify NEAR transaction proof via Chain Signatures
+        // 2. Call bridge contract unlock_tokens(recipient, amount, proof, quantum_hash)
+        // 3. Sign and send transaction
+        // 4. Wait for confirmation
+        // 5. Return transaction hash
+        
+        tracing::info!(
+            contract_address = %bridge_contract_address,
+            amount = %amount,
+            recipient = %recipient,
+            near_tx_proof = near_tx_proof,
+            quantum_hash = %quantum_hash,
+            "MOCK: Unlocking ETH tokens from bridge contract"
+        );
+        
+        // Simulate network delay
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        
+        // Generate mock transaction hash
+        let mock_tx_hash = format!("0x{:0>64}", hex::encode(quantum_hash.as_bytes()));
+        let tx_hash = mock_tx_hash.parse::<H256>()
+            .map_err(|e| EthereumError::InvalidTransaction(e.to_string()))?;
+        
+        tracing::info!(tx_hash = %tx_hash, "Mock ETH unlock transaction created");
+        Ok(tx_hash)
     }
 
     /// Get and decrypt private key via quantum crypto
