@@ -9,6 +9,7 @@ use crate::services::{
 };
 use crate::websocket::WebSocketRegistry;
 use crate::monitoring::MonitoringService;
+use crate::price_oracle::PriceOracleService;
 use kembridge_database::TransactionService;
 
 /// Application state with dependency injection for all services
@@ -27,6 +28,7 @@ pub struct AppState {
     pub transaction_service: Arc<TransactionService>,
     pub websocket_registry: Arc<WebSocketRegistry>,
     pub monitoring_service: Arc<MonitoringService>,
+    pub price_oracle_service: Arc<PriceOracleService>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -100,9 +102,14 @@ impl AppState {
                 .await
         );
 
+        // Initialize price oracle service (Phase 6.1)
+        let price_oracle_service = Arc::new(
+            PriceOracleService::new(redis.clone(), Arc::new(config.clone())).await?
+        );
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, and monitoring service",
-            11 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, and price oracle service",
+            12 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, metrics
         );
 
         Ok(Self {
@@ -119,6 +126,7 @@ impl AppState {
             transaction_service,
             websocket_registry,
             monitoring_service,
+            price_oracle_service,
             metrics,
         })
     }

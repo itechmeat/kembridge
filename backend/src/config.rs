@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use anyhow::{Context, Result};
 
+use crate::constants::*;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     // Server configuration
@@ -51,7 +53,7 @@ pub struct AppConfig {
     pub prometheus_endpoint: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Environment {
     Development,
@@ -63,46 +65,46 @@ pub enum Environment {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            port: 4000,
-            host: "0.0.0.0".to_string(),
+            port: DEFAULT_SERVER_PORT,
+            host: DEFAULT_SERVER_HOST.to_string(),
             environment: Environment::Development,
 
-            database_url: "postgresql://kembridge:kembridge@localhost:5432/kembridge".to_string(),
-            database_max_connections: 10,
-            database_min_connections: 1,
+            database_url: DEFAULT_DATABASE_URL.to_string(),
+            database_max_connections: DEFAULT_DB_MAX_CONNECTIONS,
+            database_min_connections: DEFAULT_DB_MIN_CONNECTIONS,
 
-            redis_url: "redis://localhost:6379".to_string(),
-            redis_pool_size: 10,
+            redis_url: DEFAULT_REDIS_URL.to_string(),
+            redis_pool_size: DEFAULT_REDIS_POOL_SIZE,
 
-            jwt_secret: "dev-secret-change-in-production".to_string(),
-            jwt_expiration_hours: 24,
+            jwt_secret: JWT_SECRET_KEY.to_string(),
+            jwt_expiration_hours: JWT_EXPIRATION_HOURS,
             cors_origins: vec![
-                "http://localhost:4001".to_string(),
-                "http://localhost:4000".to_string(),
+                CORS_ORIGIN_FRONTEND_DEV.to_string(),
+                CORS_ORIGIN_API_DEV.to_string(),
             ],
 
-            ai_engine_url: "http://localhost:4003".to_string(),
+            ai_engine_url: DEFAULT_AI_ENGINE_URL.to_string(),
             ai_engine_api_key: None,
-            ai_engine_timeout_ms: 5000,
-            ai_engine_max_retries: 3,
-            ethereum_rpc_url: "https://sepolia.infura.io/v3/YOUR_PROJECT_ID".to_string(),
-            near_rpc_url: "https://rpc.testnet.near.org".to_string(),
+            ai_engine_timeout_ms: DEFAULT_AI_ENGINE_TIMEOUT_MS,
+            ai_engine_max_retries: DEFAULT_AI_ENGINE_MAX_RETRIES,
+            ethereum_rpc_url: DEFAULT_ETHEREUM_RPC_URL.to_string(),
+            near_rpc_url: DEFAULT_NEAR_RPC_URL.to_string(),
 
             enable_quantum_crypto: true,
             enable_ai_risk_analysis: true,
             enable_swagger_ui: true,
 
             // Risk thresholds with secure defaults
-            risk_low_threshold: 0.3,
-            risk_medium_threshold: 0.6,
-            risk_high_threshold: 0.8,
-            risk_auto_block_threshold: 0.9,
-            risk_manual_review_threshold: 0.7,
+            risk_low_threshold: DEFAULT_RISK_LOW_THRESHOLD,
+            risk_medium_threshold: DEFAULT_RISK_MEDIUM_THRESHOLD,
+            risk_high_threshold: DEFAULT_RISK_HIGH_THRESHOLD,
+            risk_auto_block_threshold: DEFAULT_RISK_AUTO_BLOCK_THRESHOLD,
+            risk_manual_review_threshold: DEFAULT_RISK_MANUAL_REVIEW_THRESHOLD,
             risk_admin_bypass_enabled: false, // Secure default
 
             metrics_enabled: true,
-            tracing_level: "debug".to_string(),
-            prometheus_endpoint: "/metrics".to_string(),
+            tracing_level: DEFAULT_TRACING_LEVEL.to_string(),
+            prometheus_endpoint: DEFAULT_METRICS_ENDPOINT.to_string(),
         }
     }
 }
@@ -290,21 +292,21 @@ impl AppConfig {
     pub fn ethereum_config(&self) -> kembridge_blockchain::ethereum::EthereumConfig {
         kembridge_blockchain::ethereum::EthereumConfig {
             rpc_url: self.ethereum_rpc_url.clone(),
-            chain_id: 11155111, // Sepolia testnet
-            gas_price_multiplier: 1.2,
-            confirmation_blocks: 2,
-            max_retry_attempts: 3,
+            chain_id: DEFAULT_ETHEREUM_CHAIN_ID,
+            gas_price_multiplier: DEFAULT_ETHEREUM_GAS_PRICE_MULTIPLIER,
+            confirmation_blocks: DEFAULT_ETHEREUM_CONFIRMATION_BLOCKS,
+            max_retry_attempts: DEFAULT_AI_ENGINE_MAX_RETRIES,
         }
     }
 
     /// Get NEAR configuration for blockchain adapter (Phase 5.2.7)
     pub fn near_config(&self) -> kembridge_blockchain::near::NearConfig {
         kembridge_blockchain::near::NearConfig {
-            network_id: "testnet".to_string(),
+            network_id: DEFAULT_NEAR_NETWORK_ID.to_string(),
             rpc_url: self.near_rpc_url.clone(),
-            helper_url: Some("https://helper.testnet.near.org".to_string()),
-            explorer_url: Some("https://explorer.testnet.near.org".to_string()),
-            wallet_url: Some("https://wallet.testnet.near.org".to_string()),
+            helper_url: Some(DEFAULT_NEAR_HELPER_URL.to_string()),
+            explorer_url: Some(DEFAULT_NEAR_EXPLORER_URL.to_string()),
+            wallet_url: Some(DEFAULT_NEAR_WALLET_URL.to_string()),
         }
     }
 }
