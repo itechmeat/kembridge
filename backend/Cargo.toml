@@ -106,6 +106,7 @@ name = "kembridge-backend"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
+default-run = "kembridge-backend"
 
 [[bin]]
 name = "kembridge-backend"
@@ -181,7 +182,19 @@ kembridge-blockchain.workspace = true
 # Test binaries
 [[bin]]
 name = "test_api_integration"
-path = "test_api_integration.rs"
+path = "tests/test_api_integration.rs"
+
+[[bin]]
+name = "test_auth_system"
+path = "tests/test_auth_system.rs"
+
+[[bin]]
+name = "test_auth_http"
+path = "tests/test_auth_http.rs"
+
+[[bin]]
+name = "test_auth_integration"
+path = "tests/test_auth_integration.rs"
 
 [features]
 default = ["production"]

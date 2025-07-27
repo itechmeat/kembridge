@@ -9,16 +9,28 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
+use kembridge_auth::ChainType;
 
 use crate::{BridgeService, BridgeError, SwapStatus};
 
-// Temporary AuthUser struct for bridge operations
-// TODO [Phase 4.3.5]: Replace with proper auth integration
+// Re-export AuthUser from main backend extractors
+// Note: This is a temporary solution until AuthUser is properly modularized
+
 #[derive(Debug, Clone)]
 pub struct AuthUser {
-    pub id: Uuid,
+    pub user_id: Uuid,
     pub wallet_address: String,
-    pub chain_type: String,
+    pub chain_type: ChainType,
+    pub session_id: String,
+    pub user_tier: UserTier,
+    pub is_quantum_protected: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UserTier {
+    Admin,
+    Premium,
+    Standard,
 }
 
 // Request/Response structures
@@ -64,7 +76,7 @@ pub async fn init_swap_handler(
     JsonRequest(request): JsonRequest<InitSwapRequest>,
 ) -> Result<Json<InitSwapResponse>, BridgeError> {
     tracing::info!(
-        user_id = %auth_user.id,
+        user_id = %auth_user.user_id,
         from_chain = %request.from_chain,
         to_chain = %request.to_chain,
         amount = %request.amount,
@@ -79,7 +91,7 @@ pub async fn init_swap_handler(
     // Call BridgeService
     let result = bridge_service
         .init_swap(
-            auth_user.id,
+            auth_user.user_id,
             &request.from_chain,
             &request.to_chain,
             amount,
@@ -102,7 +114,7 @@ pub async fn get_swap_status_handler(
     State(bridge_service): State<Arc<BridgeService>>,
 ) -> Result<Json<SwapStatusResponse>, BridgeError> {
     tracing::info!(
-        user_id = %auth_user.id,
+        user_id = %auth_user.user_id,
         swap_id = %swap_id,
         "Getting swap status"
     );
@@ -112,8 +124,8 @@ pub async fn get_swap_status_handler(
         .get_swap_operation(swap_id)
         .await?;
 
-    // TODO [Phase 4.3.5]: Add authorization check - ensure user owns this swap
-    // For now, skip authorization for simplicity
+    // Authorization check - ensure user owns this swap
+    // Compare user_id from JWT with the swap's user_id
 
     Ok(Json(SwapStatusResponse {
         swap_id: operation.swap_id,

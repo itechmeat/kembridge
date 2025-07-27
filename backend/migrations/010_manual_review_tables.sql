@@ -76,6 +76,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS trigger_review_queue_updated_at ON review_queue;
 CREATE TRIGGER trigger_review_queue_updated_at
     BEFORE UPDATE ON review_queue
     FOR EACH ROW
