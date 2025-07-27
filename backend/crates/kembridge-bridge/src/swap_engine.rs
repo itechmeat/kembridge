@@ -39,7 +39,7 @@ impl SwapEngine {
 
         // Step 3: Derive NEAR address through Chain Signatures
         tracing::info!("Deriving NEAR address for swap {}", swap_operation.swap_id);
-        // Mock implementation for now - will be replaced with actual Chain Signatures
+        // TODO (MOCK WARNING): Mock implementation for now - will be replaced with actual Chain Signatures
         let near_address = format!("derived_{}", swap_operation.recipient);
 
         // Step 4: Mint wrapped tokens on NEAR
@@ -129,7 +129,7 @@ impl SwapEngine {
         // Generate quantum hash from encrypted data for integrity verification
         let quantum_hash = format!("quantum_{}_{}", swap_id, hex::encode(&protected_data.integrity_proof[..8]));
         
-        // TODO [Phase 4.3.3]: Use real bridge contract address from configuration
+        // TODO (MOCK WARNING) [Phase 4.3.3]: Use real bridge contract address from configuration
         // For now using mock contract address
         let bridge_contract_address = "0x1234567890123456789012345678901234567890"
             .parse::<Address>()
@@ -138,7 +138,7 @@ impl SwapEngine {
         // Convert amount to U256
         let amount_wei = U256::from(amount);
         
-        // TODO [Phase 4.3.3]: Get user wallet address from swap operation
+        // TODO (MOCK WARNING) [Phase 4.3.3]: Get user wallet address from swap operation
         // For now using mock user wallet
         let user_wallet = "0x9876543210987654321098765432109876543210"
             .parse::<Address>()
@@ -175,10 +175,10 @@ impl SwapEngine {
         // Generate quantum hash from encrypted data for integrity verification
         let quantum_hash = format!("quantum_{}_{}", recipient, hex::encode(&protected_data.integrity_proof[..8]));
         
-        // TODO [Phase 4.3.4]: Use real bridge contract ID from configuration
+        // TODO (feat): Use real bridge contract ID from configuration (P2.2)
         let bridge_contract_id = "bridge.kembridge.testnet";
         
-        // TODO [Phase 4.3.4]: Generate real ETH transaction proof via Chain Signatures
+        // TODO (feat): Generate real ETH transaction proof via Chain Signatures (P2.2)
         let eth_tx_proof = format!("eth_proof_{}", recipient);
         
         // Call NEARAdapter mint method
@@ -212,10 +212,10 @@ impl SwapEngine {
         // Generate quantum hash from encrypted data for integrity verification
         let quantum_hash = format!("quantum_{}_{}", swap_id, hex::encode(&protected_data.integrity_proof[..8]));
         
-        // TODO [Phase 4.3.4]: Use real bridge contract ID from configuration
+        // TODO (feat): Use real bridge contract ID from configuration (P2.2)
         let bridge_contract_id = "bridge.kembridge.testnet";
         
-        // TODO [Phase 4.3.4]: Get real ETH recipient from swap operation
+        // TODO (feat): Get real ETH recipient from swap operation (P2.2)
         let eth_recipient = "0x9876543210987654321098765432109876543210";
         
         // Call NEARAdapter lock method
@@ -249,7 +249,7 @@ impl SwapEngine {
         // Generate quantum hash from encrypted data for integrity verification
         let quantum_hash = format!("quantum_{}_{}", swap_id, hex::encode(&protected_data.integrity_proof[..8]));
         
-        // TODO [Phase 4.3.3]: Use real bridge contract address from configuration
+        // TODO (feat): Use real bridge contract address from configuration (P2.1)
         let bridge_contract_address = "0x1234567890123456789012345678901234567890"
             .parse::<Address>()
             .map_err(|e| BridgeError::OperationFailed(format!("Invalid contract address: {}", e)))?;
@@ -261,7 +261,7 @@ impl SwapEngine {
         let recipient_address = recipient.parse::<Address>()
             .map_err(|e| BridgeError::OperationFailed(format!("Invalid recipient address: {}", e)))?;
         
-        // TODO [Phase 4.3.3]: Generate real NEAR transaction proof
+        // TODO (feat): Generate real NEAR transaction proof (P2.1)
         let near_tx_proof = format!("near_proof_{}", swap_id);
         
         // Call EthereumAdapter unlock method
@@ -316,7 +316,7 @@ impl SwapEngine {
             .verify_implementation()
             .map_err(|e| BridgeError::QuantumCryptoError(format!("Quantum verification failed: {}", e)))?;
         
-        // TODO [Phase 4.3.6]: Complete QuantumKeyManager integration
+        // TODO (feat): Complete QuantumKeyManager integration (P1)
         // Currently using ML-KEM algorithm info but need full key generation from QuantumKeyManager
         // The following tasks will be completed in Phase 4.3.8 and 4.3.10:
         // - Key rotation mechanism with BridgeService coordination (delayed tasks 3.2.7, 3.4.4)

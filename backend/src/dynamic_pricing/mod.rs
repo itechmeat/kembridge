@@ -140,7 +140,7 @@ impl DynamicPricingService {
     ) -> Result<QuoteValidationResult, DynamicPricingError> {
         debug!("Validating quote {} for execution", quote_id);
 
-        // TODO: Implement quote validation logic
+        // TODO (feat): Implement quote validation logic (P3.1)
         // This would typically involve:
         // 1. Checking if quote is still valid (not expired)
         // 2. Verifying current market conditions haven't changed drastically
@@ -158,10 +158,10 @@ impl DynamicPricingService {
     pub async fn get_pricing_health(&self) -> Result<PricingHealthStatus, DynamicPricingError> {
         debug!("Checking pricing health status");
 
-        // TODO: Implement proper health check methods for services
+        // TODO (feat): Implement proper health check methods for services (P3.1)
         // For now, using basic availability checks
-        let oracle_healthy = true; // TODO: Add real oracle health check
-        let oneinch_healthy = true; // TODO: Add real 1inch health check
+        let oracle_healthy = true; // TODO (feat): Add real oracle health check (P3.1)
+        let oneinch_healthy = true; // TODO (feat): Add real 1inch health check (P3.1)
 
         Ok(PricingHealthStatus {
             overall_healthy: oracle_healthy && oneinch_healthy,

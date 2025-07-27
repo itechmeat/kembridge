@@ -35,7 +35,6 @@ impl PriceCache {
     /// Cache aggregated price with TTL
     pub async fn set_price(&self, price: &AggregatedPrice) -> Result<(), PriceError> {
         let key = format!("{}:primary:{}", self.config.prefix, price.symbol);
-        let fallback_key = format!("{}:fallback:{}", self.config.prefix, price.symbol);
         
         // Serialize price data
         let serialized = serde_json::to_string(price)
@@ -43,18 +42,13 @@ impl PriceCache {
         
         let mut conn = self.redis.clone();
         
-        // Set primary cache with short TTL
+        // Set primary cache only
         let _: () = conn.set_ex(&key, &serialized, self.config.primary_ttl)
             .await
             .map_err(|e| PriceError::CacheError(format!("Failed to set primary cache: {}", e)))?;
         
-        // Set fallback cache with long TTL
-        let _: () = conn.set_ex(&fallback_key, &serialized, self.config.fallback_ttl)
-            .await
-            .map_err(|e| PriceError::CacheError(format!("Failed to set fallback cache: {}", e)))?;
-        
-        info!("Cached price for {} with primary TTL {}s and fallback TTL {}s", 
-            price.symbol, self.config.primary_ttl, self.config.fallback_ttl);
+        info!("Cached price for {} with TTL {}s", 
+            price.symbol, self.config.primary_ttl);
         
         Ok(())
     }
@@ -79,25 +73,6 @@ impl PriceCache {
         }
     }
     
-    /// Get price from fallback cache (for emergency situations)
-    pub async fn get_fallback_price(&self, symbol: &str) -> Result<AggregatedPrice, PriceError> {
-        let key = format!("{}:fallback:{}", self.config.prefix, symbol);
-        let mut conn = self.redis.clone();
-        
-        let cached_data: Option<String> = conn.get(&key)
-            .await
-            .map_err(|e| PriceError::CacheError(format!("Failed to get from fallback cache: {}", e)))?;
-        
-        if let Some(data) = cached_data {
-            let price: AggregatedPrice = serde_json::from_str(&data)
-                .map_err(|e| PriceError::CacheError(format!("Failed to deserialize fallback price: {}", e)))?;
-            
-            warn!("Retrieved price for {} from fallback cache", symbol);
-            Ok(price)
-        } else {
-            Err(PriceError::CacheError(format!("No fallback price for {}", symbol)))
-        }
-    }
     
     /// Cache individual price data from provider
     pub async fn cache_provider_price(&self, provider: &str, price: &PriceData) -> Result<(), PriceError> {

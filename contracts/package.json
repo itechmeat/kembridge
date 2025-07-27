@@ -1,0 +1,31 @@
+{
+  "name": "kembridge-contracts",
+  "version": "1.0.0",
+  "description": "KEMBridge Smart Contracts",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "test": "hardhat test",
+    "check-status": "hardhat run scripts/check-status.js --network sepolia",
+    "verify": "hardhat verify --network sepolia",
+    "clean": "hardhat clean"
+  },
+  "keywords": ["bridge", "ethereum", "near", "quantum"],
+  "author": "KEMBridge Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.11",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.2.0",
+    "chai": "^5.2.1",
+    "dotenv": "^17.2.0",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.25.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

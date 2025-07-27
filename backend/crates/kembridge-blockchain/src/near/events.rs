@@ -178,7 +178,7 @@ impl NearEventListener {
             "Checking blocks for events"
         );
 
-        // TODO: Implement actual event checking
+        // TODO (feat): Implement actual event checking (P2.2)
         // For now, this is a simplified implementation
         // In a full implementation, we would:
         // 1. Query transaction outcomes for the bridge contract
@@ -193,7 +193,7 @@ impl NearEventListener {
         Ok(confirmed_block)
     }
 
-    /// Emit a mock event for testing (TODO: Replace with real event parsing)
+    /// Emit a mock event for testing (TODO (feat): Replace with real event parsing) (P2.2)
     async fn emit_mock_event(&self, block_height: u64) {
         let mock_event = NearBridgeEvent::TokensMinted {
             recipient_account: "user.testnet".to_string(),
@@ -215,12 +215,12 @@ impl NearEventListener {
         }
     }
 
-    /// Parse transaction outcomes for bridge events (TODO: Implement)
+    /// Parse transaction outcomes for bridge events (TODO (feat): Implement) (P2.2)
     async fn parse_transaction_outcomes(
         &self,
         _block_height: u64,
     ) -> Result<Vec<NearBridgeEvent>> {
-        // TODO: Implement actual transaction outcome parsing
+        // TODO (feat): Implement actual transaction outcome parsing (P2.2)
         // This would involve:
         // 1. Querying block details
         // 2. Iterating through chunks and transactions
@@ -233,7 +233,7 @@ impl NearEventListener {
 
     /// Parse contract logs for bridge events
     fn parse_contract_log(&self, log: &str) -> Option<NearBridgeEvent> {
-        // TODO: Implement actual log parsing
+        // TODO (feat): Implement actual log parsing (P2.2)
         // NEAR contracts emit logs in various formats
         // Bridge contract would emit structured logs like:
         // EVENT_JSON:{"event": "tokens_locked", "data": {...}}

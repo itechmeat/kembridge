@@ -99,6 +99,7 @@ pub struct BridgeSwapStatusResponse {
     ),
     tag = "Bridge Integration"
 )]
+#[axum::debug_handler]
 pub async fn execute_optimized_bridge_swap(
     State(state): State<AppState>,
     user: AuthUser,

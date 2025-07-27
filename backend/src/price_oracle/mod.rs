@@ -104,13 +104,11 @@ impl PriceOracleService {
         }
         
         if prices.is_empty() {
-            // Last resort: try to get from fallback cache
-            if let Ok(fallback_price) = self.cache.get_fallback_price(symbol).await {
-                warn!("Using fallback cache price for {}", symbol);
-                return Ok(fallback_price);
-            }
-            
-            return Err(anyhow::anyhow!("No price data available for {}", symbol));
+            return Err(anyhow::anyhow!(
+                "No price data available for symbol: {}. All {} providers failed or unavailable.", 
+                symbol, 
+                self.providers.len()
+            ));
         }
         
         // Aggregate prices from multiple sources
@@ -249,9 +247,9 @@ impl PriceOracleService {
             let health = ProviderHealth {
                 name: provider.provider_name().to_string(),
                 is_available: provider.is_available(),
-                last_successful_request: chrono::Utc::now(), // TODO: Track real timestamps
-                error_rate: 0.0, // TODO: Calculate real error rate
-                average_latency: Duration::from_millis(100), // TODO: Track real latency
+                last_successful_request: chrono::Utc::now(), // TODO (feat): Track real timestamps (P4.2)
+                error_rate: 0.0, // TODO (feat): Calculate real error rate (P4.2)
+                average_latency: Duration::from_millis(100), // TODO (feat): Track real latency (P4.2)
             };
             health_status.push(health);
         }

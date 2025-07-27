@@ -33,11 +33,11 @@ pub async fn quantum_signature_middleware(
     Ok(next.run(request).await)
 }
 
-/// TODO: Use real ML-KEM-1024 signature verification instead of mocks (Phase 3.1)
+/// TODO (MOCK WARNING): Use real ML-KEM-1024 signature verification instead of mocks (Phase 3.1)
 /// Validate quantum signature format (placeholder)
 /// In Phase 3.1, this will perform actual cryptographic verification
 fn _validate_quantum_signature(_signature: &str) -> bool {
-    // TODO: Use real ML-KEM-1024 signature verification instead of mocks (Phase 3.1)
+    // TODO (MOCK WARNING): Use real ML-KEM-1024 signature verification instead of mocks (Phase 3.1)
     // Real implementation will:
     // 1. Parse the quantum signature
     // 2. Verify using ML-KEM-1024 public key

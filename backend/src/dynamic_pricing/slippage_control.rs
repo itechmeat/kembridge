@@ -40,7 +40,7 @@ impl SlippageController {
     ) -> Result<SlippageSettings, DynamicPricingError> {
         info!("Calculating slippage protection for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement comprehensive slippage protection calculation
+        // TODO (feat): Implement comprehensive slippage protection calculation (P3.3)
         // This should include:
         // 1. Market volatility analysis
         // 2. Liquidity-based adjustment
@@ -73,7 +73,7 @@ impl SlippageController {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Analyzing market volatility for {} -> {}", from_token, to_token);
 
-        // TODO: Implement real-time volatility analysis
+        // TODO (feat): Implement real-time volatility analysis (P3.3)
         // This should analyze:
         // 1. Recent price movements
         // 2. Trading volume patterns
@@ -88,7 +88,7 @@ impl SlippageController {
             _ => SLIPPAGE_DEFAULT_VOLATILITY,
         };
 
-        // TODO: Add real-time volatility adjustments
+        // TODO (feat): Add real-time volatility adjustments (P3.3)
         // This should factor in current market conditions
         let current_volatility = base_volatility * SLIPPAGE_VOLATILITY_MULTIPLIER;
 
@@ -105,7 +105,7 @@ impl SlippageController {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating recommended slippage for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement sophisticated slippage calculation
+        // TODO (feat): Implement sophisticated slippage calculation (P3.3)
         // This should consider:
         // 1. Trade size impact
         // 2. Market volatility
@@ -132,7 +132,7 @@ impl SlippageController {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating size adjustment for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement size-based slippage adjustment
+        // TODO (feat): Implement size-based slippage adjustment (P3.3)
         // This should analyze trade size vs available liquidity
         // For now, using simple size-based logic
 
@@ -174,7 +174,7 @@ impl SlippageController {
     ) -> Result<bool, DynamicPricingError> {
         debug!("Determining dynamic adjustment for {} -> {} (volatility: {})", from_token, to_token, market_volatility);
 
-        // TODO: Implement dynamic adjustment logic
+        // TODO (feat): Implement dynamic adjustment logic (P3.3)
         // This should consider:
         // 1. Market conditions
         // 2. Token pair characteristics
@@ -194,7 +194,7 @@ impl SlippageController {
     ) -> Result<i64, DynamicPricingError> {
         debug!("Calculating timeout minutes for protection level: {:?}", protection_level);
 
-        // TODO: Implement dynamic timeout calculation
+        // TODO (feat): Implement dynamic timeout calculation (P3.3)
         // This should consider:
         // 1. Protection level requirements
         // 2. Market volatility
@@ -228,7 +228,7 @@ impl SlippageController {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Estimating USD value for {} {}", amount, token);
 
-        // TODO: Implement real-time USD value estimation
+        // TODO (feat): Implement real-time USD value estimation (P3.3)
         // This should use current oracle prices
         // For now, using basic oracle lookup
 
@@ -252,7 +252,7 @@ impl SlippageController {
 
         let mut warnings = Vec::new();
 
-        // TODO: Implement comprehensive validation
+        // TODO (feat): Implement comprehensive validation (P3.3)
         // This should check:
         // 1. Slippage reasonableness
         // 2. Market condition compatibility
@@ -281,25 +281,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_slippage_controller_creation() {
-        // TODO: Implement proper tests with mocked dependencies
+        // TODO (test): Implement proper tests with mocked dependencies (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_volatility_analysis() {
-        // TODO: Test volatility analysis with different token pairs
+        // TODO (test): Test volatility analysis with different token pairs (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_recommended_slippage_calculation() {
-        // TODO: Test recommended slippage calculation
+        // TODO (test): Test recommended slippage calculation (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_protection_level_determination() {
-        // TODO: Test protection level determination with different slippage values
+        // TODO (test): Test protection level determination with different slippage values (E4.1)
         assert_eq!(1, 1);
     }
 }

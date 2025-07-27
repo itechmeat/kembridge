@@ -40,7 +40,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<PriceImpact, DynamicPricingError> {
         info!("Analyzing price impact for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement comprehensive price impact analysis
+        // TODO (feat): Implement comprehensive price impact analysis (P3.4)
         // This should include:
         // 1. Liquidity depth analysis
         // 2. Market impact calculation
@@ -72,7 +72,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<LiquidityAssessment, DynamicPricingError> {
         debug!("Assessing liquidity for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement real liquidity assessment
+        // TODO (feat): Implement real liquidity assessment (P3.4)
         // This should analyze:
         // 1. Available liquidity across DEXs
         // 2. Orderbook depth
@@ -104,7 +104,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<MarketDepth, DynamicPricingError> {
         debug!("Analyzing market depth for {} -> {}", from_token, to_token);
 
-        // TODO: Implement real market depth analysis
+        // TODO (feat): Implement real market depth analysis (P3.4)
         // This should analyze:
         // 1. Bid/ask spread
         // 2. Order book depth
@@ -134,7 +134,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating impact percentage for amount {}", amount);
 
-        // TODO: Implement sophisticated impact calculation
+        // TODO (feat): Implement sophisticated impact calculation (P3.4)
         // This should use advanced models considering:
         // 1. Trade size vs liquidity ratio
         // 2. Market microstructure effects
@@ -172,7 +172,7 @@ impl PriceImpactAnalyzer {
 
         let mut recommendations = Vec::new();
 
-        // TODO: Implement intelligent recommendation generation
+        // TODO (feat): Implement intelligent recommendation generation (P3.4)
         // This should provide actionable advice based on:
         // 1. Impact level
         // 2. Market conditions
@@ -215,7 +215,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Estimating available liquidity for {} -> {}", from_token, to_token);
 
-        // TODO: Implement real liquidity estimation
+        // TODO (feat): Implement real liquidity estimation (P3.4)
         // This should aggregate liquidity from multiple sources
         // For now, using token-specific estimates
 
@@ -237,7 +237,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating liquidity score for {} vs {}", trade_amount, available_liquidity);
 
-        // TODO: Implement sophisticated liquidity scoring
+        // TODO (feat): Implement sophisticated liquidity scoring (P3.4)
         // This should consider multiple factors
         // For now, using simple ratio-based scoring
 
@@ -259,7 +259,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Assessing fragmentation risk for {} -> {}", from_token, to_token);
 
-        // TODO: Implement fragmentation risk assessment
+        // TODO (feat): Implement fragmentation risk assessment (P3.4)
         // This should analyze liquidity distribution across venues
         // For now, using estimated risk levels
 
@@ -281,7 +281,7 @@ impl PriceImpactAnalyzer {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating market stability for {} -> {}", from_token, to_token);
 
-        // TODO: Implement market stability calculation
+        // TODO (feat): Implement market stability calculation (P3.4)
         // This should analyze price volatility and market conditions
         // For now, using estimated stability scores
 
@@ -302,25 +302,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_price_impact_analyzer_creation() {
-        // TODO: Implement proper tests with mocked dependencies
+        // TODO (test): Implement proper tests with mocked dependencies (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_liquidity_assessment() {
-        // TODO: Test liquidity assessment with different token pairs
+        // TODO (test): Test liquidity assessment with different token pairs (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_market_depth_analysis() {
-        // TODO: Test market depth analysis
+        // TODO (test): Test market depth analysis (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_impact_level_determination() {
-        // TODO: Test impact level determination with different percentages
+        // TODO (test): Test impact level determination with different percentages (E4.1)
         assert_eq!(1, 1);
     }
 }

@@ -48,3 +48,22 @@ pub enum EthereumError {
     #[error("Quantum crypto error: {0}")]
     QuantumCryptoError(String),
 }
+
+// Implement From trait for common ethers errors
+impl From<ethers::providers::ProviderError> for EthereumError {
+    fn from(error: ethers::providers::ProviderError) -> Self {
+        EthereumError::NetworkError(error.to_string())
+    }
+}
+
+impl From<ethers::contract::ContractError<ethers::providers::Provider<ethers::providers::Http>>> for EthereumError {
+    fn from(error: ethers::contract::ContractError<ethers::providers::Provider<ethers::providers::Http>>) -> Self {
+        EthereumError::ContractError(error.to_string())
+    }
+}
+
+impl From<ethers::signers::WalletError> for EthereumError {
+    fn from(error: ethers::signers::WalletError) -> Self {
+        EthereumError::WalletError(error.to_string())
+    }
+}

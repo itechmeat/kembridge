@@ -41,7 +41,7 @@ impl DynamicPricingAlgorithm {
     ) -> Result<BigDecimal, DynamicPricingError> {
         info!("Calculating bridge price for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement real dynamic pricing algorithm
+        // TODO (feat): Implement real dynamic pricing algorithm (P3.1 - Production Enhancement)
         // This should include:
         // 1. Get current oracle prices for both tokens
         // 2. Apply volatility adjustments
@@ -56,7 +56,7 @@ impl DynamicPricingAlgorithm {
 
         debug!("Retrieved oracle price: {}", oracle_price.price);
 
-        // Basic calculation - TODO: Replace with sophisticated algorithm
+        // Basic calculation - TODO (feat): Replace with sophisticated algorithm (P3.1)
         let base_rate = oracle_price.price.clone();
         let volatility_adjustment = self.calculate_volatility_adjustment(&base_rate, bridge_params).await?;
         let final_rate = base_rate * volatility_adjustment;
@@ -72,7 +72,7 @@ impl DynamicPricingAlgorithm {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating volatility adjustment for bridge type: {:?}", bridge_params.bridge_type);
 
-        // TODO: Implement real volatility calculation
+        // TODO (feat): Implement real volatility calculation (P3.1)
         // This should analyze:
         // 1. Historical price volatility
         // 2. Market conditions
@@ -98,7 +98,7 @@ impl DynamicPricingAlgorithm {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating market adjustment for {} -> {}", from_token, to_token);
 
-        // TODO: Implement market-based adjustment
+        // TODO (feat): Implement market-based adjustment (P3.2)
         // This should consider:
         // 1. Current market liquidity
         // 2. Trading volume
@@ -118,7 +118,7 @@ impl DynamicPricingAlgorithm {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating cross-chain adjustment for {} -> {}", from_chain, to_chain);
 
-        // TODO: Implement cross-chain adjustment
+        // TODO (feat): Implement cross-chain adjustment (P3.3)
         // This should factor in:
         // 1. Chain-specific costs
         // 2. Bridge security costs
@@ -142,19 +142,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_pricing_algorithm_creation() {
-        // TODO: Implement proper tests with mocked dependencies
+        // TODO (test): Implement proper tests with mocked dependencies (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_volatility_adjustment_calculation() {
-        // TODO: Test volatility adjustment with different bridge types
+        // TODO (test): Test volatility adjustment with different bridge types (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_market_adjustment_calculation() {
-        // TODO: Test market adjustment with different market conditions
+        // TODO (test): Test market adjustment with different market conditions (E4.1)
         assert_eq!(1, 1);
     }
 }

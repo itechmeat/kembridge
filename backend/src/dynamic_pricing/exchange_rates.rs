@@ -40,7 +40,7 @@ impl ExchangeRateCalculator {
     ) -> Result<ExchangeRate, DynamicPricingError> {
         info!("Calculating exchange rate for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement comprehensive exchange rate calculation
+        // TODO (feat): Implement comprehensive exchange rate calculation (P3.2)
         // This should include:
         // 1. Multi-source price aggregation
         // 2. Cross-chain rate adjustments
@@ -72,7 +72,7 @@ impl ExchangeRateCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating oracle-based rate for {} -> {}", from_token, to_token);
 
-        // TODO: Implement multi-oracle rate calculation
+        // TODO (feat): Implement multi-oracle rate calculation (P3.2)
         // This should aggregate rates from multiple oracles
         // For now, using simple USD-based conversion
 
@@ -101,7 +101,7 @@ impl ExchangeRateCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Calculating 1inch-based rate for {} {} -> {}", amount, from_token, to_token);
 
-        // TODO: Implement 1inch rate calculation
+        // TODO (feat): Implement 1inch rate calculation (P3.2)
         // This should use actual 1inch quotes for real market rates
         // For now, using basic oracle fallback
 
@@ -135,7 +135,7 @@ impl ExchangeRateCalculator {
     ) -> Result<BigDecimal, DynamicPricingError> {
         debug!("Optimizing rate: oracle={}, oneinch={}, amount={}", oracle_rate, oneinch_rate, amount);
 
-        // TODO: Implement sophisticated rate optimization
+        // TODO (feat): Implement sophisticated rate optimization (P3.2)
         // This should consider:
         // 1. Rate deviation analysis
         // 2. Liquidity-based weighting
@@ -161,7 +161,7 @@ impl ExchangeRateCalculator {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating confidence score for {} -> {} rate", from_token, to_token);
 
-        // TODO: Implement confidence score calculation
+        // TODO (feat): Implement confidence score calculation (P3.2)
         // This should consider:
         // 1. Source reliability
         // 2. Rate consistency across sources
@@ -191,7 +191,7 @@ impl ExchangeRateCalculator {
     ) -> Result<f64, DynamicPricingError> {
         debug!("Calculating volatility indicator for {} -> {}", from_token, to_token);
 
-        // TODO: Implement volatility calculation
+        // TODO (feat): Implement volatility calculation (P3.2)
         // This should analyze:
         // 1. Historical price volatility
         // 2. Recent price movements
@@ -218,7 +218,7 @@ impl ExchangeRateCalculator {
     ) -> Result<ExchangeRate, DynamicPricingError> {
         debug!("Getting historical rate for {} -> {} at {}", from_token, to_token, timestamp);
 
-        // TODO: Implement historical rate retrieval
+        // TODO (feat): Implement historical rate retrieval (P3.2)
         // This would require historical data storage and retrieval
         // For now, returning current rate with historical timestamp
 
@@ -236,25 +236,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_exchange_rate_calculator_creation() {
-        // TODO: Implement proper tests with mocked dependencies
+        // TODO (test): Implement proper tests with mocked dependencies (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_oracle_rate_calculation() {
-        // TODO: Test oracle rate calculation with different token pairs
+        // TODO (test): Test oracle rate calculation with different token pairs (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_oneinch_rate_calculation() {
-        // TODO: Test 1inch rate calculation with different amounts
+        // TODO (test): Test 1inch rate calculation with different amounts (E4.1)
         assert_eq!(1, 1);
     }
 
     #[tokio::test]
     async fn test_rate_optimization() {
-        // TODO: Test rate optimization with different oracle and 1inch rates
+        // TODO (test): Test rate optimization with different oracle and 1inch rates (E4.1)
         assert_eq!(1, 1);
     }
 }

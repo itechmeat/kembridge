@@ -70,7 +70,7 @@ impl ChainSignatureService {
             return Ok(cached_address.clone());
         }
 
-        // TODO: Implement full MPC derivation with near-workspaces
+        // TODO (feat): Implement full MPC derivation with near-workspaces (P2.2)
         // For now, return a deterministic placeholder based on account ID
         let derived_address = format!("0x{:040x}", 
             near_account_id.chars()
@@ -92,7 +92,7 @@ impl ChainSignatureService {
         transaction_payload: &[u8],
         near_account_id: &str,
     ) -> Result<Vec<u8>> {
-        // TODO: Implement full MPC signing with near-workspaces
+        // TODO (feat): Implement full MPC signing with near-workspaces (P2.2)
         // For now, return a placeholder signature
         let signature_data = format!("mpc_sig_{}_{}", 
             near_account_id, 
@@ -107,7 +107,7 @@ impl ChainSignatureService {
         &self,
         request_id: &str,
     ) -> Result<SignatureStatus> {
-        // TODO: Implement status checking with near-workspaces
+        // TODO (feat): Implement status checking with near-workspaces (P2.2)
         Ok(SignatureStatus {
             request_id: request_id.to_string(),
             status: SignatureRequestStatus::Pending,

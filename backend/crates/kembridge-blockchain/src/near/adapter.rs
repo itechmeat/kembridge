@@ -107,14 +107,14 @@ impl NearAdapter {
             return Err(NearError::InvalidAccountId("Account ID cannot be empty".to_string()));
         }
 
-        // TODO: Implement actual account query once version conflicts are resolved
+        // TODO (feat): Implement actual account query once version conflicts are resolved (P2.2)
         Ok(format!("Account info for: {}", account_id))
     }
 
     /// Get account balance (simplified for now)
     pub async fn get_balance(&self, account_id: &str) -> Result<u128> {
         // For now, we'll implement a simplified version
-        // TODO: Implement proper balance query once type conflicts are resolved
+        // TODO (feat): Implement proper balance query once type conflicts are resolved (P2.2)
         match self.get_account(account_id).await {
             Ok(_) => Ok(1000000000000000000000000), // 1 NEAR as placeholder
             Err(e) => Err(e),
@@ -123,7 +123,7 @@ impl NearAdapter {
 
     /// Get latest block height (simplified)
     pub async fn get_latest_block_height(&self) -> Result<u64> {
-        // TODO: Implement proper block query once type conflicts are resolved
+        // TODO (feat): Implement proper block query once type conflicts are resolved (P2.2)
         Ok(100000000) // Placeholder block height
     }
 
@@ -192,7 +192,7 @@ impl NearAdapter {
         let balance_data = balance.to_string().into_bytes();
         let quantum_manager = self.quantum_manager.read().await;
         
-        // TODO: Fix quantum manager API once method signature is available
+        // TODO (feat): Fix quantum manager API once method signature is available (P1)
         // For now we just return the balance without quantum protection
         // let _protected_data = quantum_manager.protect_data(&balance_data, quantum_key_id)?;
         
@@ -242,7 +242,7 @@ impl NearAdapter {
     ) -> Result<Vec<u8>> {
         // 1. Quantum protect the transaction data
         let quantum_manager = self.quantum_manager.read().await;
-        // TODO: Implement quantum protection once API is available
+        // TODO (feat): Implement quantum protection once API is available (P1)
         // let protected_tx = quantum_manager.protect_transaction_data(ethereum_tx, quantum_key_id)?;
         
         // 2. Sign using Chain Signatures
@@ -313,7 +313,7 @@ impl NearAdapter {
         eth_tx_proof: &str,
         quantum_hash: &str,
     ) -> Result<String> {
-        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // TODO (feat): Complete implementation with real NEAR bridge contract (P2.2)
         // This will include:
         // 1. Verify ETH lock transaction via Chain Signatures
         // 2. Call NEAR bridge contract ft_mint(recipient, amount, eth_proof, quantum_hash)
@@ -333,7 +333,7 @@ impl NearAdapter {
         // Simulate NEAR network delay
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
-        // Generate mock transaction hash
+        // TODO (MOCK WARNING): Generate mock transaction hash - replace with real NEAR transaction
         let mock_tx_hash = format!("{}:{}", quantum_hash, hex::encode(recipient.as_bytes()));
         
         tracing::info!(tx_hash = %mock_tx_hash, "Mock NEAR mint transaction created");
@@ -349,7 +349,7 @@ impl NearAdapter {
         eth_recipient: &str,
         quantum_hash: &str,
     ) -> Result<String> {
-        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // TODO (feat): Complete implementation with real NEAR bridge contract (P2.2)
         // This will include:
         // 1. Call NEAR bridge contract ft_burn(amount, eth_recipient, quantum_hash)
         // 2. Use self.rpc_client for transaction submission
@@ -368,7 +368,7 @@ impl NearAdapter {
         // Simulate NEAR network delay
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
-        // Generate mock transaction hash
+        // TODO (MOCK WARNING): Generate mock transaction hash - replace with real NEAR transaction
         let mock_tx_hash = format!("{}:{}", quantum_hash, hex::encode(eth_recipient.as_bytes()));
         
         tracing::info!(tx_hash = %mock_tx_hash, "Mock NEAR burn transaction created");
@@ -384,7 +384,7 @@ impl NearAdapter {
         eth_recipient: &str,
         quantum_hash: &str,
     ) -> Result<String> {
-        // TODO [Phase 4.3.4]: Complete implementation with real NEAR bridge contract
+        // TODO (feat): Complete implementation with real NEAR bridge contract (P2.2)
         // This will include:
         // 1. Call NEAR bridge contract near_lock(amount, eth_recipient, quantum_hash)
         // 2. Lock native NEAR tokens in escrow

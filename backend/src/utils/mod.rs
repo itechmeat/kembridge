@@ -1,5 +1,5 @@
 // src/utils/mod.rs - Utility modules
-// TODO: These are placeholder utilities for future phases
+// TODO (info): These are placeholder utilities for future phases
 #![allow(dead_code)]
 
 pub mod crypto;

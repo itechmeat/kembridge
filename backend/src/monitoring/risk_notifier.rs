@@ -183,7 +183,7 @@ impl RiskNotifier {
     async fn broadcast_to_admins(&self, event: RiskAlertEvent) -> Result<usize, String> {
         // For now, broadcast to all connections
         // In a real implementation, this would filter by admin/operator role
-        // TODO: Implement role-based connection filtering
+        // TODO (feat): Implement role-based connection filtering (E3.2)
         self.broadcaster.broadcast_to_all(RealTimeEvent::RiskAlert(event)).await
     }
 

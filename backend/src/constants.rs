@@ -326,3 +326,15 @@ pub const SLIPPAGE_ADVANCED_TIMEOUT_MINUTES: i64 = 15; // 15 minutes advanced
 pub const SLIPPAGE_MAXIMUM_TIMEOUT_MINUTES: i64 = 30; // 30 minutes maximum
 pub const SLIPPAGE_MIN_TIMEOUT_MINUTES: i64 = 2; // 2 minutes minimum
 
+pub fn get_bridge_contract_address() -> Result<String, std::env::VarError> {
+    std::env::var("BRIDGE_CONTRACT_ADDRESS")
+}
+
+pub fn get_bridge_contract_deployed_block() -> Result<u64, Box<dyn std::error::Error>> {
+    let block_str = std::env::var("BRIDGE_CONTRACT_DEPLOYED_BLOCK")?;
+    let block_num = block_str.parse::<u64>()?;
+    Ok(block_num)
+}
+pub const BRIDGE_MIN_LOCK_AMOUNT_WEI: u64 = 1_000_000_000_000_000; // 0.001 ETH
+pub const BRIDGE_MAX_LOCK_AMOUNT_WEI: u64 = 10_000_000_000_000_000_000; // 10 ETH
+

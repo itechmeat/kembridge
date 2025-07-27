@@ -3,17 +3,18 @@ use ethers::{
     providers::{Provider, Http, Middleware},
     types::{Address, U256, H256, TransactionReceipt, Transaction},
 };
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use kembridge_crypto::QuantumKeyManager;
 use tokio::time::Duration;
 
-use super::{EthereumConfig, EthereumError, WalletInfo, TransactionStatus};
+use super::{EthereumConfig, EthereumError, WalletInfo, TransactionStatus, RealBridgeAdapter};
 
 pub struct EthereumAdapter {
     provider: Arc<Provider<Http>>,
     chain_id: u64,
-    quantum_manager: QuantumKeyManager,
+    quantum_manager: Arc<Mutex<QuantumKeyManager>>,
     config: EthereumConfig,
+    bridge_adapter: Option<RealBridgeAdapter>,
 }
 
 impl EthereumAdapter {
@@ -47,9 +48,33 @@ impl EthereumAdapter {
         Ok(Self {
             provider,
             chain_id: config.chain_id,
-            quantum_manager: QuantumKeyManager::new(),
+            quantum_manager: Arc::new(Mutex::new(QuantumKeyManager::new())),
             config,
+            bridge_adapter: None, // Will be initialized when bridge contract address is set
         })
+    }
+    
+    // TODO (MOCK WARNING): check if mock 
+    /// Initialize real bridge contract adapter (H4: Real Bridge Integration)
+    pub async fn init_bridge_contract(&mut self, contract_address: Address) -> Result<(), EthereumError> {
+        let bridge_adapter = RealBridgeAdapter::new(
+            Arc::clone(&self.provider),
+            contract_address
+        ).await?;
+        
+        self.bridge_adapter = Some(bridge_adapter);
+        
+        tracing::info!(
+            contract_address = %contract_address,
+            "Real bridge contract adapter initialized"
+        );
+        
+        Ok(())
+    }
+    
+    /// Get bridge adapter reference
+    pub fn bridge_adapter(&self) -> Option<&RealBridgeAdapter> {
+        self.bridge_adapter.as_ref()
     }
 
     /// Monitor ETH wallet balance
@@ -146,7 +171,8 @@ impl EthereumAdapter {
     }
 
     /// Lock ETH tokens in bridge contract
-    /// Implements Phase 4.3.3: ETH lock/unlock mechanism with quantum wallet integration
+    // TODO (MOCK WARNING): check if fallback 
+    /// Requires bridge contract to be initialized - no fallbacks
     pub async fn lock_eth_tokens(
         &self,
         bridge_contract_address: Address,
@@ -155,37 +181,37 @@ impl EthereumAdapter {
         quantum_hash: &str,
         user_wallet: Address,
     ) -> Result<H256, EthereumError> {
-        // TODO [Phase 4.3.3]: Complete implementation with real bridge contract
-        // This will include:
-        // 1. Load bridge contract ABI
-        // 2. Prepare transaction with lock_tokens(amount, recipient_chain, quantum_hash)
-        // 3. Sign transaction with quantum-protected private key
-        // 4. Send transaction and wait for confirmation
-        // 5. Return real transaction hash
+        // TODO (MOCK WARNING): check if fallback 
+        // Require real bridge adapter - no fallbacks
+        let bridge_adapter = self.bridge_adapter.as_ref()
+            .ok_or_else(|| EthereumError::ContractError(
+                "Bridge contract not initialized. Real bridge contract address required.".to_string()
+            ))?;
         
-        tracing::info!(
-            contract_address = %bridge_contract_address,
-            amount = %amount,
-            recipient_chain = %recipient_chain,
-            quantum_hash = %quantum_hash,
-            user_wallet = %user_wallet,
-            "MOCK: Locking ETH tokens in bridge contract"
-        );
+        tracing::info!("Using REAL bridge contract for ETH lock operation");
         
-        // Simulate network delay
-        tokio::time::sleep(Duration::from_secs(3)).await;
+        // Get real private key from quantum key manager
+        let private_key = {
+            let mut quantum_manager = self.quantum_manager.lock()
+                .map_err(|e| EthereumError::QuantumCryptoError(format!("Mutex lock failed: {}", e)))?;
+            let user_key_id = quantum_manager.generate_ethereum_keypair(uuid::Uuid::new_v4())
+                .map_err(|e| EthereumError::QuantumCryptoError(e.to_string()))?;
+            quantum_manager.get_ethereum_private_key(user_key_id)
+                .map_err(|e| EthereumError::QuantumCryptoError(e.to_string()))?
+        };
         
-        // Generate mock transaction hash
-        let mock_tx_hash = format!("0x{:0>64}", hex::encode(quantum_hash.as_bytes()));
-        let tx_hash = mock_tx_hash.parse::<H256>()
-            .map_err(|e| EthereumError::InvalidTransaction(e.to_string()))?;
-        
-        tracing::info!(tx_hash = %tx_hash, "Mock ETH lock transaction created");
-        Ok(tx_hash)
+        bridge_adapter.lock_eth_tokens(
+            amount,
+            recipient_chain,
+            quantum_hash,
+            user_wallet,
+            &private_key
+        ).await
     }
 
-    /// Unlock ETH tokens from bridge contract  
-    /// Implements Phase 4.3.3: ETH unlock mechanism for NEAR -> ETH direction
+    /// Unlock ETH tokens from bridge contract
+    // TODO (MOCK WARNING): check if fallback 
+    /// Requires bridge contract to be initialized - no fallbacks
     pub async fn unlock_eth_tokens(
         &self,
         bridge_contract_address: Address,
@@ -194,43 +220,42 @@ impl EthereumAdapter {
         near_tx_proof: &str,
         quantum_hash: &str,
     ) -> Result<H256, EthereumError> {
-        // TODO [Phase 4.3.3]: Complete implementation with real bridge contract
-        // This will include:
-        // 1. Verify NEAR transaction proof via Chain Signatures
-        // 2. Call bridge contract unlock_tokens(recipient, amount, proof, quantum_hash)
-        // 3. Sign and send transaction
-        // 4. Wait for confirmation
-        // 5. Return transaction hash
+        // TODO (MOCK WARNING): check if fallback 
+        // Require real bridge adapter - no fallbacks
+        let bridge_adapter = self.bridge_adapter.as_ref()
+            .ok_or_else(|| EthereumError::ContractError(
+                "Bridge contract not initialized. Real bridge contract address required.".to_string()
+            ))?;
         
-        tracing::info!(
-            contract_address = %bridge_contract_address,
-            amount = %amount,
-            recipient = %recipient,
-            near_tx_proof = near_tx_proof,
-            quantum_hash = %quantum_hash,
-            "MOCK: Unlocking ETH tokens from bridge contract"
-        );
+        tracing::info!("Using REAL bridge contract for ETH unlock operation");
         
-        // Simulate network delay
-        tokio::time::sleep(Duration::from_secs(3)).await;
+        // Get real admin private key from quantum key manager
+        let admin_private_key = {
+            let mut quantum_manager = self.quantum_manager.lock()
+                .map_err(|e| EthereumError::QuantumCryptoError(format!("Mutex lock failed: {}", e)))?;
+            let admin_key_id = quantum_manager.get_admin_key()
+                .map_err(|e| EthereumError::QuantumCryptoError(e.to_string()))?;
+            quantum_manager.get_ethereum_private_key(admin_key_id)
+                .map_err(|e| EthereumError::QuantumCryptoError(e.to_string()))?
+        };
         
-        // Generate mock transaction hash
-        let mock_tx_hash = format!("0x{:0>64}", hex::encode(quantum_hash.as_bytes()));
-        let tx_hash = mock_tx_hash.parse::<H256>()
-            .map_err(|e| EthereumError::InvalidTransaction(e.to_string()))?;
-        
-        tracing::info!(tx_hash = %tx_hash, "Mock ETH unlock transaction created");
-        Ok(tx_hash)
+        bridge_adapter.unlock_eth_tokens(
+            recipient,
+            amount,
+            "near", // Source chain
+            quantum_hash,
+            &admin_private_key
+        ).await
     }
 
     /// Get and decrypt private key via quantum crypto
-    /// TODO: Implement in Phase 4.3 with BridgeService integration
+    /// TODO (feat): Implement in Phase 4.3 with BridgeService integration (P2.1)
     async fn get_decrypted_private_key(
         &self,
         key_id: uuid::Uuid,
         user_id: uuid::Uuid,
     ) -> Result<Vec<u8>, EthereumError> {
-        // TODO: Integration with QuantumService for key decryption in Phase 4.3
+        // TODO (feat): Integration with QuantumService for key decryption in Phase 4.3 (P1)
         tracing::warn!(
             key_id = %key_id,
             user_id = %user_id,

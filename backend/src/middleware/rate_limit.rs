@@ -1,17 +1,21 @@
 // src/middleware/rate_limit.rs - Advanced rate limiting with Redis sliding window
 use axum::{
-    extract::Request,
+    extract::{Request, State},
     middleware::Next,
     response::Response,
     http::HeaderValue,
 };
-// TODO: Use real Redis rate limiting instead of mocks (Phase 1.3.4)
-// use redis::AsyncCommands;
-use std::time::Duration;
-use crate::middleware::error_handler::ApiError;
+use redis::AsyncCommands;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
+use crate::{middleware::error_handler::ApiError, AppState};
 
-/// Rate limiting middleware with sliding window algorithm
-pub async fn rate_limit(request: Request, next: Next) -> Result<Response, ApiError> {
+/// Rate limiting middleware with sliding window algorithm and Redis
+pub async fn rate_limit_with_state(
+    State(app_state): State<AppState>,
+    request: Request,
+    next: Next,
+) -> Result<Response, ApiError> {
     // Extract rate limiting key from request
     let rate_key = extract_rate_limit_key(&request);
     
@@ -24,18 +28,20 @@ pub async fn rate_limit(request: Request, next: Next) -> Result<Response, ApiErr
     }
 
     // Check rate limit using Redis sliding window
-    // Note: This is a simplified implementation for the POC
-    // In real implementation, we would inject Redis connection through state
     tracing::debug!(
         rate_key = %rate_key,
         limit = limit,
         window_seconds = window.as_secs(),
-        "Checking rate limit"
+        "Checking rate limit with Redis"
     );
 
-    // TODO: Use real Redis rate limiting instead of mocks (Phase 1.3.4)
-    // Simulate rate limit check
-    let (allowed, remaining, reset_time) = check_rate_limit_redis(&rate_key, limit, window).await?;
+    // Real Redis rate limiting implementation using regular ConnectionManager
+    let (allowed, remaining, reset_time) = check_rate_limit_redis_simple(
+        &app_state.redis, 
+        &rate_key, 
+        limit, 
+        window
+    ).await?;
 
     if !allowed {
         tracing::warn!(
@@ -54,9 +60,17 @@ pub async fn rate_limit(request: Request, next: Next) -> Result<Response, ApiErr
     let mut response = next.run(request).await;
 
     // Add rate limit headers to response
-    add_rate_limit_headers(&mut response, remaining, reset_time);
+    add_rate_limit_headers(&mut response, limit, remaining, reset_time);
 
     Ok(response)
+}
+
+/// TODO (MOCK WARNING): Legacy rate limiting middleware (fallback)
+/// Deprecated: Use rate_limit_with_state instead
+pub async fn rate_limit(request: Request, next: Next) -> Result<Response, ApiError> {
+    // For backward compatibility, skip rate limiting if no Redis available
+    tracing::warn!("Using legacy rate limiting without Redis - requests not actually limited");
+    Ok(next.run(request).await)
 }
 
 /// Extract rate limiting key from request (IP + User ID + Endpoint class)
@@ -187,33 +201,93 @@ fn extract_user_tier(request: &Request) -> UserTier {
         .unwrap_or(UserTier::Free)
 }
 
-/// TODO: Use real Redis sliding window rate limiting instead of mocks (Phase 1.3.4)
-/// Simplified Redis rate limit check
-/// In real implementation, this would use the Redis connection from app state
-async fn check_rate_limit_redis(
-    _key: &str, 
-    _limit: u32, 
-    _window: Duration
+/// Real Redis sliding window rate limiting implementation using ConnectionManager
+async fn check_rate_limit_redis_simple(
+    redis_manager: &redis::aio::ConnectionManager,
+    key: &str,
+    limit: u32,
+    window: Duration,
 ) -> Result<(bool, u32, u64), ApiError> {
-    // TODO: Use real Redis rate limiting instead of mocks (Phase 1.3.4)
-    // Real implementation would:
-    // 1. Use Redis ZRANGEBYSCORE to get requests in current window
-    // 2. Count current requests
-    // 3. If under limit, add current request with ZADD
-    // 4. Clean up expired entries with ZREMRANGEBYSCORE
-    // 5. Set TTL on the key
+    use redis::AsyncCommands;
     
-    // For now, always allow requests
-    let allowed = true;
-    let remaining = 50; // Mock remaining requests
-    let reset_time = chrono::Utc::now().timestamp() as u64 + 60; // Reset in 60 seconds
+    let mut conn = redis_manager.clone();
+    
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let window_start = now - window.as_secs();
+    let window_end = now;
+    
+    // Lua script for atomic sliding window rate limiting
+    let script = r#"
+        local key = KEYS[1]
+        local window_start = tonumber(ARGV[1])
+        local now = tonumber(ARGV[2])
+        local limit = tonumber(ARGV[3])
+        local window_seconds = tonumber(ARGV[4])
+        local request_id = ARGV[5]
+        
+        -- Remove expired entries
+        redis.call('ZREMRANGEBYSCORE', key, '-inf', window_start)
+        
+        -- Count current requests
+        local current_count = redis.call('ZCARD', key)
+        
+        -- Check rate limit
+        if current_count >= limit then
+            return {0, 0, now + window_seconds}
+        end
+        
+        -- Add current request
+        redis.call('ZADD', key, now, request_id)
+        
+        -- Set TTL
+        redis.call('EXPIRE', key, window_seconds)
+        
+        local remaining = limit - current_count - 1
+        return {1, remaining, now + window_seconds}
+    "#;
+    
+    let request_id = format!("{}:{}", now, Uuid::new_v4());
+    
+    // Execute script using ConnectionManager
+    let result: Vec<u64> = redis::cmd("EVAL")
+        .arg(script)
+        .arg(1) // Number of keys
+        .arg(key)
+        .arg(window_start)
+        .arg(now)
+        .arg(limit)
+        .arg(window.as_secs())
+        .arg(&request_id)
+        .query_async(&mut conn)
+        .await
+        .map_err(|e| ApiError::Internal(format!("Redis script execution failed: {}", e)))?;
+    
+    let allowed = result[0] == 1;
+    let remaining = result[1] as u32;
+    let reset_time = result[2];
+    
+    tracing::debug!(
+        key = %key,
+        allowed = allowed,
+        limit = limit,
+        remaining = remaining,
+        "Rate limit check completed"
+    );
     
     Ok((allowed, remaining, reset_time))
 }
 
 /// Add rate limit headers to response
-fn add_rate_limit_headers(response: &mut Response, remaining: u32, reset_time: u64) {
+fn add_rate_limit_headers(response: &mut Response, limit: u32, remaining: u32, reset_time: u64) {
     let headers = response.headers_mut();
+    
+    if let Ok(limit_header) = HeaderValue::from_str(&limit.to_string()) {
+        headers.insert("x-rate-limit-limit", limit_header);
+    }
     
     if let Ok(remaining_header) = HeaderValue::from_str(&remaining.to_string()) {
         headers.insert("x-rate-limit-remaining", remaining_header);
@@ -221,10 +295,6 @@ fn add_rate_limit_headers(response: &mut Response, remaining: u32, reset_time: u
     
     if let Ok(reset_header) = HeaderValue::from_str(&reset_time.to_string()) {
         headers.insert("x-rate-limit-reset", reset_header);
-    }
-    
-    if let Ok(limit_header) = HeaderValue::from_str("100") { // Mock limit
-        headers.insert("x-rate-limit-limit", limit_header);
     }
 }
 
