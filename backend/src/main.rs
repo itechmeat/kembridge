@@ -53,6 +53,10 @@ use config::AppConfig;
         handlers::quantum::decapsulate,
         handlers::quantum::get_user_keys,
         handlers::quantum::export_public_key,
+        handlers::quantum::rotate_key,
+        handlers::quantum::check_rotation_needed,
+        handlers::quantum::admin_check_rotation,
+        handlers::quantum::hybrid_rotate_key,
     ),
     components(
         schemas(
@@ -68,6 +72,16 @@ use config::AppConfig;
             models::quantum::EncapsulateResponse,
             models::quantum::DecapsulateRequest,
             models::quantum::DecapsulateResponse,
+            models::quantum::RotateKeyRequest,
+            models::quantum::RotateKeyResponse,
+            models::quantum::CheckRotationRequest,
+            models::quantum::CheckRotationResponse,
+            models::quantum::QuantumKeyRotationInfo,
+            models::quantum::HybridRotateKeyRequest,
+            models::quantum::HybridRotateKeyResponse,
+            models::quantum::HybridRotationConfig,
+            models::quantum::HybridEncryptionDetails,
+            models::quantum::HybridKeySizes,
         )
     ),
     tags(

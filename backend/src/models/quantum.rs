@@ -145,3 +145,158 @@ pub struct QuantumKeysListResponse {
     /// Total number of keys
     pub total: usize,
 }
+
+/// Request for key rotation operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct RotateKeyRequest {
+    /// ID of the key to rotate
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// Reason for rotation
+    #[schema(example = "scheduled_rotation")]
+    pub rotation_reason: String,
+    /// Optional new expiration in days (default: 365)
+    #[schema(example = 365)]
+    pub expires_in_days: Option<i32>,
+}
+
+/// Response from key rotation operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct RotateKeyResponse {
+    /// New key information
+    pub new_key: QuantumKeyResponse,
+    /// ID of the previous key that was rotated
+    #[schema(value_type = String, format = "uuid")]
+    pub previous_key_id: Uuid,
+    /// Rotation reason
+    pub rotation_reason: String,
+    /// Generation number of the new key
+    pub rotation_generation: i32,
+    /// When the rotation was performed
+    #[schema(value_type = String, format = "date-time")]
+    pub rotated_at: DateTime<Utc>,
+}
+
+/// Request to check if keys need rotation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct CheckRotationRequest {
+    /// Optional user ID to check (admin endpoint)
+    #[schema(value_type = Option<String>, format = "uuid")]
+    pub user_id: Option<Uuid>,
+    /// Check keys older than this many days
+    #[schema(example = 90)]
+    pub days_threshold: Option<i32>,
+}
+
+/// Response with keys that need rotation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct CheckRotationResponse {
+    /// Keys that need rotation
+    pub keys_needing_rotation: Vec<QuantumKeyRotationInfo>,
+    /// Total count
+    pub total: usize,
+    /// Threshold used for checking
+    pub days_threshold: i32,
+}
+
+/// Information about a key that needs rotation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct QuantumKeyRotationInfo {
+    /// Key ID
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// User ID
+    #[schema(value_type = String, format = "uuid")]
+    pub user_id: Uuid,
+    /// Key algorithm
+    pub algorithm: String,
+    /// Days since creation
+    pub days_old: i32,
+    /// Current rotation generation
+    pub rotation_generation: i32,
+    /// Whether key has active operations (from AI Risk Engine monitoring)
+    pub has_active_operations: bool,
+    /// Risk score for the key
+    pub risk_score: f64,
+    /// Recommended rotation priority
+    #[schema(example = "high")]
+    pub priority: String,
+}
+
+/// Request for hybrid key rotation operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridRotateKeyRequest {
+    /// ID of the key to rotate
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// Reason for rotation
+    #[schema(example = "scheduled_rotation")]
+    pub rotation_reason: String,
+    /// Optional new expiration in days (default: 365)
+    #[schema(example = 365)]
+    pub expires_in_days: Option<i32>,
+    /// Hybrid encryption configuration
+    pub hybrid_config: HybridRotationConfig,
+}
+
+/// Configuration for hybrid encryption during key rotation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridRotationConfig {
+    /// Use hybrid encryption for private key storage
+    #[schema(example = true)]
+    pub use_hybrid_encryption: bool,
+    /// Master key ID for hybrid encryption (if not provided, will use latest)
+    #[schema(value_type = Option<String>, format = "uuid")]
+    pub master_key_id: Option<Uuid>,
+    /// Context for encryption (bridge_transaction, key_exchange, etc.)
+    #[schema(example = "key_rotation")]
+    pub encryption_context: String,
+}
+
+/// Response from hybrid key rotation operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridRotateKeyResponse {
+    /// New key information
+    pub new_key: QuantumKeyResponse,
+    /// ID of the previous key that was rotated
+    #[schema(value_type = String, format = "uuid")]
+    pub previous_key_id: Uuid,
+    /// Rotation reason
+    pub rotation_reason: String,
+    /// Generation number of the new key
+    pub rotation_generation: i32,
+    /// When the rotation was performed
+    #[schema(value_type = String, format = "date-time")]
+    pub rotated_at: DateTime<Utc>,
+    /// Hybrid encryption details
+    pub hybrid_details: HybridEncryptionDetails,
+}
+
+/// Details about hybrid encryption used during rotation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridEncryptionDetails {
+    /// Whether hybrid encryption was used
+    pub hybrid_encryption_used: bool,
+    /// Master key ID used for encryption
+    #[schema(value_type = Option<String>, format = "uuid")]
+    pub master_key_id: Option<Uuid>,
+    /// Encryption context used
+    pub encryption_context: String,
+    /// Hybrid scheme version
+    pub scheme_version: u8,
+    /// Key size information
+    pub key_sizes: HybridKeySizes,
+}
+
+/// Information about key sizes in hybrid encryption
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridKeySizes {
+    /// ML-KEM ciphertext size
+    pub ml_kem_ciphertext_size: usize,
+    /// AES encrypted data size
+    pub aes_encrypted_size: usize,
+    /// Integrity proof size
+    pub integrity_proof_size: usize,
+    /// Total hybrid data size
+    pub total_size: usize,
+}

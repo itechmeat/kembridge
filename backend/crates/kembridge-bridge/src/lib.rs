@@ -9,6 +9,7 @@ pub mod state_machine;
 pub mod validation;
 pub mod timeout_manager;
 pub mod api;
+pub mod event_handler;
 
 pub use types::*;
 pub use executor::*;
@@ -18,6 +19,7 @@ pub use state_machine::*;
 pub use validation::*;
 pub use timeout_manager::*;
 pub use api::*;
+pub use event_handler::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum BridgeError {

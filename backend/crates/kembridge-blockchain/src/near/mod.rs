@@ -5,6 +5,7 @@ pub mod adapter;
 pub mod config;
 pub mod error;
 pub mod wallet;
+pub mod events;
 
 // Advanced features (will be implemented progressively)
 #[cfg(feature = "chain-signatures")]
@@ -31,6 +32,8 @@ pub use one_click_api::{
     OneClickApiClient, OneClickConfig, QuoteRequest, QuoteResponse, SwapStatus,
     OptimizationCriteria, OptimizationTarget, QuoteVariation, SwapExecution, ExecutionStatus
 };
+
+pub use events::{NearEventListener, NearBridgeEvent, NearEventListenerConfig};
 
 // Type aliases for convenience
 pub type Result<T> = std::result::Result<T, NearError>;

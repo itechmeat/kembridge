@@ -23,4 +23,12 @@ pub fn create_routes() -> Router<AppState> {
         
         // Export public key (Phase 3.2.8)
         .route("/keys/{key_id}/public", get(crate::handlers::quantum::export_public_key))
+        
+        // Key rotation endpoints (Task 3.2.7)
+        .route("/keys/rotate", post(crate::handlers::quantum::rotate_key))
+        .route("/keys/check-rotation", post(crate::handlers::quantum::check_rotation_needed))
+        .route("/admin/check-rotation", post(crate::handlers::quantum::admin_check_rotation))
+        
+        // Hybrid key rotation endpoint (Task 3.4.4)
+        .route("/keys/hybrid-rotate", post(crate::handlers::quantum::hybrid_rotate_key))
 }

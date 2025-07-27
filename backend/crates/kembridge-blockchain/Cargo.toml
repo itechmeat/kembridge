@@ -48,6 +48,9 @@ secp256k1.workspace = true
 base64 = "0.22"
 hex = "0.4"
 
+# Random for event generation (development)
+rand = "0.8"
+
 [features]
 default = []
 # Feature for Chain Signatures testing
