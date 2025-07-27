@@ -8,6 +8,7 @@ use base64::{Engine as _, engine::general_purpose};
 use sha2::{Sha256, Digest};
 
 use kembridge_crypto::{MlKemCrypto, QuantumKeyManager, QuantumCryptoError, HybridCrypto, TransactionCrypto};
+use validator::Validate;
 use crate::config::AppConfig;
 use crate::models::quantum::{
     QuantumKey, CreateQuantumKeyRequest, QuantumKeyResponse,
@@ -36,6 +37,11 @@ impl QuantumService {
             key_manager: QuantumKeyManager::new(),
             config: config.clone(),
         })
+    }
+
+    /// Get the quantum key manager for bridge service integration (Phase 5.2.7)
+    pub fn get_quantum_manager(&self) -> Arc<QuantumKeyManager> {
+        Arc::new(QuantumKeyManager::new())
     }
 
     /// Generate a new ML-KEM-1024 key pair for a user
@@ -801,6 +807,173 @@ impl QuantumService {
         .await
         .map_err(|e| QuantumServiceError::DatabaseError(e.to_string()))?
         .ok_or(QuantumServiceError::KeyNotFound)
+    }
+
+    /// Encrypt data using hybrid cryptography (Task 3.4.5)
+    pub async fn hybrid_encrypt(
+        &self,
+        user_id: Uuid,
+        request: crate::models::quantum::HybridEncryptRequest,
+    ) -> Result<crate::models::quantum::HybridEncryptResponse, QuantumServiceError> {
+        use crate::models::quantum::*;
+        use kembridge_crypto::HybridCrypto;
+        use base64::{Engine as _, engine::general_purpose};
+
+        // Validate input
+        if let Err(validation_errors) = request.validate() {
+            let error_message = validation_errors
+                .field_errors()
+                .iter()
+                .map(|(field, errors)| {
+                    let error_messages: Vec<String> = errors.iter()
+                        .map(|e| e.message.as_ref().unwrap_or(&"invalid".into()).to_string())
+                        .collect();
+                    format!("{}: {}", field, error_messages.join(", "))
+                })
+                .collect::<Vec<_>>()
+                .join("; ");
+            return Err(QuantumServiceError::InvalidRequest(error_message));
+        }
+
+        // Get and validate key
+        let key = self.get_user_key(user_id, request.key_id).await?;
+        if !key.is_active.unwrap_or(false) {
+            return Err(QuantumServiceError::InvalidRequest("Key is not active".to_string()));
+        }
+
+        // Decode input data
+        let data = general_purpose::STANDARD
+            .decode(&request.data)
+            .map_err(|e| QuantumServiceError::InvalidRequest(format!("Invalid base64 data: {}", e)))?;
+
+        // Create encryption context based on request
+        let context = match request.encryption_context.as_str() {
+            "bridge_transaction" => kembridge_crypto::kdf::contexts::bridge_transaction(),
+            "key_exchange" => kembridge_crypto::kdf::contexts::key_exchange(),
+            "session_keys" => kembridge_crypto::kdf::contexts::session_keys(),
+            _ => kembridge_crypto::kdf::contexts::bridge_transaction(), // Default
+        };
+
+        // Encrypt data
+        let encrypted_data = HybridCrypto::encrypt_data(&key.public_key, &data, &context)
+            .map_err(|e| QuantumServiceError::CryptoError(e))?;
+
+        // Serialize encrypted data for transport
+        let serialized = serde_json::to_vec(&encrypted_data)
+            .map_err(|e| QuantumServiceError::InvalidRequest(format!("Failed to serialize encrypted data: {}", e)))?;
+        let encrypted_base64 = general_purpose::STANDARD.encode(&serialized);
+
+        // Create response
+        let response = HybridEncryptResponse {
+            encrypted_data: encrypted_base64,
+            encryption_metadata: HybridEncryptionMetadata {
+                scheme_version: encrypted_data.scheme_version,
+                encrypted_at: Utc::now(),
+                encryption_context: request.encryption_context.clone(),
+                data_sizes: HybridKeySizes {
+                    ml_kem_ciphertext_size: encrypted_data.ml_kem_ciphertext.len(),
+                    aes_encrypted_size: encrypted_data.aes_encrypted_data.ciphertext.len(),
+                    integrity_proof_size: encrypted_data.integrity_proof.len(),
+                    total_size: serialized.len(),
+                },
+            },
+            key_info: HybridKeyInfo {
+                key_id: key.id.unwrap(),
+                algorithm: key.algorithm.unwrap_or_default(),
+                is_active: key.is_active.unwrap_or(false),
+                rotation_generation: key.rotation_generation.unwrap_or(1),
+            },
+        };
+
+        Ok(response)
+    }
+
+    /// Decrypt data using hybrid cryptography (Task 3.4.5)
+    pub async fn hybrid_decrypt(
+        &self,
+        user_id: Uuid,
+        request: crate::models::quantum::HybridDecryptRequest,
+    ) -> Result<crate::models::quantum::HybridDecryptResponse, QuantumServiceError> {
+        use crate::models::quantum::*;
+        use kembridge_crypto::HybridCrypto;
+        use base64::{Engine as _, engine::general_purpose};
+
+        // Validate input
+        if let Err(validation_errors) = request.validate() {
+            let error_message = validation_errors
+                .field_errors()
+                .iter()
+                .map(|(field, errors)| {
+                    let error_messages: Vec<String> = errors.iter()
+                        .map(|e| e.message.as_ref().unwrap_or(&"invalid".into()).to_string())
+                        .collect();
+                    format!("{}: {}", field, error_messages.join(", "))
+                })
+                .collect::<Vec<_>>()
+                .join("; ");
+            return Err(QuantumServiceError::InvalidRequest(error_message));
+        }
+
+        // Get and validate key
+        let key = self.get_user_key(user_id, request.key_id).await?;
+        if !key.is_active.unwrap_or(false) {
+            return Err(QuantumServiceError::InvalidRequest("Key is not active".to_string()));
+        }
+
+        // Decode encrypted data
+        let encrypted_data = general_purpose::STANDARD
+            .decode(&request.encrypted_data)
+            .map_err(|e| QuantumServiceError::InvalidRequest(format!("Invalid base64 data: {}", e)))?;
+
+        // Parse encrypted data structure
+        let hybrid_data: kembridge_crypto::HybridEncryptedData = serde_json::from_slice(&encrypted_data)
+            .map_err(|e| QuantumServiceError::InvalidRequest(format!("Invalid encrypted data format: {}", e)))?;
+
+        // Decrypt private key (we need to implement this method)
+        let private_key = self.decrypt_private_key(&key.encrypted_private_key)
+            .map_err(|e| QuantumServiceError::CryptoError(e))?;
+
+        // Create decryption context based on request
+        let context = match request.encryption_context.as_str() {
+            "bridge_transaction" => kembridge_crypto::kdf::contexts::bridge_transaction(),
+            "key_exchange" => kembridge_crypto::kdf::contexts::key_exchange(),
+            "session_keys" => kembridge_crypto::kdf::contexts::session_keys(),
+            _ => kembridge_crypto::kdf::contexts::bridge_transaction(), // Default
+        };
+
+        // Decrypt data
+        let decrypted_data = HybridCrypto::decrypt_data(&private_key, &hybrid_data, &context)
+            .map_err(|e| QuantumServiceError::CryptoError(e))?;
+
+        // Encode decrypted data
+        let decrypted_base64 = general_purpose::STANDARD.encode(&decrypted_data);
+
+        // Create response
+        let response = HybridDecryptResponse {
+            decrypted_data: decrypted_base64,
+            decryption_metadata: HybridDecryptionMetadata {
+                scheme_version: hybrid_data.scheme_version,
+                decrypted_at: Utc::now(),
+                encryption_context: request.encryption_context.clone(),
+                original_data_size: decrypted_data.len(),
+            },
+            key_info: HybridKeyInfo {
+                key_id: key.id.unwrap(),
+                algorithm: key.algorithm.unwrap_or_default(),
+                is_active: key.is_active.unwrap_or(false),
+                rotation_generation: key.rotation_generation.unwrap_or(1),
+            },
+        };
+
+        Ok(response)
+    }
+
+    /// Helper method to decrypt private key
+    fn decrypt_private_key(&self, encrypted_private_key: &[u8]) -> Result<Vec<u8>, QuantumCryptoError> {
+        // For now, we'll use a simple decryption method
+        // In production, this should use the master key and proper key derivation
+        // This is a simplified implementation for the demo
+        Ok(encrypted_private_key.to_vec())
     }
 }
 

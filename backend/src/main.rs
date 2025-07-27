@@ -23,6 +23,7 @@ mod extractors;
 mod models;
 mod services;
 mod utils;
+mod state;
 
 // Services are used via full paths in AppState
 
@@ -57,6 +58,18 @@ use config::AppConfig;
         handlers::quantum::check_rotation_needed,
         handlers::quantum::admin_check_rotation,
         handlers::quantum::hybrid_rotate_key,
+        handlers::risk::get_user_risk_profile,
+        handlers::risk::get_risk_thresholds,
+        handlers::risk::update_risk_thresholds,
+        handlers::risk::get_risk_engine_health,
+        handlers::risk::test_risk_analysis,
+        handlers::manual_review::add_to_review_queue,
+        handlers::manual_review::get_review_queue,
+        handlers::manual_review::assign_review,
+        handlers::manual_review::make_review_decision,
+        handlers::manual_review::get_review_details,
+        handlers::manual_review::escalate_review,
+        handlers::manual_review::check_escalations,
     ),
     components(
         schemas(
@@ -82,6 +95,26 @@ use config::AppConfig;
             models::quantum::HybridRotationConfig,
             models::quantum::HybridEncryptionDetails,
             models::quantum::HybridKeySizes,
+            handlers::risk::GetUserRiskProfileQuery,
+            handlers::risk::RiskProfileResponse,
+            handlers::risk::UpdateRiskThresholdsRequest,
+            handlers::risk::RiskThresholdsResponse,
+            handlers::risk::RiskEngineHealthResponse,
+            models::review::ReviewStatus,
+            models::review::ReviewPriority,
+            models::review::ReviewQueueEntry,
+            models::review::CreateReviewRequest,
+            models::review::UpdateReviewRequest,
+            models::review::ReviewQueueResponse,
+            models::review::TransactionSummary,
+            models::review::UserRiskSummary,
+            models::review::ReviewDecision,
+            models::review::ReviewQueueQuery,
+            models::review::ReviewQueueListResponse,
+            models::review::PaginationInfo,
+            models::review::ReviewQueueStats,
+            models::review::ReviewNotification,
+            models::review::NotificationType,
         )
     ),
     tags(
@@ -90,6 +123,8 @@ use config::AppConfig;
         (name = "Bridge", description = "Cross-chain bridge operations"),
         (name = "Quantum", description = "Post-quantum cryptography operations"),
         (name = "User", description = "User management endpoints"),
+        (name = "Risk Analysis", description = "AI-powered risk analysis and monitoring"),
+        (name = "Manual Review", description = "Manual review queue management for suspicious transactions"),
         (name = "Admin", description = "Administrative endpoints")
     ),
     servers(
@@ -185,6 +220,9 @@ fn create_v1_routes() -> Router<AppState> {
 
         // User management routes
         .nest("/user", routes::user::create_routes())
+
+        // Risk analysis routes
+        .nest("/risk", routes::risk::create_routes())
 
         // Admin routes (protected)
         .nest("/admin", routes::admin::create_routes())
@@ -319,72 +357,6 @@ fn init_tracing() -> anyhow::Result<()> {
     Ok(())
 }
 
-// Application state with dependency injection
-#[derive(Clone)]
-pub struct AppState {
-    pub db: sqlx::PgPool,
-    pub redis: ConnectionManager,
-    pub config: AppConfig,
-    pub auth_service: std::sync::Arc<services::AuthService>,
-    pub user_service: std::sync::Arc<services::UserService>,
-    pub bridge_service: std::sync::Arc<services::BridgeService>,
-    pub quantum_service: std::sync::Arc<services::QuantumService>,
-    pub ai_client: std::sync::Arc<services::AiClient>,
-    pub metrics: std::sync::Arc<metrics_exporter_prometheus::PrometheusHandle>,
-}
+// Re-export AppState from state module
+pub use state::AppState;
 
-impl AppState {
-    pub async fn new(
-        db: sqlx::PgPool,
-        redis: ConnectionManager,
-        config: AppConfig,
-    ) -> anyhow::Result<Self> {
-        use std::sync::Arc;
-
-        // Initialize services with dependency injection
-        let auth_service = Arc::new(
-            services::AuthService::new(
-                db.clone(), 
-                redis.clone(), 
-                config.jwt_secret.clone()
-            ).await?
-        );
-
-        let user_service = Arc::new(
-            services::UserService::new(db.clone())
-        );
-
-        let quantum_service = Arc::new(
-            services::QuantumService::new(db.clone(), &config).await?
-        );
-
-        let bridge_service = Arc::new(
-            services::BridgeService::new(
-                db.clone(),
-                quantum_service.clone(),
-                &config
-            ).await?
-        );
-
-        let ai_client = Arc::new(
-            services::AiClient::new(&config.ai_engine_url)?
-        );
-
-        let metrics = metrics_exporter_prometheus::PrometheusBuilder::new()
-            .build_recorder()
-            .handle();
-        let metrics = Arc::new(metrics);
-
-        Ok(Self {
-            db,
-            redis,
-            config,
-            auth_service,
-            user_service,
-            bridge_service,
-            quantum_service,
-            ai_client,
-            metrics,
-        })
-    }
-}

@@ -3,20 +3,36 @@ use crate::models::user::{
     UserProfile, UserProfileResponse, UserWallet, UserWalletInfo, 
     UserStats, UpdateUserRequest, AddWalletRequest
 };
+use crate::services::risk_integration::RiskIntegrationService;
 use crate::middleware::error_handler::ApiError;
 use anyhow::Result;
 use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
+use std::sync::Arc;
+use serde_json::json;
+use tracing::{info, warn, debug};
 
 #[derive(Clone)]
 pub struct UserService {
     db_pool: PgPool,
+    risk_integration_service: Option<Arc<RiskIntegrationService>>,
 }
 
 impl UserService {
     pub fn new(db_pool: PgPool) -> Self {
-        Self { db_pool }
+        Self { 
+            db_pool,
+            risk_integration_service: None,
+        }
+    }
+
+    /// Create UserService with risk integration support (Phase 5.2.7)
+    pub fn with_risk_integration(db_pool: PgPool, risk_integration_service: Arc<RiskIntegrationService>) -> Self {
+        Self {
+            db_pool,
+            risk_integration_service: Some(risk_integration_service),
+        }
     }
 
     /// Get user profile by user ID with wallets and stats
@@ -203,6 +219,31 @@ impl UserService {
             ApiError::internal_server_error("Failed to update user profile")
         })?
         .ok_or_else(|| ApiError::not_found("User not found"))?;
+
+        // Update risk profile after user profile changes (Phase 5.2.7)
+        if let Some(ref risk_service) = self.risk_integration_service {
+            let transaction_data = json!({
+                "event_type": "profile_updated",
+                "user_id": user_id,
+                "changes": {
+                    "username": request.username,
+                    "profile_data": request.profile_data
+                },
+                "timestamp": chrono::Utc::now(),
+                "source": "user_management"
+            });
+
+            if let Err(e) = risk_service.update_user_profile_after_transaction(user_id, transaction_data).await {
+                warn!(
+                    user_id = %user_id,
+                    error = %e,
+                    "Failed to update risk profile after user profile change"
+                );
+                // Don't fail the user update for risk profile errors
+            } else {
+                info!(user_id = %user_id, "Risk profile updated after user profile change");
+            }
+        }
 
         Ok(updated_user)
     }

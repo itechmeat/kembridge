@@ -19,9 +19,10 @@ tower-http = { version = "0.6.6", features = [
 
 # Database & Cache
 sqlx = { version = "0.8", features = [
-    "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "migrate"
+    "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "migrate", "bigdecimal"
 ] }
 redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
+bigdecimal = { version = "0.4", features = ["serde"] }
 
 # Serialization & JSON
 serde = { version = "1.0", features = ["derive"] }
@@ -70,7 +71,7 @@ metrics = "0.24.2"
 metrics-exporter-prometheus = "0.17.2"
 
 # API Documentation
-utoipa = "5.0.1"
+utoipa = { version = "5.0.1", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 utoipa-axum = "0.2.0"
 
@@ -125,6 +126,9 @@ redis.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
+# HTTP client
+reqwest.workspace = true
+
 # Configuration
 dotenvy.workspace = true
 config.workspace = true
@@ -143,6 +147,7 @@ validator.workspace = true
 # Time & UUID
 chrono.workspace = true
 uuid.workspace = true
+bigdecimal.workspace = true
 
 # Cryptography
 sha2.workspace = true

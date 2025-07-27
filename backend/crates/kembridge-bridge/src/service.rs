@@ -10,6 +10,7 @@ use tokio::time::{sleep, Duration};
 use uuid::Uuid;
 use chrono::Utc;
 use bigdecimal::{BigDecimal, ToPrimitive, FromPrimitive};
+use tracing::{info, warn};
 
 pub struct BridgeService {
     ethereum_adapter: Arc<EthereumAdapter>,

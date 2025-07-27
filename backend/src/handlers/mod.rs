@@ -6,3 +6,5 @@ pub mod quantum;
 pub mod websocket;
 pub mod user;
 pub mod admin;
+pub mod risk;
+pub mod manual_review;
