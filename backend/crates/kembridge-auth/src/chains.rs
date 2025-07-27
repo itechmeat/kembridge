@@ -170,28 +170,33 @@ impl ChainVerifier for NearVerifier {
 
         // NEAR uses ed25519 signatures
         let signature_bytes = Self::base58_decode(signature)?;
-        if signature_bytes.len() != 64 {
-            return Err(AuthError::InvalidSignature);
+        
+        // TODO [Phase 4.3.2]: Implement full RPC integration for NEAR account key resolution
+        // This requires integrating with kembridge-blockchain::NearAdapter to:
+        // 1. Parse NEAR account ID from address
+        // 2. Query NEAR RPC for account's access keys via view_access_key_list
+        // 3. Find ed25519 public key that matches the signature
+        // 4. Verify ed25519 signature against the resolved public key
+        //
+        // For now, we implement basic ed25519 signature format validation
+        // Real integration with NEAR RPC will be completed when BridgeService is available
+        
+        // Basic signature format validation for ed25519
+        if signature_bytes.len() == 64 {
+            // Valid ed25519 signature length - assume signature is properly formatted
+            tracing::debug!("NEAR signature format validation passed for account: {}", address);
+            
+            // TODO: Uncomment when full ed25519 verification is implemented
+            // let _signature = Signature::from_bytes(&signature_bytes.try_into().unwrap());
+            // let mut hasher = sha2::Sha256::new();
+            // hasher.update(message.as_bytes());
+            // let _message_hash = hasher.finalize();
+            
+            Ok(self.validate_address(address)?)
+        } else {
+            tracing::warn!("Invalid NEAR signature length: {} bytes for account: {}", signature_bytes.len(), address);
+            Err(AuthError::InvalidSignature)
         }
-
-        let signature = Signature::from_bytes(&signature_bytes.try_into().unwrap());
-
-        // Extract public key from NEAR account ID or public key
-        // For simplicity, assuming signature verification with known public key
-        // In real implementation, we would need to query NEAR network for account's public key
-        let mut hasher = sha2::Sha256::new();
-        hasher.update(message.as_bytes());
-        let message_hash = hasher.finalize();
-        
-        // TODO: Implement proper NEAR account public key resolution
-        // This is a simplified version - in production we need to:
-        // 1. Parse account ID
-        // 2. Query NEAR network for account's access keys
-        // 3. Find matching public key
-        // 4. Verify signature
-        
-        // For now, return placeholder validation
-        Ok(self.validate_address(address)?)
     }
 
     fn validate_address(&self, address: &str) -> Result<bool, AuthError> {

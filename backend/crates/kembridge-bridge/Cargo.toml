@@ -8,6 +8,7 @@ edition = "2021"
 kembridge-crypto.workspace = true
 kembridge-blockchain.workspace = true
 kembridge-database.workspace = true
+kembridge-auth.workspace = true
 
 # Async
 tokio.workspace = true
@@ -32,3 +33,15 @@ chrono.workspace = true
 
 # UUID
 uuid.workspace = true
+
+# Database
+sqlx = { workspace = true, features = ["bigdecimal"] }
+rust_decimal = "1.36"
+bigdecimal = "0.4"
+hex = "0.4"
+
+# Ethereum types
+ethers.workspace = true
+
+# HTTP framework
+axum.workspace = true
