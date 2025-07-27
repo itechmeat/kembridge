@@ -4,6 +4,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use utoipa::ToSchema;
+use validator::Validate;
 
 /// Database model for quantum_keys table (matches Phase 1.2 schema exactly)
 #[derive(Debug, Clone, FromRow)]
@@ -299,4 +300,96 @@ pub struct HybridKeySizes {
     pub integrity_proof_size: usize,
     /// Total hybrid data size
     pub total_size: usize,
+}
+
+/// Request for hybrid encryption operation (Task 3.4.5)
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+pub struct HybridEncryptRequest {
+    /// Key ID to use for encryption
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// Data to encrypt (base64 encoded)
+    #[validate(length(min = 1, max = 1048576))] // Max 1MB
+    pub data: String,
+    /// Context for encryption (bridge_transaction, key_exchange, etc.)
+    #[schema(example = "bridge_transaction")]
+    pub encryption_context: String,
+}
+
+/// Response from hybrid encryption operation (Task 3.4.5)
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridEncryptResponse {
+    /// Encrypted data (base64 encoded)
+    pub encrypted_data: String,
+    /// Encryption metadata
+    pub encryption_metadata: HybridEncryptionMetadata,
+    /// Key information used for encryption
+    pub key_info: HybridKeyInfo,
+}
+
+/// Request for hybrid decryption operation (Task 3.4.5)
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+pub struct HybridDecryptRequest {
+    /// Key ID to use for decryption
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// Encrypted data (base64 encoded)
+    #[validate(length(min = 1))]
+    pub encrypted_data: String,
+    /// Context for decryption (must match encryption context)
+    #[schema(example = "bridge_transaction")]
+    pub encryption_context: String,
+}
+
+/// Response from hybrid decryption operation (Task 3.4.5)
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridDecryptResponse {
+    /// Decrypted data (base64 encoded)
+    pub decrypted_data: String,
+    /// Decryption metadata
+    pub decryption_metadata: HybridDecryptionMetadata,
+    /// Key information used for decryption
+    pub key_info: HybridKeyInfo,
+}
+
+/// Metadata about hybrid encryption operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridEncryptionMetadata {
+    /// Scheme version used
+    pub scheme_version: u8,
+    /// Encryption timestamp
+    #[schema(value_type = String, format = "date-time")]
+    pub encrypted_at: DateTime<Utc>,
+    /// Context used for encryption
+    pub encryption_context: String,
+    /// Data size information
+    pub data_sizes: HybridKeySizes,
+}
+
+/// Metadata about hybrid decryption operation
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridDecryptionMetadata {
+    /// Scheme version used
+    pub scheme_version: u8,
+    /// Decryption timestamp
+    #[schema(value_type = String, format = "date-time")]
+    pub decrypted_at: DateTime<Utc>,
+    /// Context used for decryption
+    pub encryption_context: String,
+    /// Original data size
+    pub original_data_size: usize,
+}
+
+/// Information about key used in hybrid operations
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct HybridKeyInfo {
+    /// Key ID used
+    #[schema(value_type = String, format = "uuid")]
+    pub key_id: Uuid,
+    /// Key algorithm
+    pub algorithm: String,
+    /// Key status
+    pub is_active: bool,
+    /// Key generation
+    pub rotation_generation: i32,
 }

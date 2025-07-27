@@ -14,6 +14,8 @@ use crate::models::quantum::{
     RotateKeyRequest, RotateKeyResponse,
     CheckRotationRequest, CheckRotationResponse,
     HybridRotateKeyRequest, HybridRotateKeyResponse,
+    HybridEncryptRequest, HybridEncryptResponse,
+    HybridDecryptRequest, HybridDecryptResponse,
 };
 use crate::services::quantum::QuantumServiceError;
 
@@ -337,6 +339,86 @@ pub async fn hybrid_rotate_key(
             QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
             QuantumServiceError::CryptoError(err) => ApiError::Internal(err.to_string()),
             _ => ApiError::Internal("Hybrid key rotation failed".to_string()),
+        })?;
+
+    Ok(Json(response))
+}
+
+/// Encrypt data using hybrid cryptography (Task 3.4.5)
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/hybrid/encrypt",
+    request_body = HybridEncryptRequest,
+    responses(
+        (status = 200, description = "Data encrypted successfully", body = HybridEncryptResponse),
+        (status = 400, description = "Invalid request data or key not found"),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Key not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn hybrid_encrypt(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(request): Json<HybridEncryptRequest>,
+) -> Result<Json<HybridEncryptResponse>, ApiError> {
+    let response = state.quantum_service
+        .hybrid_encrypt(user.user_id, request)
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::KeyNotFound => ApiError::NotFound { 
+                resource: "Quantum key".to_string() 
+            },
+            QuantumServiceError::InvalidRequest(msg) => ApiError::Validation {
+                field: "hybrid_encrypt".to_string(),
+                message: msg,
+            },
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            QuantumServiceError::CryptoError(err) => ApiError::Internal(err.to_string()),
+            _ => ApiError::Internal("Hybrid encryption failed".to_string()),
+        })?;
+
+    Ok(Json(response))
+}
+
+/// Decrypt data using hybrid cryptography (Task 3.4.5)
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/hybrid/decrypt",
+    request_body = HybridDecryptRequest,
+    responses(
+        (status = 200, description = "Data decrypted successfully", body = HybridDecryptResponse),
+        (status = 400, description = "Invalid request data or key not found"),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Key not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn hybrid_decrypt(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(request): Json<HybridDecryptRequest>,
+) -> Result<Json<HybridDecryptResponse>, ApiError> {
+    let response = state.quantum_service
+        .hybrid_decrypt(user.user_id, request)
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::KeyNotFound => ApiError::NotFound { 
+                resource: "Quantum key".to_string() 
+            },
+            QuantumServiceError::InvalidRequest(msg) => ApiError::Validation {
+                field: "hybrid_decrypt".to_string(),
+                message: msg,
+            },
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            QuantumServiceError::CryptoError(err) => ApiError::Internal(err.to_string()),
+            _ => ApiError::Internal("Hybrid decryption failed".to_string()),
         })?;
 
     Ok(Json(response))

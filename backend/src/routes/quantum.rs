@@ -31,4 +31,8 @@ pub fn create_routes() -> Router<AppState> {
         
         // Hybrid key rotation endpoint (Task 3.4.4)
         .route("/keys/hybrid-rotate", post(crate::handlers::quantum::hybrid_rotate_key))
+        
+        // HybridCrypto endpoints (Task 3.4.5)
+        .route("/hybrid/encrypt", post(crate::handlers::quantum::hybrid_encrypt))
+        .route("/hybrid/decrypt", post(crate::handlers::quantum::hybrid_decrypt))
 }

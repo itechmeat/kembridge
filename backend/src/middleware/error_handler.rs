@@ -85,6 +85,11 @@ impl ApiError {
         }
     }
 
+    /// Create a forbidden error (convenience method)
+    pub fn forbidden(message: impl Into<String>) -> Self {
+        Self::Authentication(message.into())
+    }
+
     /// Convert error to HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {

@@ -442,6 +442,7 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -3196,6 +3197,7 @@ dependencies = [
  "async-trait",
  "axum 0.8.4",
  "base64 0.22.1",
+ "bigdecimal",
  "chrono",
  "config",
  "dotenvy",
@@ -3208,6 +3210,7 @@ dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
  "redis",
+ "reqwest 0.12.22",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -3304,6 +3307,7 @@ name = "kembridge-database"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bigdecimal",
  "chrono",
  "config",
  "redis",
@@ -7361,7 +7365,9 @@ checksum = "6d79d08d92ab8af4c5e8a6da20c47ae3f61a0f1dabc1997cdf2d082b757ca08b"
 dependencies = [
  "proc-macro2",
  "quote",
+ "regex",
  "syn 2.0.104",
+ "uuid 1.17.0",
 ]
 
 [[package]]

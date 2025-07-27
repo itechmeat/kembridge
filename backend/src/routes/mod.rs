@@ -4,3 +4,4 @@ pub mod bridge;
 pub mod quantum;
 pub mod user;
 pub mod admin;
+pub mod risk;
