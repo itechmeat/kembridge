@@ -141,86 +141,9 @@ curl -X POST http://localhost:4000/api/v1/auth/logout \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-### 5. Test API Integrations
+## Testing
 
-Test external API connectivity (Ethereum RPC and 1inch API):
-
-```bash
-# Quick test of all external APIs
-cargo run --bin test_api_integration
-```
-
-Expected output:
-```
-🚀 KEMBridge API Integration Test
-==================================
-
-🔗 Testing Ethereum RPC Connection...
-   🔍 RPC URL: https://sepolia.infura.io/v3/...
-   ✅ Connected! Latest block: 0x85f4ea (8778986)
-   ✅ Network: Sepolia testnet ✓
-
-📱 Testing 1inch API Connection...
-   🔑 API Key: MrTcxGYJ...
-   ✅ Found 139 liquidity sources on Ethereum
-   📋 Examples: Uniswap V1, Uniswap V2, SushiSwap
-   ✅ API key validation successful
-
-✅ All API integrations tested successfully!
-Ready for bridge operations! 🌉
-```
-
-### 6. Test User Management Endpoints
-
-```bash
-# Get user profile (requires valid JWT token)
-curl -X GET http://localhost:4000/api/v1/user/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Update user profile
-curl -X PUT http://localhost:4000/api/v1/user/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"username": "new_username", "profile_data": {"email": "user@example.com"}}'
-
-# Get user wallets
-curl -X GET http://localhost:4000/api/v1/user/wallets \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Add new wallet
-curl -X POST http://localhost:4000/api/v1/user/wallets \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"wallet_address": "0x...", "chain_type": "ethereum", "signature": "0x...", "message": "verification message"}'
-
-# Set primary wallet
-curl -X PUT http://localhost:4000/api/v1/user/wallets/0x.../primary \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Remove wallet
-curl -X DELETE http://localhost:4000/api/v1/user/wallets/0x... \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Soft delete user account
-curl -X DELETE http://localhost:4000/api/v1/user/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-### 5. Verify Database & Redis
-
-```sql
--- Check created user and auth data
-SELECT u.id, u.created_at, uam.wallet_address, us.expires_at
-FROM users u
-JOIN user_auth_methods uam ON u.id = uam.user_id
-JOIN user_sessions us ON u.id = us.user_id
-ORDER BY u.created_at DESC LIMIT 1;
-```
-
-```bash
-# Check Redis nonce storage
-docker-compose exec redis redis-cli -a dev_redis_password KEYS "kembridge:auth:nonce:*"
-```
+**📋 Complete testing documentation:** [tests/README.md](tests/README.md)
 
 ## Database Schema
 

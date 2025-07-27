@@ -14,23 +14,29 @@ impl WebSocketAuth {
         connection: &Arc<WebSocketConnection>,
         token: String,
     ) -> Result<Uuid, String> {
-        // TODO: Implement JWT token validation
-        // For now, we'll implement basic validation
+        use kembridge_auth::JwtManager;
         
         if token.is_empty() {
             return Err("Empty token".to_string());
         }
         
-        // Placeholder for JWT validation
-        // In real implementation, this would validate the JWT token
-        // and extract user_id from claims
+        // Get JWT secret from environment (same as HTTP auth)
+        let jwt_secret = std::env::var("JWT_SECRET")
+            .unwrap_or_else(|_| "hackathon-super-secret-key-change-in-production".to_string());
         
-        // For development, we'll accept any non-empty token
-        // and return a mock user ID
-        let user_id = Uuid::new_v4();
+        // Create JWT manager and validate token
+        let jwt_manager = JwtManager::new(jwt_secret)
+            .map_err(|e| format!("JWT manager initialization failed: {}", e))?;
+        
+        // Validate JWT token and extract user ID
+        let claims = jwt_manager.verify_token(&token)
+            .await
+            .map_err(|e| format!("JWT validation failed: {}", e))?;
+        
+        let user_id = claims.user_id;
         
         info!("WebSocket authentication successful for connection {}, user: {}", 
-              connection.id(), user_id);
+            connection.id(), user_id);
         
         Ok(user_id)
     }

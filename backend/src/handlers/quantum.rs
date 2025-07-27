@@ -5,7 +5,7 @@ use utoipa;
 use uuid;
 
 use crate::AppState;
-use crate::extractors::auth::AuthUser;
+use crate::extractors::auth::{AuthUser, AdminAuth};
 use crate::middleware::error_handler::ApiError;
 use crate::models::quantum::{
     CreateQuantumKeyRequest, QuantumKeyResponse, QuantumKeysListResponse,
@@ -289,10 +289,10 @@ pub async fn check_rotation_needed(
 )]
 pub async fn admin_check_rotation(
     State(state): State<AppState>,
-    user: AuthUser, // In production, would use AdminAuth extractor
+    admin: AdminAuth,
     Json(request): Json<CheckRotationRequest>,
 ) -> Result<Json<CheckRotationResponse>, ApiError> {
-    // TODO: Add admin role check when RBAC is implemented
+    // Admin role check implemented via AdminAuth extractor
     let response = state.quantum_service
         .check_rotation_needed(None, request) // None = check all users
         .await

@@ -85,8 +85,10 @@ pnpm run lint
 # Run specific binary
 cargo run --bin kembridge-backend
 
-# Run tests
-cargo test
+# Run integration tests
+cargo run --bin test_api_integration
+cargo run --bin test_auth_system
+cargo run --bin test_auth_http
 
 # Check code
 cargo check

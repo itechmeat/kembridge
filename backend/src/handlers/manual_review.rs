@@ -12,7 +12,7 @@ use bigdecimal::ToPrimitive;
 
 use crate::{
     state::AppState,
-    extractors::auth::AuthUser,
+    extractors::auth::{AuthUser, AdminAuth},
     models::review::{
         CreateReviewRequest, UpdateReviewRequest, ReviewQueueQuery,
         ReviewQueueListResponse, ReviewQueueResponse, ReviewDecision, UserRiskSummary,
@@ -101,7 +101,7 @@ fn convert_transaction_details_to_summary(details: TransactionDetails) -> Transa
 #[instrument(skip(state, request))]
 pub async fn add_to_review_queue(
     State(state): State<AppState>,
-    _user: AuthUser, // TODO: In production, use AdminAuth extractor
+    admin: AdminAuth,
     Json(request): Json<CreateReviewRequest>,
 ) -> Result<Json<ManualReviewApiResponse<ReviewQueueResponse>>, StatusCode> {
     info!(
@@ -155,7 +155,7 @@ pub async fn add_to_review_queue(
 #[instrument(skip(state, query))]
 pub async fn get_review_queue(
     State(state): State<AppState>,
-    _user: AuthUser, // TODO: In production, use AdminAuth extractor
+    admin: AdminAuth,
     Query(query): Query<ReviewQueueQuery>,
 ) -> Result<Json<ManualReviewApiResponse<ReviewQueueListResponse>>, StatusCode> {
     info!(
@@ -341,7 +341,7 @@ pub async fn make_review_decision(
 #[instrument(skip(state))]
 pub async fn get_review_details(
     State(state): State<AppState>,
-    _user: AuthUser, // TODO: In production, use AdminAuth extractor
+    admin: AdminAuth,
     Path(review_id): Path<Uuid>,
 ) -> Result<Json<ManualReviewApiResponse<ReviewQueueResponse>>, StatusCode> {
     info!(review_id = %review_id, "Fetching review details");
@@ -404,7 +404,7 @@ pub async fn get_review_details(
 #[instrument(skip(state))]
 pub async fn escalate_review(
     State(state): State<AppState>,
-    _user: AuthUser, // TODO: In production, use AdminAuth extractor
+    admin: AdminAuth,
     Path(review_id): Path<Uuid>,
 ) -> Result<Json<ManualReviewApiResponse<ReviewQueueResponse>>, StatusCode> {
     info!(review_id = %review_id, "Manually escalating review");
@@ -462,7 +462,7 @@ pub async fn escalate_review(
 #[instrument(skip(state))]
 pub async fn check_escalations(
     State(state): State<AppState>,
-    _user: AuthUser, // TODO: In production, use AdminAuth extractor
+    admin: AdminAuth,
 ) -> Result<Json<ManualReviewApiResponse<Vec<Uuid>>>, StatusCode> {
     info!("Checking for reviews that need escalation");
 
