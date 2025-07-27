@@ -24,6 +24,7 @@ mod models;
 mod services;
 mod utils;
 mod state;
+mod websocket;
 
 // Services are used via full paths in AppState
 
@@ -180,6 +181,9 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
         .route("/ready", get(handlers::health::readiness_check))
         .route("/metrics", get(handlers::health::metrics))
 
+        // WebSocket routes (before authentication middleware)
+        .merge(routes::websocket::websocket_routes())
+
         // API v1 routes
         .nest("/api/v1", create_v1_routes())
         
@@ -188,9 +192,6 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
             state.clone(),
             middleware::auth::auth_middleware
         ))
-
-        // WebSocket for real-time updates
-        .route("/ws", get(handlers::websocket::websocket_handler))
 
         // OpenAPI documentation (enabled conditionally)
         .merge(create_docs_routes(&state.config))

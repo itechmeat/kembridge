@@ -7,6 +7,7 @@ use crate::services::{
     AuthService, UserService, BridgeService, QuantumService, AiClient,
     RiskIntegrationService, ManualReviewService,
 };
+use crate::websocket::WebSocketRegistry;
 use kembridge_database::TransactionService;
 
 /// Application state with dependency injection for all services
@@ -23,6 +24,7 @@ pub struct AppState {
     pub risk_integration_service: Arc<RiskIntegrationService>,
     pub manual_review_service: Arc<ManualReviewService>,
     pub transaction_service: Arc<TransactionService>,
+    pub websocket_registry: Arc<WebSocketRegistry>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -86,9 +88,12 @@ impl AppState {
             .handle();
         let metrics = Arc::new(metrics);
 
+        // Initialize WebSocket registry (Phase 5.3.1)
+        let websocket_registry = Arc::new(WebSocketRegistry::new());
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, and transaction service",
-            9 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, and WebSocket registry",
+            10 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, metrics
         );
 
         Ok(Self {
@@ -103,6 +108,7 @@ impl AppState {
             risk_integration_service,
             manual_review_service,
             transaction_service,
+            websocket_registry,
             metrics,
         })
     }

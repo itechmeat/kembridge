@@ -3201,6 +3201,7 @@ dependencies = [
  "chrono",
  "config",
  "dotenvy",
+ "futures-util",
  "headers",
  "kembridge-auth",
  "kembridge-blockchain",
