@@ -5,6 +5,7 @@ use tracing::{info, warn, error, debug, instrument};
 use uuid::Uuid;
 
 use crate::config::AppConfig;
+use crate::constants::*;
 use crate::models::risk::{
     RiskAnalysisRequest, RiskAnalysisResponse, RiskAnalysisError,
     UserRiskProfileRequest, UserRiskProfileResponse,
@@ -30,8 +31,8 @@ impl RiskClient {
         let client = Client::builder()
             .timeout(Duration::from_millis(config.ai_engine_timeout_ms))
             .connection_verbose(false)
-            .pool_idle_timeout(Duration::from_secs(30))
-            .pool_max_idle_per_host(10)
+            .pool_idle_timeout(Duration::from_secs(RISK_CLIENT_POOL_IDLE_TIMEOUT_SEC))
+            .pool_max_idle_per_host(RISK_CLIENT_POOL_MAX_IDLE_PER_HOST)
             .build()
             .map_err(|e| RiskAnalysisError::NetworkError(format!("Failed to create HTTP client: {}", e)))?;
 
@@ -90,7 +91,7 @@ impl RiskClient {
 
                     if attempt < self.max_retries {
                         // Exponential backoff
-                        let delay = Duration::from_millis(100 * (2_u64.pow(attempt - 1)));
+                        let delay = Duration::from_millis(RISK_CLIENT_RETRY_BASE_DELAY_MS * (2_u64.pow(attempt - 1)));
                         tokio::time::sleep(delay).await;
                     }
                 }
@@ -210,7 +211,7 @@ impl RiskClient {
 
         let response = self.client
             .get(url)
-            .timeout(Duration::from_secs(5)) // Shorter timeout for health check
+            .timeout(Duration::from_secs(RISK_CLIENT_HEALTH_CHECK_TIMEOUT_SEC))
             .send()
             .await?;
 
@@ -271,17 +272,17 @@ mod tests {
     #[test]
     fn test_risk_client_creation() {
         let mut config = AppConfig::default();
-        config.ai_engine_url = "http://localhost:4003".to_string();
-        config.ai_engine_timeout_ms = 5000;
-        config.ai_engine_max_retries = 3;
+        config.ai_engine_url = DEFAULT_AI_ENGINE_URL.to_string();
+        config.ai_engine_timeout_ms = DEFAULT_AI_ENGINE_TIMEOUT_MS;
+        config.ai_engine_max_retries = DEFAULT_AI_ENGINE_MAX_RETRIES;
 
         let client = RiskClient::new(&config);
         assert!(client.is_ok());
         
         let client = client.unwrap();
-        assert_eq!(client.base_url.as_str(), "http://localhost:4003/");
-        assert_eq!(client.timeout, Duration::from_millis(5000));
-        assert_eq!(client.max_retries, 3);
+        assert_eq!(client.base_url.as_str(), &format!("{}/", DEFAULT_AI_ENGINE_URL));
+        assert_eq!(client.timeout, Duration::from_millis(DEFAULT_AI_ENGINE_TIMEOUT_MS));
+        assert_eq!(client.max_retries, DEFAULT_AI_ENGINE_MAX_RETRIES);
     }
 
     #[test]

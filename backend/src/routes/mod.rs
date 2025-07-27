@@ -7,3 +7,4 @@ pub mod admin;
 pub mod risk;
 pub mod websocket;
 pub mod monitoring;
+pub mod price_oracle;

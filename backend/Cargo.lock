@@ -3210,6 +3210,7 @@ dependencies = [
  "kembridge-database",
  "metrics",
  "metrics-exporter-prometheus",
+ "rand 0.8.5",
  "redis",
  "reqwest 0.12.22",
  "serde",

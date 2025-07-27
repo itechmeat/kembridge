@@ -9,3 +9,4 @@ pub mod admin;
 pub mod risk;
 pub mod manual_review;
 pub mod monitoring;
+pub mod price_oracle;

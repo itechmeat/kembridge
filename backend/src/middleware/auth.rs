@@ -5,6 +5,7 @@ use axum::{
     response::Response,
 };
 use crate::{middleware::error_handler::ApiError, AppState};
+use crate::constants::*;
 
 /// JWT Authentication middleware
 /// Validates JWT tokens and extracts user context for protected endpoints
@@ -24,8 +25,8 @@ pub async fn auth_middleware(
         .and_then(|h| h.to_str().ok());
 
     match auth_header {
-        Some(auth) if auth.starts_with("Bearer ") => {
-            let token = &auth[7..]; // Remove "Bearer " prefix
+        Some(auth) if auth.starts_with(BEARER_PREFIX) => {
+            let token = &auth[BEARER_PREFIX_LENGTH..]; // Remove Bearer prefix
             
             // Validate JWT token
             match state.auth_service.jwt_manager.verify_token(token).await {
@@ -45,7 +46,7 @@ pub async fn auth_middleware(
                 },
                 Err(e) => {
                     tracing::warn!("JWT token validation failed: {}", e);
-                    return Err(ApiError::unauthorized("Invalid or expired token"));
+                    return Err(ApiError::unauthorized(ERROR_INVALID_TOKEN));
                 }
             }
         },
@@ -99,12 +100,12 @@ fn is_public_endpoint(path: &str) -> bool {
 fn determine_user_tier(wallet_address: &str) -> &'static str {
     // For now, simple logic based on wallet address
     // In production, this would query the database for user preferences/tier
-    if wallet_address.starts_with("0x000") || wallet_address.starts_with("admin") {
-        "admin"
-    } else if wallet_address.len() > 42 || wallet_address.ends_with("premium") {
-        "premium" 
+    if wallet_address.starts_with(ADMIN_WALLET_PREFIX_1) || wallet_address.starts_with(ADMIN_WALLET_PREFIX_2) {
+        USER_TIER_ADMIN
+    } else if wallet_address.len() > PREMIUM_WALLET_MIN_LENGTH || wallet_address.ends_with(PREMIUM_WALLET_SUFFIX) {
+        USER_TIER_PREMIUM 
     } else {
-        "free"
+        USER_TIER_FREE
     }
 }
 
@@ -157,8 +158,8 @@ impl AuthContext {
             .get("x-user-tier")
             .and_then(|h| h.to_str().ok())
             .map(|tier| match tier {
-                "admin" => UserTier::Admin,
-                "premium" => UserTier::Premium,
+                USER_TIER_ADMIN => UserTier::Admin,
+                USER_TIER_PREMIUM => UserTier::Premium,
                 _ => UserTier::Free,
             })
             .unwrap_or(UserTier::Free);

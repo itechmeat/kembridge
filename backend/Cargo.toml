@@ -149,7 +149,10 @@ validator.workspace = true
 # Time & UUID
 chrono.workspace = true
 uuid.workspace = true
+
+# Math
 bigdecimal.workspace = true
+rand.workspace = true
 
 # Cryptography
 sha2.workspace = true

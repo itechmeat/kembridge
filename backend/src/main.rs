@@ -26,10 +26,13 @@ mod utils;
 mod state;
 mod websocket;
 mod monitoring;
+mod price_oracle;
+mod constants;
 
 // Services are used via full paths in AppState
 
 use config::AppConfig;
+use constants::*;
 // use middleware::error_handler::handle_error;
 
 // OpenAPI documentation structure
@@ -199,7 +202,7 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
 
         // Global middleware stack
         .layer(middleware::cors::create_cors_layer(&state.config))
-        .layer(RequestBodyLimitLayer::new(1024 * 1024)) // 1MB limit
+        .layer(RequestBodyLimitLayer::new(REQUEST_BODY_LIMIT_BYTES))
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())
 
@@ -231,6 +234,9 @@ fn create_v1_routes() -> Router<AppState> {
 
         // Monitoring dashboard routes (protected)
         .nest("/monitoring", routes::monitoring::monitoring_routes())
+        
+        // Price Oracle routes (protected)
+        .nest("/price", routes::price_oracle::price_oracle_routes())
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {
@@ -308,17 +314,17 @@ async fn swagger_ui_handler() -> axum::response::Html<&'static str> {
 
 async fn swagger_ui_bundle_js() -> impl axum::response::IntoResponse {
     // Using CDN instead of embedded files for simplicity
-    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js")
+    axum::response::Redirect::temporary(&format!("{}{}/swagger-ui-bundle.js", SWAGGER_UI_CDN_BASE, SWAGGER_UI_VERSION))
 }
 
 async fn swagger_ui_standalone_preset_js() -> impl axum::response::IntoResponse {
     // Using CDN instead of embedded files for simplicity
-    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js")
+    axum::response::Redirect::temporary(&format!("{}{}/swagger-ui-standalone-preset.js", SWAGGER_UI_CDN_BASE, SWAGGER_UI_VERSION))
 }
 
 async fn swagger_ui_css() -> impl axum::response::IntoResponse {
     // Using CDN instead of embedded files for simplicity
-    axum::response::Redirect::temporary("https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css")
+    axum::response::Redirect::temporary(&format!("{}{}/swagger-ui.css", SWAGGER_UI_CDN_BASE, SWAGGER_UI_VERSION))
 }
 
 
@@ -354,7 +360,7 @@ fn init_tracing() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "kembridge_backend=debug,tower_http=debug".into()),
+                .unwrap_or_else(|_| DEFAULT_TRACING_FILTER.into()),
         )
         .with(tracing_subscriber::fmt::layer().json())
         .init();
