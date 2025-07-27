@@ -11,6 +11,9 @@ use crate::models::quantum::{
     CreateQuantumKeyRequest, QuantumKeyResponse, QuantumKeysListResponse,
     EncapsulateRequest, EncapsulateResponse,
     DecapsulateRequest, DecapsulateResponse,
+    RotateKeyRequest, RotateKeyResponse,
+    CheckRotationRequest, CheckRotationResponse,
+    HybridRotateKeyRequest, HybridRotateKeyResponse,
 };
 use crate::services::quantum::QuantumServiceError;
 
@@ -195,4 +198,146 @@ pub async fn export_public_key(
         "created_at": key.created_at,
         "usage": "This public key can be used for ML-KEM-1024 encapsulation operations"
     })))
+}
+
+/// Rotate a quantum key (Task 3.2.7)
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/keys/rotate",
+    request_body = RotateKeyRequest,
+    responses(
+        (status = 200, description = "Key rotation successful", body = RotateKeyResponse),
+        (status = 400, description = "Invalid request or active operations prevent rotation"),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Key not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn rotate_key(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(request): Json<RotateKeyRequest>,
+) -> Result<Json<RotateKeyResponse>, ApiError> {
+    let response = state.quantum_service
+        .rotate_key(user.user_id, request)
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::KeyNotFound => ApiError::NotFound { 
+                resource: "Quantum key".to_string() 
+            },
+            QuantumServiceError::InvalidRequest(msg) => ApiError::Validation {
+                field: "rotation".to_string(),
+                message: msg,
+            },
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            QuantumServiceError::CryptoError(err) => ApiError::Internal(err.to_string()),
+            _ => ApiError::Internal("Key rotation failed".to_string()),
+        })?;
+
+    Ok(Json(response))
+}
+
+/// Check which keys need rotation (Task 3.2.7)
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/keys/check-rotation",
+    request_body = CheckRotationRequest,
+    responses(
+        (status = 200, description = "Rotation check completed", body = CheckRotationResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn check_rotation_needed(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(request): Json<CheckRotationRequest>,
+) -> Result<Json<CheckRotationResponse>, ApiError> {
+    let response = state.quantum_service
+        .check_rotation_needed(Some(user.user_id), request)
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            _ => ApiError::Internal("Rotation check failed".to_string()),
+        })?;
+
+    Ok(Json(response))
+}
+
+/// Admin endpoint: Check rotation for all users
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/admin/check-rotation",
+    request_body = CheckRotationRequest,
+    responses(
+        (status = 200, description = "Admin rotation check completed", body = CheckRotationResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Admin access required"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn admin_check_rotation(
+    State(state): State<AppState>,
+    user: AuthUser, // In production, would use AdminAuth extractor
+    Json(request): Json<CheckRotationRequest>,
+) -> Result<Json<CheckRotationResponse>, ApiError> {
+    // TODO: Add admin role check when RBAC is implemented
+    let response = state.quantum_service
+        .check_rotation_needed(None, request) // None = check all users
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            _ => ApiError::Internal("Admin rotation check failed".to_string()),
+        })?;
+
+    Ok(Json(response))
+}
+
+/// Rotate a quantum key with hybrid encryption support (Task 3.4.4)
+#[utoipa::path(
+    post,
+    path = "/api/v1/crypto/keys/hybrid-rotate",
+    request_body = HybridRotateKeyRequest,
+    responses(
+        (status = 200, description = "Hybrid key rotation successful", body = HybridRotateKeyResponse),
+        (status = 400, description = "Invalid request or active operations prevent rotation"),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Key not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn hybrid_rotate_key(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(request): Json<HybridRotateKeyRequest>,
+) -> Result<Json<HybridRotateKeyResponse>, ApiError> {
+    let response = state.quantum_service
+        .hybrid_rotate_key(user.user_id, request)
+        .await
+        .map_err(|e| match e {
+            QuantumServiceError::KeyNotFound => ApiError::NotFound { 
+                resource: "Quantum key".to_string() 
+            },
+            QuantumServiceError::InvalidRequest(msg) => ApiError::Validation {
+                field: "hybrid_rotation".to_string(),
+                message: msg,
+            },
+            QuantumServiceError::DatabaseError(msg) => ApiError::Internal(msg),
+            QuantumServiceError::CryptoError(err) => ApiError::Internal(err.to_string()),
+            _ => ApiError::Internal("Hybrid key rotation failed".to_string()),
+        })?;
+
+    Ok(Json(response))
 }
