@@ -27,6 +27,7 @@ mod state;
 mod websocket;
 mod monitoring;
 mod price_oracle;
+mod oneinch;
 mod constants;
 
 // Services are used via full paths in AppState
@@ -75,6 +76,20 @@ use constants::*;
         handlers::manual_review::get_review_details,
         handlers::manual_review::escalate_review,
         handlers::manual_review::check_escalations,
+        // 1inch Fusion+ endpoints
+        handlers::oneinch::get_quote,
+        handlers::oneinch::get_enhanced_quote,
+        handlers::oneinch::execute_swap,
+        handlers::oneinch::execute_signed_swap,
+        handlers::oneinch::get_order_status,
+        handlers::oneinch::get_supported_tokens,
+        handlers::oneinch::get_intelligent_routing,
+        handlers::oneinch::health_check,
+        // Bridge integration endpoints
+        handlers::bridge_oneinch::execute_optimized_bridge_swap,
+        handlers::bridge_oneinch::get_bridge_swap_status,
+        handlers::bridge_oneinch::calculate_bridge_swap_savings,
+        handlers::bridge_oneinch::get_supported_bridge_chains,
     ),
     components(
         schemas(
@@ -120,6 +135,34 @@ use constants::*;
             models::review::ReviewQueueStats,
             models::review::ReviewNotification,
             models::review::NotificationType,
+            // 1inch Fusion+ schemas
+            handlers::oneinch::QuoteRequest,
+            handlers::oneinch::EnhancedQuoteRequest,
+            handlers::oneinch::SwapExecutionRequest,
+            handlers::oneinch::SignedSwapExecutionRequest,
+            handlers::oneinch::IntelligentRoutingRequest,
+            handlers::oneinch::OptimizationWeights,
+            handlers::oneinch::QuoteResponse,
+            handlers::oneinch::EnhancedQuoteResponse,
+            handlers::oneinch::QuoteWithRating,
+            handlers::oneinch::OracleComparisonData,
+            handlers::oneinch::SwapResponse,
+            handlers::oneinch::OrderStatusResponse,
+            handlers::oneinch::TokenInfo,
+            handlers::oneinch::ProtocolInfo,
+            handlers::oneinch::FillInfo,
+            handlers::oneinch::SupportedTokensResponse,
+            handlers::oneinch::OneinchHealthResponse,
+            handlers::oneinch::IntelligentRoutingResponse,
+            handlers::oneinch::RouteInfo,
+            handlers::oneinch::RouteScores,
+            handlers::oneinch::SavingsInfo,
+            // Bridge integration schemas
+            handlers::bridge_oneinch::OptimizedBridgeSwapRequest,
+            handlers::bridge_oneinch::OptimizedBridgeSwapResponse,
+            handlers::bridge_oneinch::ChainOptimizationResponse,
+            handlers::bridge_oneinch::OptimizationSummaryResponse,
+            handlers::bridge_oneinch::BridgeSwapStatusResponse,
         )
     ),
     tags(
@@ -130,7 +173,9 @@ use constants::*;
         (name = "User", description = "User management endpoints"),
         (name = "Risk Analysis", description = "AI-powered risk analysis and monitoring"),
         (name = "Manual Review", description = "Manual review queue management for suspicious transactions"),
-        (name = "Admin", description = "Administrative endpoints")
+        (name = "Admin", description = "Administrative endpoints"),
+        (name = "1inch Swap", description = "1inch Fusion+ integration for optimal swap routing"),
+        (name = "Bridge Integration", description = "Cross-chain bridge with 1inch optimization")
     ),
     servers(
         (url = "http://localhost:4000", description = "Development server"),
@@ -167,8 +212,8 @@ async fn main() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     tracing::info!("🚀 KEMBridge API Gateway starting on {}", addr);
-    tracing::info!("📋 Health check available at http://localhost:{}/health", config.port);
-    tracing::info!("📖 API documentation at http://localhost:{}/docs", config.port);
+    tracing::info!("📋 Health check available at http://{}:{}/health", config.host, config.port);
+    tracing::info!("📖 API documentation at http://{}:{}/docs", config.host, config.port);
 
     // Graceful shutdown handling
     axum::serve(listener, app)
@@ -181,9 +226,9 @@ async fn main() -> anyhow::Result<()> {
 async fn create_application(state: AppState) -> anyhow::Result<Router> {
     let app = Router::new()
         // Health & Status endpoints
-        .route("/health", get(handlers::health::health_check))
-        .route("/ready", get(handlers::health::readiness_check))
-        .route("/metrics", get(handlers::health::metrics))
+        .route(API_ROUTE_HEALTH, get(handlers::health::health_check))
+        .route(API_ROUTE_READY, get(handlers::health::readiness_check))
+        .route(API_ROUTE_METRICS, get(handlers::health::metrics))
 
         // WebSocket routes (before authentication middleware)
         .merge(routes::websocket::websocket_routes())
@@ -237,6 +282,12 @@ fn create_v1_routes() -> Router<AppState> {
         
         // Price Oracle routes (protected)
         .nest("/price", routes::price_oracle::price_oracle_routes())
+        
+        // 1inch Fusion+ routes (protected)
+        .nest("/swap", routes::oneinch::create_oneinch_routes())
+        
+        // Bridge-1inch integration routes (protected)
+        .nest("/bridge", routes::bridge_oneinch::create_bridge_oneinch_routes())
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {

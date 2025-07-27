@@ -10,6 +10,7 @@ use crate::services::{
 use crate::websocket::WebSocketRegistry;
 use crate::monitoring::MonitoringService;
 use crate::price_oracle::PriceOracleService;
+use crate::oneinch::OneinchService;
 use kembridge_database::TransactionService;
 
 /// Application state with dependency injection for all services
@@ -29,6 +30,7 @@ pub struct AppState {
     pub websocket_registry: Arc<WebSocketRegistry>,
     pub monitoring_service: Arc<MonitoringService>,
     pub price_oracle_service: Arc<PriceOracleService>,
+    pub oneinch_service: Arc<OneinchService>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -107,9 +109,17 @@ impl AppState {
             PriceOracleService::new(redis.clone(), Arc::new(config.clone())).await?
         );
 
+        // Initialize 1inch service (Phase 6.2)
+        let oneinch_service = Arc::new(
+            OneinchService::new(
+                config.oneinch_api_key.clone().unwrap_or_else(|| "test_key".to_string()),
+                config.ethereum_chain_id.unwrap_or(11155111), // Default to Sepolia testnet
+            )
+        );
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, and price oracle service",
-            12 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, and 1inch Fusion+ service",
+            13 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, metrics
         );
 
         Ok(Self {
@@ -127,6 +137,7 @@ impl AppState {
             websocket_registry,
             monitoring_service,
             price_oracle_service,
+            oneinch_service,
             metrics,
         })
     }
