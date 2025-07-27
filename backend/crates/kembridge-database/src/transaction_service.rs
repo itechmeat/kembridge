@@ -48,6 +48,46 @@ impl TransactionService {
         Ok(())
     }
 
+    /// Get transaction by ID for manual review
+    pub async fn get_transaction_by_id(&self, transaction_id: Uuid) -> Result<Option<TransactionDetails>> {
+        let result = sqlx::query!(
+            r#"
+            SELECT 
+                id,
+                user_id,
+                source_chain,
+                destination_chain,
+                source_token,
+                destination_token,
+                amount_in,
+                status,
+                created_at,
+                quantum_key_id
+            FROM transactions 
+            WHERE id = $1
+            "#,
+            transaction_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        match result {
+            Some(row) => Ok(Some(TransactionDetails {
+                id: row.id,
+                user_id: row.user_id,
+                source_chain: row.source_chain,
+                destination_chain: row.destination_chain,
+                source_token: row.source_token,
+                destination_token: row.destination_token,
+                amount_in: row.amount_in,
+                status: row.status,
+                created_at: row.created_at.expect("created_at should not be null"),
+                quantum_key_id: row.quantum_key_id.map(|id| id.to_string()),
+            })),
+            None => Ok(None),
+        }
+    }
+
     /// Get transaction risk score
     pub async fn get_risk_score(&self, transaction_id: Uuid) -> Result<Option<BigDecimal>> {
         let result = sqlx::query_scalar!(
@@ -409,6 +449,21 @@ pub struct RiskScoreDistribution {
     pub count: u64,
     pub avg_score: BigDecimal,
     pub total_volume: BigDecimal,
+}
+
+/// Transaction details for manual review
+#[derive(Debug, Clone)]
+pub struct TransactionDetails {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub source_chain: String,
+    pub destination_chain: String,
+    pub source_token: String,
+    pub destination_token: String,
+    pub amount_in: BigDecimal,
+    pub status: String,
+    pub created_at: DateTime<Utc>,
+    pub quantum_key_id: Option<String>,
 }
 
 /// Top risky transactions for monitoring (Phase 5.2.5)

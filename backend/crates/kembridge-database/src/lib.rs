@@ -1,11 +1,11 @@
 pub mod models;
 pub mod pool;
-pub mod transactions_simple;
+pub mod transaction_service;
 
 pub use models::*;
-pub use transactions_simple::{
+pub use transaction_service::{
     TransactionService, RiskStatistics, RiskScoreHistoryEntry, RiskTrendEntry,
-    RiskAnalyticsSummary, RiskScoreDistribution, TopRiskyTransaction
+    RiskAnalyticsSummary, RiskScoreDistribution, TopRiskyTransaction, TransactionDetails
 };
 
 use sqlx::PgPool;
