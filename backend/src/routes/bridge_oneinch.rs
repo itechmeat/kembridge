@@ -18,7 +18,7 @@ pub fn create_bridge_oneinch_routes() -> Router<AppState> {
         .route("/swap/calculate-savings", post(calculate_bridge_swap_savings))
         
         // Bridge swap status endpoints
-        .route("/swap/:swap_id/status", get(get_bridge_swap_status))
+        .route("/swap/{swap_id}/status", get(get_bridge_swap_status))
         
         // Information endpoints
         .route("/supported-chains", get(get_supported_bridge_chains))

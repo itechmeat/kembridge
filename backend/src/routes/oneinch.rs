@@ -25,7 +25,7 @@ pub fn create_oneinch_routes() -> Router<AppState> {
         .route("/execute-signed", post(execute_signed_swap))
         
         // Order management endpoints
-        .route("/order/:order_hash", get(get_order_status))
+        .route("/order/{order_hash}", get(get_order_status))
         
         // Token information endpoints
         .route("/tokens", get(get_supported_tokens))

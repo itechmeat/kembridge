@@ -24,5 +24,5 @@ pub fn price_oracle_routes() -> Router<AppState> {
         // Price alerts
         .route("/alerts", post(price_oracle::create_price_alert))
         .route("/alerts", get(price_oracle::get_user_alerts))
-        .route("/alerts/:alert_id", delete(price_oracle::delete_price_alert))
+        .route("/alerts/{alert_id}", delete(price_oracle::delete_price_alert))
 }

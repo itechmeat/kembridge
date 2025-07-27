@@ -114,6 +114,15 @@ GET /api/v1/price/alerts
 DELETE /api/v1/price/alerts/{alert_id}
 ```
 
+### 1inch Integration Endpoints
+```
+POST /api/v1/swap/quote/enhanced
+GET /api/v1/swap/routing
+POST /api/v1/bridge/optimized-swap
+POST /api/v1/bridge/savings
+```
+*These endpoints use Price Oracle for 1inch operation comparison and optimization*
+
 ## Configuration
 
 ### Provider Configuration
@@ -131,6 +140,16 @@ DELETE /api/v1/price/alerts/{alert_id}
 - **Primary TTL**: 60 seconds for real-time data
 - **Fallback TTL**: 24 hours for emergency availability
 - **Provider TTL**: 30 seconds for individual source caching
+
+### Dynamic Pricing Configuration
+- **Bridge Base Fee**: 0.15% of transaction amount
+- **Protocol Fee**: 0.10% of transaction amount
+- **Slippage Protection Fee**: 0.05% of transaction amount
+- **Gas Estimation**: 100,000 units at 20 gwei
+- **Exchange Rate Weights**: 60% Oracle, 40% 1inch
+- **Volatility Thresholds**: ETH/NEAR 15%, ETH/USDT 8%, NEAR/USDT 12%
+- **Price Impact Thresholds**: Low <0.5%, Medium 0.5-2%, High >2%
+- **Slippage Limits**: Standard 0.5%, Maximum 2.0%
 
 ## Error Handling & Resilience
 
@@ -159,19 +178,129 @@ DELETE /api/v1/price/alerts/{alert_id}
 - Price alerts system for user notifications
 - Real-time monitoring and health checks
 - Circuit breaker pattern for resilience
+- **Dynamic Pricing Logic** with full modular architecture
+- **Comprehensive Fee Calculator** with detailed breakdown
+- **Hybrid Exchange Rate Calculator** (Oracle + 1inch)
+- **Price Impact Analysis** with recommendations
+- **Adaptive Slippage Protection** with market analysis
+- **Bridge Quote API** with complete pricing information
+- **Constants-based Configuration** for all pricing parameters
 
 ### 🔄 Current Limitations
 - Chainlink integration uses development mocks (production requires Web3 integration)
-- Price impact calculations are simplified (requires liquidity data)
 - Historical price data storage not implemented
 - Advanced ML-based anomaly detection not implemented
+- Volume-based discount calculation requires historical data
+- Real-time WebSocket price feeds not implemented
 
-### 🚀 Next Steps (Phase 6.2 & 6.3)
-- 1inch Fusion+ integration for optimal routing
-- Dynamic pricing logic for bridge operations
+### 🔗 1inch Fusion+ Integration
+
+The Price Oracle system is now fully integrated with 1inch Fusion+ for swap optimization and price analysis:
+
+#### Price Comparison Service
+- **Real-time comparison**: Automatic comparison of 1inch quotes with oracle data
+- **Efficiency Analysis**: Calculation of efficiency scores based on price, gas, slippage, and confidence
+- **Recommendation Engine**: Intelligent recommendations (HighlyRecommended, Recommended, Neutral, NotRecommended)
+- **Risk Assessment**: Transaction execution risk analysis considering market conditions
+
+#### Intelligent Routing Support
+- **Oracle-optimized routing**: Using oracle data to select optimal routing paths
+- **Multi-criteria optimization**: Combining oracle prices with 1inch routing for maximum efficiency
+- **Price deviation analysis**: Monitoring 1inch price deviations from oracle consensus
+
+#### Bridge Integration
+- **Cross-chain price optimization**: Using oracle data to optimize cross-chain swap operations
+- **Slippage protection**: Dynamic slippage adjustment based on oracle volatility data
+- **Cost-benefit analysis**: Comparing bridge operation costs with market rates
+
+### 🚀 Phase 6.3 - Dynamic Pricing Logic (COMPLETED)
+
+The Price Oracle system has been extended with a comprehensive Dynamic Pricing Logic module that provides intelligent, market-aware pricing for bridge operations:
+
+#### Dynamic Pricing Components
+
+**DynamicPricingService** (`/backend/src/dynamic_pricing/mod.rs`)
+- Main orchestrator coordinating all pricing components
+- Integrates with Price Oracle and 1inch services
+- Provides unified interface for bridge quote generation
+- Manages service health and graceful degradation
+
+**PricingAlgorithm** (`/backend/src/dynamic_pricing/algorithm.rs`)
+- Core pricing algorithm with volatility adjustments
+- Market condition analysis and cross-chain rate calculations
+- Dynamic fee adjustments based on network conditions
+- Comprehensive TODO framework for future ML integration
+
+**FeeCalculator** (`/backend/src/dynamic_pricing/fee_calculator.rs`)
+- Detailed fee breakdown calculation
+- Components: Base fees, Gas fees, Protocol fees, Slippage protection
+- Volume-based discount support
+- Real-time gas price integration
+
+**ExchangeRateCalculator** (`/backend/src/dynamic_pricing/exchange_rates.rs`)
+- Hybrid exchange rate calculation (Oracle + 1inch)
+- Weighted optimization with confidence scoring
+- Historical rate support and volatility analysis
+- Multi-source rate aggregation
+
+**PriceImpactAnalyzer** (`/backend/src/dynamic_pricing/impact_analyzer.rs`)
+- Price impact analysis for large transactions
+- Liquidity assessment and market depth analysis
+- Recommendation generation based on impact levels
+- Risk assessment integration
+
+**SlippageController** (`/backend/src/dynamic_pricing/slippage_control.rs`)
+- Adaptive slippage protection mechanisms
+- Market volatility analysis and dynamic adjustment
+- Protection level recommendations
+- Timeout and recovery strategies
+
+#### Bridge Quote API
+
+**GET /api/bridge/quote** - Comprehensive bridge quote generation
+```json
+{
+  "quote_id": "uuid",
+  "from_token": "ETH",
+  "to_token": "NEAR",
+  "from_amount": "1.000000000000000000",
+  "to_amount": "45.234567890123456789",
+  "fee_breakdown": {
+    "base_fee": "0.001500000000000000",
+    "gas_fee": "0.002134567890123456",
+    "protocol_fee": "0.000750000000000000",
+    "slippage_protection_fee": "0.000500000000000000",
+    "total_fee_amount": "0.004884567890123456",
+    "fee_percentage": 0.488,
+    "fee_currency": "ETH"
+  },
+  "exchange_rate": {
+    "rate": "45.234567890123456789",
+    "rate_source": "hybrid_oracle_oneinch",
+    "confidence_score": 0.85,
+    "volatility_indicator": 0.12
+  },
+  "price_impact": {
+    "impact_percentage": 0.15,
+    "impact_category": "Low",
+    "liquidity_score": 0.92,
+    "market_depth_score": 0.88,
+    "recommendation": "Proceed"
+  },
+  "slippage_protection": {
+    "recommended_slippage": 0.5,
+    "maximum_slippage": 2.0,
+    "protection_level": "Standard",
+    "timeout_seconds": 300
+  }
+}
+```
+
+### 🎯 Future Enhancements
 - Real-time price feeds via WebSocket
-- Advanced slippage protection mechanisms
+- Advanced ML-based price prediction
 - Production Chainlink contract integration
+- Historical price analysis and trends
 
 ## Security Considerations
 
@@ -190,4 +319,4 @@ DELETE /api/v1/price/alerts/{alert_id}
 
 ---
 
-*This Price Oracle System provides the foundation for accurate and reliable pricing data in KEMBridge's cross-chain bridge operations, ensuring optimal swap execution and user experience.*
+*This comprehensive Price Oracle and Dynamic Pricing system provides the foundation for accurate, intelligent, and market-aware pricing in KEMBridge's cross-chain bridge operations. The system ensures optimal swap execution, fair fee calculation, and superior user experience through advanced price aggregation, dynamic pricing algorithms, and comprehensive risk assessment.*

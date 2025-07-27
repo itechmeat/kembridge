@@ -64,7 +64,7 @@ services:
       - REDIS_URL=redis://:dev_redis_password@redis:6379
       - JWT_SECRET=hackathon-super-secret-key-change-in-production
       - AI_ENGINE_URL=http://ai-engine:4003
-      - ETHEREUM_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+      - ETHEREUM_RPC_URL=https://rpc.sepolia.org
       - NEAR_RPC_URL=https://rpc.testnet.near.org
       - RUST_LOG=debug
       - CORS_ORIGINS=http://localhost:4001

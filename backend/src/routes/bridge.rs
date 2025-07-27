@@ -10,7 +10,7 @@ use crate::AppState;
 pub fn create_routes() -> Router<AppState> {
     Router::new()
         // Get swap quote (Phase 6.3.5)
-        .route("/quote", post(crate::handlers::bridge::get_quote))
+        .route("/quote", get(crate::handlers::bridge::get_quote))
         
         // Initiate cross-chain swap (Phase 4.3.4)
         .route("/swap", post(crate::handlers::bridge::initiate_swap))
