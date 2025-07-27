@@ -182,6 +182,50 @@ This is a hackathon version with simplified architecture. Production deployment 
 - Comprehensive audit logging
 - Real-time transaction monitoring
 
+## Critical Development Rules
+
+### ABSOLUTE PROHIBITIONS - NO EXCEPTIONS
+
+**1. NEVER USE MOCK DATA AS FALLBACK IN PRODUCTION PATHS**
+- FORBIDDEN: Any fallback to mock/fake data when real APIs are unavailable
+- REASON: This destroys user trust and can cause financial losses
+- ACCEPTABLE: Mock data ONLY during development with clear TODO comments for removal
+- REQUIRED: Proper error handling instead of fake data
+
+**2. NO FAKE RESPONSES TO USERS**
+- If external service is unavailable, return proper error messages
+- Users must know when service is degraded, not receive fake data
+- Better to fail gracefully than provide misleading information
+
+**3. MOCK DATA USAGE RULES**
+- ONLY allowed during initial development for compilation
+- MUST have TODO comments explaining removal plan
+- MUST be removed before any user-facing deployment
+- NEVER as a fallback mechanism for production
+
+### Constants Management
+
+**MANDATORY**: Use global constants in `/src/constants.rs` for any values that might be variable:
+- API endpoints and URLs
+- Timeout values and retry counts
+- Default configurations
+- Error messages and status codes
+- Numeric thresholds and limits
+- String patterns and prefixes
+
+**Examples requiring constants:**
+```rust
+// BAD - hardcoded values
+let timeout = 30;
+let api_url = "https://api.example.com";
+let max_retries = 3;
+
+// GOOD - using constants
+let timeout = HTTP_CLIENT_TIMEOUT;
+let api_url = EXTERNAL_API_BASE_URL;
+let max_retries = DEFAULT_MAX_RETRIES;
+```
+
 ## Language Guidelines
 
 **IMPORTANT**: All project files (code, configuration, documentation except MD files) MUST contain ONLY English language content, including:

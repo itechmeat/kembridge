@@ -149,3 +149,78 @@ pub const CACHE_PRIMARY_PRICES_DEFAULT: usize = 5;
 pub const CACHE_FALLBACK_PRICES_DEFAULT: usize = 5;
 pub const CACHE_PROVIDER_PRICES_DEFAULT: usize = 5;
 pub const CACHE_HIT_RATE_DEFAULT: f64 = 0.85;
+
+// 1inch Fusion+ API configuration
+pub const ONEINCH_FUSION_API_BASE: &str = "https://api.1inch.dev/fusion";
+pub const ONEINCH_FUSION_API_VERSION: &str = "v1.0";
+pub const ONEINCH_FUSION_TIMEOUT_SEC: u64 = 30;
+pub const ONEINCH_FUSION_MAX_RETRIES: u32 = 3;
+pub const ONEINCH_FUSION_RETRY_DELAY_MS: u64 = 1000;
+
+// 1inch Fusion+ swap parameters
+pub const ONEINCH_DEFAULT_SLIPPAGE: f64 = 0.5; // 0.5%
+pub const ONEINCH_MAX_SLIPPAGE: f64 = 5.0; // 5%
+pub const ONEINCH_MIN_SLIPPAGE: f64 = 0.1; // 0.1%
+pub const ONEINCH_ORDER_TIMEOUT_SEC: u64 = 300; // 5 minutes
+
+// 1inch supported networks
+pub const ONEINCH_ETHEREUM_CHAIN_ID: u64 = 1;
+pub const ONEINCH_BSC_CHAIN_ID: u64 = 56;
+pub const ONEINCH_POLYGON_CHAIN_ID: u64 = 137;
+pub const ONEINCH_AVALANCHE_CHAIN_ID: u64 = 43114;
+pub const ONEINCH_ARBITRUM_CHAIN_ID: u64 = 42161;
+pub const ONEINCH_OPTIMISM_CHAIN_ID: u64 = 10;
+
+// 1inch testnet networks
+pub const ONEINCH_SEPOLIA_CHAIN_ID: u64 = 11155111;
+pub const ONEINCH_BSC_TESTNET_CHAIN_ID: u64 = 97;
+pub const ONEINCH_POLYGON_MUMBAI_CHAIN_ID: u64 = 80001;
+
+// 1inch order status
+pub const ONEINCH_ORDER_STATUS_PENDING: &str = "pending";
+pub const ONEINCH_ORDER_STATUS_FILLED: &str = "filled";
+pub const ONEINCH_ORDER_STATUS_EXPIRED: &str = "expired";
+pub const ONEINCH_ORDER_STATUS_CANCELLED: &str = "cancelled";
+pub const ONEINCH_ORDER_STATUS_FAILED: &str = "failed";
+
+// 1inch gas estimation
+pub const ONEINCH_GAS_LIMIT_BUFFER: f64 = 1.2; // 20% buffer
+pub const ONEINCH_DEFAULT_GAS_PRICE_GWEI: u64 = 20;
+
+// Native token addresses for bridge integration
+pub const ETHEREUM_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const BSC_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const POLYGON_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const AVALANCHE_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const ARBITRUM_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const OPTIMISM_NATIVE_TOKEN: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+pub const NEAR_NATIVE_TOKEN: &str = "near";
+
+// Bridge integration defaults
+pub const BRIDGE_DEFAULT_OPTIMIZATION_STRATEGY: &str = "balanced";
+pub const BRIDGE_MIN_OPTIMIZATION_THRESHOLD: f64 = 0.01; // 1% minimum improvement
+pub const BRIDGE_MAX_SLIPPAGE_BRIDGE: f64 = 2.0; // 2% max slippage for bridge operations
+
+// 1inch source identifiers
+pub const ONEINCH_DEFAULT_SOURCE: &str = "kembridge";
+pub const ONEINCH_BRIDGE_INTEGRATION_SOURCE: &str = "kembridge-bridge-integration";
+pub const ONEINCH_ROUTING_SOURCE: &str = "kembridge-routing";
+
+// 1inch execution probability base
+pub const ONEINCH_EXECUTION_PROBABILITY_BASE: f64 = 0.9;
+
+// ETH price fallback for gas calculations
+pub const ONEINCH_ETH_PRICE_FALLBACK_USD: f64 = 2000.0;
+
+// Ethereum zero address constant
+pub const ETHEREUM_ZERO_ADDRESS: &str = "0x0000000000000000000000000000000000000000";
+
+// Ethereum transaction constants
+pub const ETHEREUM_BASE_GAS: u64 = 21000;
+pub const ETHEREUM_WEI_MULTIPLIER: u64 = 1_000_000_000_000_000_000;
+
+// API routes
+pub const API_ROUTE_HEALTH: &str = "/health";
+pub const API_ROUTE_READY: &str = "/ready";
+pub const API_ROUTE_METRICS: &str = "/metrics";
+

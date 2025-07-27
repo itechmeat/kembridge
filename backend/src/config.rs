@@ -34,6 +34,11 @@ pub struct AppConfig {
     pub ethereum_rpc_url: String,
     pub near_rpc_url: String,
 
+    // 1inch Integration
+    pub oneinch_api_key: Option<String>,
+    pub ethereum_chain_id: Option<u64>,
+    pub enable_oneinch_fusion: bool,
+
     // Feature flags
     pub enable_quantum_crypto: bool,
     pub enable_ai_risk_analysis: bool,
@@ -89,6 +94,10 @@ impl Default for AppConfig {
             ai_engine_max_retries: DEFAULT_AI_ENGINE_MAX_RETRIES,
             ethereum_rpc_url: DEFAULT_ETHEREUM_RPC_URL.to_string(),
             near_rpc_url: DEFAULT_NEAR_RPC_URL.to_string(),
+
+            oneinch_api_key: None,
+            ethereum_chain_id: Some(ONEINCH_SEPOLIA_CHAIN_ID),
+            enable_oneinch_fusion: true,
 
             enable_quantum_crypto: true,
             enable_ai_risk_analysis: true,
@@ -193,6 +202,20 @@ impl AppConfig {
 
         if let Ok(near_rpc) = env::var("NEAR_RPC_URL") {
             config.near_rpc_url = near_rpc;
+        }
+
+        // 1inch Integration
+        if let Ok(api_key) = env::var("ONEINCH_API_KEY") {
+            config.oneinch_api_key = Some(api_key);
+        }
+
+        if let Ok(chain_id) = env::var("ETHEREUM_CHAIN_ID") {
+            config.ethereum_chain_id = Some(chain_id.parse()
+                .context("Invalid ETHEREUM_CHAIN_ID value")?);
+        }
+
+        if let Ok(enable_oneinch) = env::var("ENABLE_ONEINCH_FUSION") {
+            config.enable_oneinch_fusion = enable_oneinch.parse().unwrap_or(true);
         }
 
         // Feature flags
