@@ -224,3 +224,104 @@ pub const API_ROUTE_HEALTH: &str = "/health";
 pub const API_ROUTE_READY: &str = "/ready";
 pub const API_ROUTE_METRICS: &str = "/metrics";
 
+// Dynamic Pricing Constants
+pub const BRIDGE_ESTIMATED_EXECUTION_TIME_MINUTES: i64 = 15;
+pub const BRIDGE_QUOTE_VALIDITY_MINUTES: i64 = 5;
+
+// Bridge volatility adjustments
+pub const BRIDGE_ATOMIC_VOLATILITY_ADJUSTMENT: f64 = 1.02; // 2% for atomic swaps
+pub const BRIDGE_OPTIMISTIC_VOLATILITY_ADJUSTMENT: f64 = 1.01; // 1% for optimistic
+pub const BRIDGE_CANONICAL_VOLATILITY_ADJUSTMENT: f64 = 1.005; // 0.5% for canonical
+
+// Bridge cross-chain adjustments
+pub const BRIDGE_ETH_TO_NEAR_ADJUSTMENT: f64 = 1.015; // 1.5% adjustment
+pub const BRIDGE_NEAR_TO_ETH_ADJUSTMENT: f64 = 1.012; // 1.2% adjustment
+
+// Bridge fee percentages
+pub const BRIDGE_BASE_FEE_PERCENTAGE: f64 = 0.15; // 0.15% base fee
+pub const BRIDGE_PROTOCOL_FEE_PERCENTAGE: f64 = 0.05; // 0.05% protocol fee
+pub const BRIDGE_SLIPPAGE_PROTECTION_FEE_PERCENTAGE: f64 = 0.03; // 0.03% slippage protection
+
+// Bridge gas estimation
+pub const BRIDGE_ESTIMATED_GAS_UNITS: u64 = 150000;
+pub const BRIDGE_DEFAULT_GAS_PRICE_GWEI: u64 = 25;
+
+// Exchange rate constants
+pub const EXCHANGE_RATE_DEFAULT_SLIPPAGE: f64 = 0.5; // 0.5% default slippage
+pub const EXCHANGE_RATE_ORACLE_WEIGHT: f64 = 0.6; // 60% oracle weight
+pub const EXCHANGE_RATE_ONEINCH_WEIGHT: f64 = 0.4; // 40% 1inch weight
+pub const EXCHANGE_RATE_BASE_CONFIDENCE: f64 = 0.8; // 80% base confidence
+
+// Exchange rate volatility indicators
+pub const EXCHANGE_RATE_ETH_NEAR_VOLATILITY: f64 = 0.25; // 25% volatility
+pub const EXCHANGE_RATE_ETH_USDT_VOLATILITY: f64 = 0.15; // 15% volatility  
+pub const EXCHANGE_RATE_NEAR_USDT_VOLATILITY: f64 = 0.20; // 20% volatility
+pub const EXCHANGE_RATE_DEFAULT_VOLATILITY: f64 = 0.30; // 30% default volatility
+
+// Price impact thresholds
+pub const PRICE_IMPACT_LOW_THRESHOLD: f64 = 0.5; // 0.5% low impact
+pub const PRICE_IMPACT_MEDIUM_THRESHOLD: f64 = 2.0; // 2% medium impact
+pub const PRICE_IMPACT_HIGH_THRESHOLD: f64 = 5.0; // 5% high impact
+pub const PRICE_IMPACT_MAX_PERCENTAGE: f64 = 20.0; // 20% max impact
+
+// Price impact liquidity estimates (in USD)
+pub const PRICE_IMPACT_ETH_NEAR_LIQUIDITY: f64 = 500000.0; // $500k liquidity
+pub const PRICE_IMPACT_ETH_USDT_LIQUIDITY: f64 = 2000000.0; // $2M liquidity
+pub const PRICE_IMPACT_NEAR_USDT_LIQUIDITY: f64 = 300000.0; // $300k liquidity
+pub const PRICE_IMPACT_DEFAULT_LIQUIDITY: f64 = 100000.0; // $100k default
+
+// Price impact market depth defaults
+pub const PRICE_IMPACT_DEFAULT_BID_DEPTH: f64 = 100000.0; // $100k bid depth
+pub const PRICE_IMPACT_DEFAULT_ASK_DEPTH: f64 = 100000.0; // $100k ask depth
+pub const PRICE_IMPACT_DEFAULT_SPREAD_PERCENTAGE: f64 = 0.1; // 0.1% spread
+
+// Price impact fragmentation risk
+pub const PRICE_IMPACT_ETH_NEAR_FRAGMENTATION: f64 = 0.3; // 30% fragmentation
+pub const PRICE_IMPACT_ETH_USDT_FRAGMENTATION: f64 = 0.1; // 10% fragmentation
+pub const PRICE_IMPACT_NEAR_USDT_FRAGMENTATION: f64 = 0.4; // 40% fragmentation
+pub const PRICE_IMPACT_DEFAULT_FRAGMENTATION: f64 = 0.5; // 50% default
+pub const PRICE_IMPACT_HIGH_FRAGMENTATION_THRESHOLD: f64 = 0.35; // 35% high fragmentation
+
+// Price impact stability scores
+pub const PRICE_IMPACT_HIGH_STABILITY: f64 = 0.9; // 90% stability
+pub const PRICE_IMPACT_MEDIUM_STABILITY: f64 = 0.7; // 70% stability
+pub const PRICE_IMPACT_LOW_STABILITY: f64 = 0.5; // 50% stability
+pub const PRICE_IMPACT_DEFAULT_STABILITY: f64 = 0.6; // 60% default stability
+
+// Slippage control constants
+pub const SLIPPAGE_BASE_PERCENTAGE: f64 = 0.5; // 0.5% base slippage
+pub const SLIPPAGE_MIN_PERCENTAGE: f64 = 0.1; // 0.1% minimum slippage
+pub const SLIPPAGE_MAX_PERCENTAGE: f64 = 5.0; // 5% maximum slippage
+pub const SLIPPAGE_WARNING_THRESHOLD: f64 = 3.0; // 3% warning threshold
+
+// Slippage volatility factors
+pub const SLIPPAGE_ETH_NEAR_VOLATILITY: f64 = 0.15; // 15% volatility
+pub const SLIPPAGE_ETH_USDT_VOLATILITY: f64 = 0.05; // 5% volatility
+pub const SLIPPAGE_NEAR_USDT_VOLATILITY: f64 = 0.10; // 10% volatility
+pub const SLIPPAGE_DEFAULT_VOLATILITY: f64 = 0.20; // 20% default volatility
+
+pub const SLIPPAGE_VOLATILITY_MULTIPLIER: f64 = 1.2; // 20% volatility multiplier
+pub const SLIPPAGE_VOLATILITY_FACTOR: f64 = 2.0; // 2x volatility factor
+pub const SLIPPAGE_DYNAMIC_THRESHOLD: f64 = 0.15; // 15% dynamic threshold
+pub const SLIPPAGE_HIGH_VOLATILITY_THRESHOLD: f64 = 0.25; // 25% high volatility
+pub const SLIPPAGE_HIGH_VOLATILITY_TIMEOUT_FACTOR: f64 = 0.5; // 50% timeout reduction
+
+// Slippage trade size adjustments
+pub const SLIPPAGE_LARGE_TRADE_THRESHOLD: f64 = 10000.0; // $10k large trade
+pub const SLIPPAGE_MEDIUM_TRADE_THRESHOLD: f64 = 1000.0; // $1k medium trade
+pub const SLIPPAGE_LARGE_TRADE_ADJUSTMENT: f64 = 0.5; // 0.5% large trade adjustment
+pub const SLIPPAGE_MEDIUM_TRADE_ADJUSTMENT: f64 = 0.2; // 0.2% medium trade adjustment
+pub const SLIPPAGE_SMALL_TRADE_ADJUSTMENT: f64 = 0.0; // 0% small trade adjustment
+
+// Slippage protection level thresholds
+pub const SLIPPAGE_BASIC_THRESHOLD: f64 = 0.5; // 0.5% basic threshold
+pub const SLIPPAGE_STANDARD_THRESHOLD: f64 = 1.0; // 1% standard threshold
+pub const SLIPPAGE_ADVANCED_THRESHOLD: f64 = 2.0; // 2% advanced threshold
+
+// Slippage timeout settings (in minutes)
+pub const SLIPPAGE_BASIC_TIMEOUT_MINUTES: i64 = 5; // 5 minutes basic
+pub const SLIPPAGE_STANDARD_TIMEOUT_MINUTES: i64 = 10; // 10 minutes standard
+pub const SLIPPAGE_ADVANCED_TIMEOUT_MINUTES: i64 = 15; // 15 minutes advanced
+pub const SLIPPAGE_MAXIMUM_TIMEOUT_MINUTES: i64 = 30; // 30 minutes maximum
+pub const SLIPPAGE_MIN_TIMEOUT_MINUTES: i64 = 2; // 2 minutes minimum
+

@@ -27,9 +27,9 @@ pub fn create_routes() -> Router<AppState> {
         // Manual review queue management (Phase 5.2.4)
         .route("/review/queue", get(crate::handlers::manual_review::get_review_queue))
         .route("/review/queue", post(crate::handlers::manual_review::add_to_review_queue))
-        .route("/review/:review_id", get(crate::handlers::manual_review::get_review_details))
-        .route("/review/:review_id/assign", put(crate::handlers::manual_review::assign_review))
-        .route("/review/:review_id/decision", put(crate::handlers::manual_review::make_review_decision))
-        .route("/review/:review_id/escalate", put(crate::handlers::manual_review::escalate_review))
+        .route("/review/{review_id}", get(crate::handlers::manual_review::get_review_details))
+        .route("/review/{review_id}/assign", put(crate::handlers::manual_review::assign_review))
+        .route("/review/{review_id}/decision", put(crate::handlers::manual_review::make_review_decision))
+        .route("/review/{review_id}/escalate", put(crate::handlers::manual_review::escalate_review))
         .route("/review/check-escalations", post(crate::handlers::manual_review::check_escalations))
 }

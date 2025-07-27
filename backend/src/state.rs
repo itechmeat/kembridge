@@ -11,6 +11,7 @@ use crate::websocket::WebSocketRegistry;
 use crate::monitoring::MonitoringService;
 use crate::price_oracle::PriceOracleService;
 use crate::oneinch::OneinchService;
+use crate::dynamic_pricing::DynamicPricingService;
 use kembridge_database::TransactionService;
 
 /// Application state with dependency injection for all services
@@ -21,7 +22,7 @@ pub struct AppState {
     pub config: AppConfig,
     pub auth_service: Arc<AuthService>,
     pub user_service: Arc<UserService>,
-    pub bridge_service: Arc<BridgeService>,
+    pub bridge_service: Option<Arc<BridgeService>>,
     pub quantum_service: Arc<QuantumService>,
     pub ai_client: Arc<AiClient>,
     pub risk_integration_service: Arc<RiskIntegrationService>,
@@ -31,6 +32,7 @@ pub struct AppState {
     pub monitoring_service: Arc<MonitoringService>,
     pub price_oracle_service: Arc<PriceOracleService>,
     pub oneinch_service: Arc<OneinchService>,
+    pub dynamic_pricing_service: Arc<DynamicPricingService>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -75,14 +77,21 @@ impl AppState {
         );
 
         // Initialize bridge service with risk integration (Phase 5.2.7)
-        let bridge_service = Arc::new(
-            BridgeService::new(
-                db.clone(),
-                quantum_service.clone(),
-                &config
-            ).await?
-            .with_risk_integration(risk_integration_service.clone())
-        );
+        // TODO: Temporary fallback while fixing Ethereum adapter configuration
+        let bridge_service = match BridgeService::new(
+            db.clone(),
+            quantum_service.clone(),
+            &config
+        ).await {
+            Ok(service) => {
+                tracing::info!("Successfully initialized BridgeService");
+                Some(Arc::new(service.with_risk_integration(risk_integration_service.clone())))
+            }
+            Err(e) => {
+                tracing::warn!("Failed to initialize BridgeService: {}. Continuing without bridge service for dynamic pricing testing.", e);
+                None
+            }
+        };
 
         // Initialize user service with risk integration (Phase 5.2.7)
         let user_service = Arc::new(
@@ -117,9 +126,17 @@ impl AppState {
             )
         );
 
+        // Initialize dynamic pricing service (Phase 6.3)
+        let dynamic_pricing_service = Arc::new(
+            DynamicPricingService::new(
+                price_oracle_service.clone(),
+                oneinch_service.clone(),
+            )
+        );
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, and 1inch Fusion+ service",
-            13 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, and dynamic pricing service",
+            14 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, dynamic_pricing, metrics
         );
 
         Ok(Self {
@@ -138,6 +155,7 @@ impl AppState {
             monitoring_service,
             price_oracle_service,
             oneinch_service,
+            dynamic_pricing_service,
             metrics,
         })
     }

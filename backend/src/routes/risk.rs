@@ -17,7 +17,7 @@ use crate::state::AppState;
 pub fn create_routes() -> Router<AppState> {
     Router::new()
         // User risk profile endpoints
-        .route("/profile/:user_id", get(get_user_risk_profile))
+        .route("/profile/{user_id}", get(get_user_risk_profile))
         
         // Risk threshold management
         .route("/thresholds", get(get_risk_thresholds))

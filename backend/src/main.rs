@@ -28,6 +28,7 @@ mod websocket;
 mod monitoring;
 mod price_oracle;
 mod oneinch;
+mod dynamic_pricing;
 mod constants;
 
 // Services are used via full paths in AppState
