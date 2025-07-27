@@ -19,6 +19,7 @@
 *.env.local
 *.env.production
 *.env.staging
+*.env.bcp
 
 # Logs
 *.log

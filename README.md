@@ -12,16 +12,22 @@ KEMBridge is an autonomous cross-chain bridge that enables secure asset transfer
 - **Docker Compose** (included with Docker Desktop)
 - **Git**
 
-### One-Command Setup
+### Setup
 
 ```bash
 # Clone the repository
 git clone <kembridge-repo>
 cd kembridge-mono
 
-# Start all services
-docker-compose up --build
+# ⚠️ IMPORTANT: Configure API keys first
+cp .env.example .env
+# Edit .env with your API keys (see setup section below)
+
+# Then start the application
+make dev
 ```
+
+📋 **For detailed API configuration see "API Configuration" section below**
 
 This single command will:
 
@@ -95,6 +101,67 @@ After successful startup, you can access:
 ```
 
 ✅ **Frontend:** Welcome page with "KEMBridge - Cross-Chain Intelligence Meets Quantum Security"
+
+## API Configuration
+
+Before running KEMBridge, you need to configure API keys for external services:
+
+### 1. MetaMask/Infura (Ethereum RPC)
+
+1. **Go to [MetaMask Developer Dashboard](https://developer.metamask.io/)**
+2. **Create a new project** called "KEMBridge"
+3. **Get your Project ID** from the project settings
+4. **Enable Sepolia testnet** in network settings
+5. **Configure API security:**
+   - Check "Require API Key Secret for all requests"
+   - Copy the generated API Secret
+6. **Update your .env file:**
+   ```env
+   ETHEREUM_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
+   INFURA_API_SECRET=YOUR_API_SECRET_FROM_DASHBOARD
+   INFURA_API_KEY=YOUR_PROJECT_ID
+   ```
+
+### 2. 1inch API (For Fusion+ Integration)
+
+1. **Go to [1inch Developer Portal](https://portal.1inch.dev/)**
+2. **Create a new application**
+3. **Copy the API key**
+4. **Update your .env file:**
+   ```env
+   ONEINCH_API_KEY=YOUR_1INCH_API_KEY
+   ```
+
+### 3. WalletConnect (Optional - for frontend)
+
+1. **Go to [WalletConnect Cloud](https://cloud.walletconnect.com/)**
+2. **Create a new project**
+3. **Copy the Project ID**
+4. **Update your .env file:**
+   ```env
+   VITE_WALLET_CONNECT_PROJECT_ID=YOUR_WALLET_CONNECT_PROJECT_ID
+   ```
+
+### 4. Test Your Configuration
+
+After configuring API keys, test the connection:
+
+```bash
+# Start the backend for testing
+make dev
+
+# In another terminal, test Ethereum RPC
+curl http://localhost:4000/health
+
+# Check the logs for successful API connections
+docker-compose logs backend | grep -i "ethereum\|infura"
+```
+
+### Environment Files
+
+- **Root `.env`** - Used by Docker Compose for all services
+- **Backend `.env`** - Used for local backend development without Docker
+- Both files have corresponding `.env.example` templates
 
 ### Development Commands
 

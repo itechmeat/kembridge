@@ -28,6 +28,10 @@ pub use risk_integration::{RiskIntegrationService, OperationDecision};
 pub mod manual_review;
 pub use manual_review::ManualReviewService;
 
+/// Bridge integration service - implemented in Phase 6.2.1
+pub mod bridge_integration;
+pub use bridge_integration::BridgeIntegrationService;
+
 #[cfg(test)]
 mod user_service_tests;
 
@@ -148,6 +152,11 @@ impl BridgeService {
     /// Get swap operation (delegate to inner service)
     pub async fn get_swap_operation(&self, swap_id: uuid::Uuid) -> Result<kembridge_bridge::SwapOperation, kembridge_bridge::BridgeError> {
         self.inner.get_swap_operation(swap_id).await
+    }
+
+    /// Get inner bridge service for advanced integrations
+    pub fn inner(&self) -> std::sync::Arc<kembridge_bridge::BridgeService> {
+        self.inner.clone()
     }
 
     /// Initialize swap (delegate to inner service)
