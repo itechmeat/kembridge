@@ -1,0 +1,66 @@
+/**
+ * Bottom Navigation Styles
+ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.bottom-nav__container {
+  display: flex;
+  padding: 0.5rem 0;
+}
+
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &--active {
+    .bottom-nav__icon {
+      transform: scale(1.1);
+    }
+
+    .bottom-nav__label {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.bottom-nav__icon {
+  font-size: 1.5rem;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+/* Safe area support for iOS */
+@supports (padding: max(0px)) {
+  .bottom-nav {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}

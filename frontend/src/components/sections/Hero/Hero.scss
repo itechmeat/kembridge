@@ -1,0 +1,147 @@
+/**
+ * Hero Section Styles
+ */
+
+.hero {
+  padding: 4rem 0;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-subtle),
+    var(--color-background)
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+.hero__branding {
+  margin-bottom: 3rem;
+}
+
+.hero__title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.hero__title-main {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-dark)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero__title-quantum {
+  font-size: 0.8em;
+  animation: quantum-pulse 2s ease-in-out infinite;
+}
+
+@keyframes quantum-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.hero__subtitle {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin: 0;
+}
+
+.hero__wallet,
+.hero__auth {
+  margin: 2rem 0;
+}
+
+.hero__description {
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.hero__text {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 3rem 0;
+}
+
+.hero__cta,
+.hero__demo {
+  min-width: 160px;
+}
+
+.hero__status {
+  margin-top: 2rem;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+}
+
+.status-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero {
+    padding: 2rem 0;
+  }
+
+  .hero__container {
+    padding: 0 1rem;
+  }
+
+  .hero__title {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero__cta,
+  .hero__demo {
+    width: 100%;
+    max-width: 280px;
+  }
+}

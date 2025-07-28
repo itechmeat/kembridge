@@ -13,13 +13,43 @@
     "docker:build": "docker-compose build frontend"
   },
   "packageManager": "pnpm@10.12.1",
+  "pnpm": {
+    "overrides": {
+      "react": "^19.1.0",
+      "react-dom": "^19.1.0",
+      "near-api-js": "^6.2.2",
+      "@near-js/accounts": "^2.0.1",
+      "@near-js/crypto": "^2.0.1",
+      "@near-js/keystores": "^2.0.1",
+      "@near-js/keystores-browser": "^2.0.1",
+      "@near-js/keystores-node": "^2.0.1",
+      "@near-js/providers": "^2.0.1",
+      "@near-js/signers": "^2.0.1",
+      "@near-js/transactions": "^2.0.1",
+      "@near-js/types": "^2.0.1",
+      "@near-js/utils": "^2.0.1"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "near-api-js"
+      ],
+      "allowedVersions": {
+        "near-api-js": "6",
+        "react": "19",
+        "react-dom": "19"
+      }
+    }
+  },
   "dependencies": {
     "@near-wallet-selector/core": "^9.0.3",
     "@near-wallet-selector/modal-ui": "^9.0.3",
     "@near-wallet-selector/my-near-wallet": "^9.0.3",
+    "@near-wallet-selector/nightly": "^9.1.0",
+    "@near-wallet-selector/react-hook": "^9.0.3",
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-query-devtools": "^5.83.0",
+    "@walletconnect/ethereum-provider": "^2.21.5",
     "axios": "^1.10.0",
     "near-api-js": "^6.2.2",
     "react": "^19.1.0",

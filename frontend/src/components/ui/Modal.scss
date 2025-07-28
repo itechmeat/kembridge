@@ -1,0 +1,170 @@
+/**
+ * Mobile-first Modal component styles
+ * Full-screen mobile design with smooth animations
+ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 0;
+  animation: modal-overlay-enter 0.2s ease-out;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 1rem 1rem 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 100vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modal-slide-up 0.3s ease-out;
+  position: relative;
+
+  // Size variants (mobile-optimized)
+  &--sm {
+    max-height: 50vh;
+  }
+
+  &--md {
+    max-height: 75vh;
+  }
+
+  &--lg {
+    max-height: 90vh;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem 0.5rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    min-height: 3.5rem;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+  }
+
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+// Animations
+@keyframes modal-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Center modal variant for desktop-like appearance (if needed)
+.modal-overlay--center {
+  align-items: center;
+  padding: 1rem;
+
+  .modal {
+    border-radius: 1rem;
+    max-width: 32rem;
+    width: calc(100% - 2rem);
+    animation: modal-zoom-in 0.2s ease-out;
+  }
+}
+
+@keyframes modal-zoom-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Accessibility improvements
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay {
+    animation: none;
+  }
+
+  .modal {
+    animation: none;
+  }
+}
+
+// Ensure proper touch scrolling
+.modal__content {
+  scroll-behavior: smooth;
+
+  // iOS momentum scrolling
+  -webkit-overflow-scrolling: touch;
+
+  // Prevent overscroll on mobile
+  overscroll-behavior: contain;
+}

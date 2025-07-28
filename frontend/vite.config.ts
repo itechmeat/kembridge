@@ -4,9 +4,13 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: "globalThis",
+    "process.env": {},
+  },
   server: {
     host: "0.0.0.0",
-    port: 4001,
+    port: 4100,
     watch: {
       usePolling: true,
     },
@@ -16,7 +20,7 @@ export default defineConfig({
     host: "0.0.0.0",
   },
   optimizeDeps: {
-    include: ["react", "react-dom"], // Pre-bundle dependencies
+    include: ["react", "react-dom", "buffer", "process"],
   },
   build: {
     rollupOptions: {
