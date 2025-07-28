@@ -1,0 +1,148 @@
+// Utility functions for SCSS calculations and conversions
+@use "sass:math";
+@use "sass:color";
+
+// Convert pixels to rem
+@function px-to-rem($px, $base-font-size: 16px) {
+  @return math.div($px, $base-font-size) * 1rem;
+}
+
+// Convert pixels to em
+@function px-to-em($px, $base-font-size: 16px) {
+  @return math.div($px, $base-font-size) * 1em;
+}
+
+// Convert rem to pixels
+@function rem-to-px($rem, $base-font-size: 16px) {
+  @return $rem * $base-font-size;
+}
+
+// Convert em to pixels
+@function em-to-px($em, $base-font-size: 16px) {
+  @return $em * $base-font-size;
+}
+
+// Strip unit from number
+@function strip-unit($number) {
+  @if type-of($number) == "number" and not unitless($number) {
+    @return math.div($number, $number * 0 + 1);
+  }
+  @return $number;
+}
+
+// Power function
+@function pow($base, $exponent) {
+  $result: 1;
+  @for $i from 1 through $exponent {
+    $result: $result * $base;
+  }
+  @return $result;
+}
+
+// Modular scale
+@function modular-scale($increment, $base: 1rem, $ratio: 1.25) {
+  @return $base * pow($ratio, $increment);
+}
+
+// Get color with opacity
+@function get-color($color, $opacity: 1) {
+  @return rgba($color, $opacity);
+}
+
+// Lighten color using modern syntax
+@function lighten-color($color, $amount: 20%) {
+  @return color.adjust($color, $lightness: $amount);
+}
+
+// Darken color using modern syntax
+@function darken-color($color, $amount: 20%) {
+  @return color.adjust($color, $lightness: -$amount);
+}
+
+// Get spacing value
+@function get-spacing($key) {
+  $spacing-map: (
+    xs: 0.25rem,
+    sm: 0.5rem,
+    md: 1rem,
+    lg: 1.5rem,
+    xl: 2rem,
+    xxl: 3rem,
+  );
+  @return map-get($spacing-map, $key);
+}
+
+// Get shadow value
+@function get-shadow($level: 1) {
+  $shadow-map: (
+    1: 0 1px 3px rgba(0, 0, 0, 0.12),
+    2: 0 4px 6px rgba(0, 0, 0, 0.12),
+    3: 0 5px 15px rgba(0, 0, 0, 0.12),
+    4: 0 10px 24px rgba(0, 0, 0, 0.12),
+    5: 0 15px 35px rgba(0, 0, 0, 0.12),
+  );
+  @return map-get($shadow-map, $level);
+}
+
+// Calculate contrast ratio
+@function contrast-ratio($color1, $color2) {
+  $luminance1: relative-luminance($color1);
+  $luminance2: relative-luminance($color2);
+
+  @if $luminance1 > $luminance2 {
+    @return math.div($luminance1 + 0.05, $luminance2 + 0.05);
+  } @else {
+    @return math.div($luminance2 + 0.05, $luminance1 + 0.05);
+  }
+}
+
+// Calculate relative luminance
+@function relative-luminance($color) {
+  $red: color.red($color) / 255;
+  $green: color.green($color) / 255;
+  $blue: color.blue($color) / 255;
+
+  $red: if($red <= 0.03928, $red / 12.92, pow(($red + 0.055) / 1.055, 2.4));
+  $green: if(
+    $green <= 0.03928,
+    $green / 12.92,
+    pow(($green + 0.055) / 1.055, 2.4)
+  );
+  $blue: if($blue <= 0.03928, $blue / 12.92, pow(($blue + 0.055) / 1.055, 2.4));
+
+  @return 0.2126 * $red + 0.7152 * $green + 0.0722 * $blue;
+}
+
+// Get accessible color
+@function get-accessible-color(
+  $background-color,
+  $light-color: #ffffff,
+  $dark-color: #000000
+) {
+  $light-contrast: contrast-ratio($background-color, $light-color);
+  $dark-contrast: contrast-ratio($background-color, $dark-color);
+
+  @return if($light-contrast > $dark-contrast, $light-color, $dark-color);
+}
+
+// Fluid typography
+@function fluid-type(
+  $min-font-size,
+  $max-font-size,
+  $min-vw: 320px,
+  $max-vw: 1200px
+) {
+  $slope: math.div($max-font-size - $min-font-size, $max-vw - $min-vw);
+  $intercept: $min-font-size - $slope * $min-vw;
+
+  @return clamp(
+    #{$min-font-size},
+    #{$intercept} + #{$slope * 100vw},
+    #{$max-font-size}
+  );
+}
+
+// Constrain value between min and max (renamed from clamp to avoid conflict)
+@function constrain($min, $val, $max) {
+  @return if($val < $min, $min, if($val > $max, $max, $val));
+}
