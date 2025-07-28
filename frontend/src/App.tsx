@@ -6,6 +6,7 @@ import { setNearWalletContext } from "./services/wallet/providers/near";
 import { MobileLayout } from "./components/layout/MobileLayout/MobileLayout";
 import { WalletPage } from "./pages/WalletPage/WalletPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
+import { useAuthInit } from "./hooks/api/useAuth";
 import { useEffect } from "react";
 import "./styles/main.scss";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -13,6 +14,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 function AppContent() {
   console.log("🏗️ App: AppContent component rendering");
   const nearWallet = useNearWallet();
+  const authInit = useAuthInit();
 
   useEffect(() => {
     console.log("🔗 App: Connecting NEAR context to provider...");
@@ -27,6 +29,15 @@ function AppContent() {
     setNearWalletContext(nearWallet);
     console.log("✅ App: NEAR context connected to provider");
   }, [nearWallet]);
+
+  // Log authentication initialization status
+  useEffect(() => {
+    if (authInit.isInitialized) {
+      console.log("🔐 App: Authentication initialized", {
+        isAuthenticated: authInit.isAuthenticated,
+      });
+    }
+  }, [authInit.isInitialized, authInit.isAuthenticated]);
 
   return (
     <WalletProviders>

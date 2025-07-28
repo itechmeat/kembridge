@@ -9,10 +9,8 @@ import { setupModal } from "@near-wallet-selector/modal-ui";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupNightly } from "@near-wallet-selector/nightly";
 import type { WalletSelector } from "@near-wallet-selector/core";
-import {
-  NearWalletContext,
-  type NearWalletContextType,
-} from "./NearWalletContext";
+import { NearWalletContext } from "./NearWalletContext";
+import type { NearWalletContextType } from "../types/nearWallet";
 
 interface NearWalletProviderProps {
   children: React.ReactNode;

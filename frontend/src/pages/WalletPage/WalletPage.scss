@@ -49,6 +49,16 @@
   margin-bottom: 2rem;
 }
 
+.onboarding__auth {
+  margin: 2rem 0;
+}
+
+.status-indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .onboarding__status {
   display: flex;
   justify-content: center;
@@ -193,4 +203,176 @@
 .status-indicator__text {
   color: var(--color-text-secondary);
   font-weight: 500;
+}
+
+/* User Profile Header */
+.user-profile-header {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  &__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  &__info {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 0.5rem;
+  }
+
+  &__details {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  &__wallets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.user-tier {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &--free {
+    background: rgba(128, 128, 128, 0.2);
+    color: #888;
+  }
+
+  &--premium {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+  }
+
+  &--admin {
+    background: rgba(138, 43, 226, 0.2);
+    color: #8a2be2;
+  }
+}
+
+.risk-level {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &--low {
+    background: rgba(50, 205, 50, 0.2);
+    color: #32cd32;
+  }
+
+  &--medium {
+    background: rgba(255, 165, 0, 0.2);
+    color: #ffa500;
+  }
+
+  &--high {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+  }
+}
+
+.wallet-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  &__icon {
+    font-size: 1rem;
+  }
+
+  &__address {
+    font-family: "Courier New", monospace;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+  }
+}
+
+/* Loading State */
+.wallet-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+}
+
+.loading-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+
+  .loading-spinner {
+    font-size: 2rem;
+    animation: spin 2s linear infinite;
+  }
+
+  span {
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Quick Action Button Variants */
+.quick-action-btn--danger {
+  &:hover:not(:disabled) {
+    background: rgba(255, 68, 68, 0.1);
+    border-color: #ff4444;
+    color: #ff4444;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .user-profile-header {
+    &__main {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    &__wallets {
+      align-self: flex-start;
+    }
+  }
+
+  .wallet-chip {
+    &__address {
+      font-size: 0.75rem;
+    }
+  }
 }

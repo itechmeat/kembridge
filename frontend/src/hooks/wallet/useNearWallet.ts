@@ -5,8 +5,9 @@
 
 import { useContext } from "react";
 import { NearWalletContext } from "../../contexts/NearWalletContext";
+import type { NearWalletContextType } from "../../types/nearWallet";
 
-export const useNearWallet = () => {
+export const useNearWallet = (): NearWalletContextType => {
   console.log("🔄 useNearWallet: Hook called");
   const context = useContext(NearWalletContext);
   if (!context) {

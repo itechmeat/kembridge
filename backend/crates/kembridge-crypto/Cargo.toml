@@ -20,7 +20,7 @@ sha2 = "0.10.8"                     # SHA-256 for hashing
 
 # Core utilities  
 rand = "0.8"                        # Cryptographically secure RNG
-rand_core = "0.6.4"                 # RNG core traits (совместимость с ml-kem)
+rand_core = "0.6.4"                 # RNG core traits (ml-kem compatibility)
 zeroize = { version = "1.8.1", features = ["derive"] }  # Secure memory zeroing
 
 # Serialization and data handling
