@@ -12,12 +12,21 @@ pub async fn generate_nonce(
     Query(request): Query<NonceRequest>,
     State(state): State<AppState>
 ) -> Result<Json<NonceResponse>, StatusCode> {
+    tracing::info!("🔑 Nonce Handler: Generating nonce for wallet: {}", request.wallet_address);
+    tracing::debug!("🔑 Nonce Handler: Request details: chain_type={:?}", request.chain_type);
+    
     match state.auth_service
         .generate_nonce(&request.wallet_address, request.chain_type)
         .await 
     {
-        Ok(response) => Ok(Json(response)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(response) => {
+            tracing::info!("✅ Nonce Handler: Nonce generated successfully");
+            Ok(Json(response))
+        },
+        Err(err) => {
+            tracing::error!("❌ Nonce Handler: Failed to generate nonce: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        },
     }
 }
 
@@ -26,12 +35,22 @@ pub async fn verify_wallet(
     State(state): State<AppState>,
     Json(request): Json<AuthRequest>
 ) -> Result<Json<AuthResponse>, StatusCode> {
+    tracing::info!("🔐 Auth Handler: Verifying wallet signature for address: {}", request.wallet_address);
+    tracing::debug!("🔐 Auth Handler: Request details: chain_type={:?}, signature_len={}, nonce_len={}", 
+        request.chain_type, request.signature.len(), request.nonce.len());
+    
     match state.auth_service
         .verify_wallet_signature(request)
         .await 
     {
-        Ok(response) => Ok(Json(response)),
-        Err(_) => Err(StatusCode::UNAUTHORIZED),
+        Ok(response) => {
+            tracing::info!("✅ Auth Handler: Authentication successful for user_id: {}", response.user_id);
+            Ok(Json(response))
+        },
+        Err(err) => {
+            tracing::error!("❌ Auth Handler: Authentication failed: {:?}", err);
+            Err(StatusCode::UNAUTHORIZED)
+        },
     }
 }
 

@@ -70,15 +70,18 @@ impl EthereumVerifier {
         signature: &str,
     ) -> Result<secp256k1::PublicKey, AuthError> {
         use secp256k1::{ecdsa::RecoverableSignature, Message, Secp256k1};
-        use sha2::{Digest, Sha256};
+        use sha3::{Digest, Keccak256};
 
         let secp = Secp256k1::new();
         
-        // Ethereum signed message format
+        // Ethereum signed message format (EIP-191)
         let prefixed_message = format!("\x19Ethereum Signed Message:\n{}{}", message.len(), message);
-        let mut hasher = sha2::Sha256::new();
+        tracing::debug!("🔍 Ethereum: Creating prefixed message with length {}", message.len());
+        
+        let mut hasher = Keccak256::new();
         hasher.update(prefixed_message.as_bytes());
         let message_hash = hasher.finalize();
+        tracing::debug!("🔍 Ethereum: Message hash: {}", hex::encode(&message_hash));
         let message = Message::from_digest(message_hash.into());
 
         // Parse signature (65 bytes: r + s + v)
@@ -88,18 +91,40 @@ impl EthereumVerifier {
         }
 
         let recovery_id = sig_bytes[64];
+        tracing::debug!("🔍 Ethereum: Raw recovery ID: {}", recovery_id);
+        
+        // Ethereum uses v = 27 or 28, but secp256k1 expects 0-3
+        let recovery_id = if recovery_id >= 27 {
+            recovery_id - 27
+        } else {
+            recovery_id
+        };
+        tracing::debug!("🔍 Ethereum: Normalized recovery ID: {}", recovery_id);
+        
         let recovery_id = secp256k1::ecdsa::RecoveryId::from_u8_masked(recovery_id);
 
         let signature = RecoverableSignature::from_compact(&sig_bytes[0..64], recovery_id)
-            .map_err(|_| AuthError::InvalidSignature)?;
+            .map_err(|e| {
+                tracing::error!("🔍 Ethereum: Failed to create recoverable signature: {:?}", e);
+                AuthError::InvalidSignature
+            })?;
 
-        secp.recover_ecdsa(message, &signature)
-            .map_err(|_| AuthError::InvalidSignature)
+        let recovered_pubkey = secp.recover_ecdsa(message, &signature)
+            .map_err(|e| {
+                tracing::error!("🔍 Ethereum: Failed to recover public key: {:?}", e);
+                AuthError::InvalidSignature
+            })?;
+        
+        tracing::debug!("🔍 Ethereum: Recovered public key: {}", hex::encode(recovered_pubkey.serialize_uncompressed()));
+        
+        Ok(recovered_pubkey)
     }
 
     fn public_key_to_address(public_key: &secp256k1::PublicKey) -> String {
+        use sha3::{Digest, Keccak256};
+        
         let public_key_bytes = public_key.serialize_uncompressed();
-        let mut hasher = sha2::Sha256::new();
+        let mut hasher = Keccak256::new();
         hasher.update(&public_key_bytes[1..]);
         let hash = hasher.finalize();
         let address = &hash[12..];
@@ -115,9 +140,20 @@ impl ChainVerifier for EthereumVerifier {
         signature: &str,
         address: &str,
     ) -> Result<bool, AuthError> {
+        tracing::debug!("🔍 Ethereum: Verifying signature for address: {}", address);
+        tracing::debug!("🔍 Ethereum: Signature: {}", signature);
+        tracing::debug!("🔍 Ethereum: Message: {}", message);
+        
         let recovered_pubkey = Self::recover_public_key(message, signature)?;
         let recovered_address = Self::public_key_to_address(&recovered_pubkey);
-        Ok(recovered_address.to_lowercase() == address.to_lowercase())
+        
+        tracing::debug!("🔍 Ethereum: Recovered address: {}", recovered_address);
+        tracing::debug!("🔍 Ethereum: Expected address: {}", address);
+        
+        let matches = recovered_address.to_lowercase() == address.to_lowercase();
+        tracing::debug!("🔍 Ethereum: Address match result: {}", matches);
+        
+        Ok(matches)
     }
 
     fn validate_address(&self, address: &str) -> Result<bool, AuthError> {

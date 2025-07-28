@@ -1,0 +1,278 @@
+/**
+ * Auth Manager Styles
+ * Styles for the authentication manager component
+ */
+
+.auth-manager {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+
+  &__title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+
+  &__description {
+    margin: 0 0 1.5rem 0;
+    color: var(--color-text-secondary);
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  // Error state
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: 8px;
+
+    &-icon {
+      font-size: 1rem;
+    }
+
+    &-text {
+      color: #ff4444;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+  }
+
+  // Authentication methods
+  &__methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__method {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--color-background);
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    min-height: 60px;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    &--ethereum {
+      &:hover:not(:disabled) {
+        border-color: #f6851b;
+        background: rgba(246, 133, 27, 0.05);
+      }
+    }
+
+    &--near {
+      &:hover:not(:disabled) {
+        border-color: #00d4aa;
+        background: rgba(0, 212, 170, 0.05);
+      }
+    }
+
+    &-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    &-title {
+      font-weight: 600;
+      color: var(--color-text-primary);
+      font-size: 1rem;
+    }
+
+    &-subtitle {
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+    }
+  }
+
+  // Security note
+  &__security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(50, 205, 50, 0.1);
+    border: 1px solid rgba(50, 205, 50, 0.3);
+    border-radius: 8px;
+
+    &-icon {
+      font-size: 1rem;
+    }
+
+    &-text {
+      color: #32cd32;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+  }
+
+  // Authenticated state
+  &--authenticated {
+    background: rgba(50, 205, 50, 0.05);
+    border-color: rgba(50, 205, 50, 0.3);
+  }
+
+  &__profile {
+    text-align: center;
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    &-icon {
+      font-size: 1.25rem;
+    }
+
+    &-text {
+      font-weight: 600;
+      color: #32cd32;
+      font-size: 1rem;
+    }
+  }
+
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__tier {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+
+    &-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+
+      &--free {
+        background: rgba(128, 128, 128, 0.2);
+        color: #888;
+      }
+
+      &--premium {
+        background: rgba(255, 215, 0, 0.2);
+        color: #ffd700;
+      }
+
+      &--admin {
+        background: rgba(138, 43, 226, 0.2);
+        color: #8a2be2;
+      }
+    }
+  }
+
+  &__wallets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  &__wallet {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+
+    &-icon {
+      font-size: 1rem;
+    }
+
+    &-address {
+      font-family: "Courier New", monospace;
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+    }
+
+    &-more {
+      color: var(--color-text-secondary);
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+  }
+
+  // Loading state
+  &--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+
+    span {
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .auth-manager {
+    padding: 1rem;
+
+    &__method {
+      padding: 0.75rem;
+      min-height: 50px;
+
+      &-icon {
+        font-size: 1.25rem;
+      }
+
+      &-title {
+        font-size: 0.875rem;
+      }
+
+      &-subtitle {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}

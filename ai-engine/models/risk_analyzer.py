@@ -1,6 +1,6 @@
 """
 Risk Analyzer Module
-ML-powered risk analysis для bridge транзакций
+ML-powered risk analysis for bridge transactions
 """
 
 import numpy as np
@@ -25,18 +25,18 @@ class RiskAnalyzer:
         self.blacklist_checker = BlacklistChecker()
         self.is_trained = False
         
-        # Убедимся что директория для моделей существует
+        # Ensure model directory exists
         os.makedirs(self.model_path, exist_ok=True)
         
-        # Загрузка сохраненных моделей
+        # Load saved models
         self._load_models()
         
-        # Если модели не загружены, создаем базовые
+        # If models not loaded, create basic ones
         if not self.is_trained:
             self._initialize_basic_models()
     
     def _load_models(self):
-        """Загрузка обученных моделей"""
+        """Load trained models"""
         try:
             isolation_path = os.path.join(self.model_path, "isolation_forest.joblib")
             classifier_path = os.path.join(self.model_path, "risk_classifier.joblib")
@@ -56,15 +56,15 @@ class RiskAnalyzer:
             self.is_trained = False
     
     def _initialize_basic_models(self):
-        """Инициализация базовых ML моделей с dummy data"""
+        """Initialize basic ML models with dummy data"""
         try:
             logger.info("Initializing basic ML models...")
             
-            # Создаем dummy training data для демонстрации
+            # Create dummy training data for demonstration
             X_dummy = np.random.rand(100, 15)  # 100 samples, 15 features
             y_dummy = np.random.choice([0, 1], 100, p=[0.8, 0.2])  # 20% high risk
             
-            # Инициализация моделей
+            # Initialize models
             self.feature_scaler = StandardScaler()
             self.isolation_forest = IsolationForest(
                 contamination=0.1,  # 10% outliers
@@ -75,12 +75,12 @@ class RiskAnalyzer:
                 class_weight='balanced'
             )
             
-            # "Обучение" на dummy data
+            # "Training" on dummy data
             X_scaled = self.feature_scaler.fit_transform(X_dummy)
             self.isolation_forest.fit(X_scaled)
             self.risk_classifier.fit(X_scaled, y_dummy)
             
-            # Сохранение моделей
+            # Save models
             self._save_models()
             
             self.is_trained = True
@@ -91,7 +91,7 @@ class RiskAnalyzer:
             self.is_trained = False
     
     def _save_models(self):
-        """Сохранение моделей"""
+        """Save models"""
         try:
             joblib.dump(self.isolation_forest, os.path.join(self.model_path, "isolation_forest.joblib"))
             joblib.dump(self.risk_classifier, os.path.join(self.model_path, "risk_classifier.joblib"))
@@ -101,7 +101,7 @@ class RiskAnalyzer:
             logger.error(f"Failed to save models: {e}")
     
     def extract_features(self, transaction_data: Dict) -> np.ndarray:
-        """Извлечение признаков для ML анализа"""
+        """Feature extraction for ML analysis"""
         features = []
         
         # Transaction amount features
@@ -134,7 +134,7 @@ class RiskAnalyzer:
             1.0 if user_history.get('is_new_user', True) else 0.0,
         ])
         
-        # Time-based features (циклическое представление)
+        # Time-based features (cyclical representation)
         hour_of_day = transaction_data.get('hour_of_day', datetime.now().hour)
         day_of_week = transaction_data.get('day_of_week', datetime.now().weekday())
         features.extend([
@@ -145,12 +145,12 @@ class RiskAnalyzer:
         return np.array(features).reshape(1, -1)
     
     def analyze_risk(self, transaction_data: Dict) -> Dict:
-        """Основной метод анализа рисков"""
+        """Main risk analysis method"""
         try:
-            # Blacklist проверка
+            # Blacklist check
             blacklist_result = self._check_blacklist(transaction_data)
             
-            # Если адрес в blacklist, сразу высокий риск
+            # If address is blacklisted, immediately high risk
             if blacklist_result['is_blacklisted']:
                 return {
                     "risk_score": 1.0,
@@ -164,7 +164,7 @@ class RiskAnalyzer:
                     "blacklist_check": blacklist_result
                 }
             
-            # ML анализ если модели обучены
+            # ML analysis if models are trained
             if self.is_trained:
                 return self._ml_analysis(transaction_data, blacklist_result)
             else:
@@ -175,7 +175,7 @@ class RiskAnalyzer:
             return self._emergency_fallback()
     
     def _check_blacklist(self, transaction_data: Dict) -> Dict:
-        """Проверка blacklist для всех адресов в транзакции"""
+        """Blacklist check for all addresses in transaction"""
         results = {
             "is_blacklisted": False,
             "reason": None,
@@ -183,7 +183,7 @@ class RiskAnalyzer:
             "risk_score_increase": 0.0
         }
         
-        # Проверяем user_address если доступен
+        # Check user_address if available
         if 'user_address' in transaction_data and transaction_data['user_address']:
             source_chain = transaction_data.get('source_chain', 'ethereum')
             check_result = self.blacklist_checker.check_address(
@@ -198,10 +198,10 @@ class RiskAnalyzer:
     def _ml_analysis(self, transaction_data: Dict, blacklist_result: Dict) -> Dict:
         """ML-powered risk analysis"""
         try:
-            # Извлечение признаков
+            # Feature extraction
             features = self.extract_features(transaction_data)
             
-            # Нормализация признаков
+            # Feature normalization
             features_scaled = self.feature_scaler.transform(features)
             
             # Anomaly detection
@@ -211,7 +211,7 @@ class RiskAnalyzer:
             # Risk classification
             risk_proba = self.risk_classifier.predict_proba(features_scaled)[0]
             
-            # Комбинированный risk score
+            # Combined risk score
             ml_risk_score = risk_proba[1] if len(risk_proba) > 1 else 0.5
             rule_based_score = self._rule_based_analysis(transaction_data)
             
@@ -319,7 +319,7 @@ class RiskAnalyzer:
         }
     
     def _determine_risk_level(self, risk_score: float) -> Tuple[str, bool, str]:
-        """Определение уровня риска и рекомендаций"""
+        """Determine risk level and recommendations"""
         if risk_score < 0.3:
             return "low", True, "proceed"
         elif risk_score < 0.6:
@@ -330,7 +330,7 @@ class RiskAnalyzer:
             return "critical", False, "block_transaction"
     
     def _identify_risk_factors(self, transaction_data: Dict, features: np.ndarray) -> List[str]:
-        """Идентификация основных факторов риска"""
+        """Identify main risk factors"""
         factors = []
         
         amount = float(transaction_data.get('amount_in', 0))
@@ -351,9 +351,9 @@ class RiskAnalyzer:
         return factors
     
     def _emergency_fallback(self) -> Dict:
-        """Emergency fallback при полном отказе анализа"""
+        """Emergency fallback on complete analysis failure"""
         return {
-            "risk_score": 0.5,  # Medium risk когда неизвестно
+            "risk_score": 0.5,  # Medium risk when unknown
             "risk_level": "medium",
             "is_anomaly": False,
             "anomaly_score": None,
@@ -365,12 +365,12 @@ class RiskAnalyzer:
         }
     
     def retrain_models(self, training_data: List[Dict]) -> Dict[str, any]:
-        """Переобучение моделей на новых данных"""
+        """Retrain models on new data"""
         try:
             if len(training_data) < 10:
                 return {"status": "error", "message": "Insufficient training data"}
             
-            # Подготовка данных для обучения
+            # Prepare training data
             X = []
             y = []
             
@@ -382,12 +382,12 @@ class RiskAnalyzer:
             X = np.array(X)
             y = np.array(y)
             
-            # Переобучение моделей
+            # Retrain models
             X_scaled = self.feature_scaler.fit_transform(X)
             self.isolation_forest.fit(X_scaled)
             self.risk_classifier.fit(X_scaled, y)
             
-            # Сохранение обновленных моделей
+            # Save updated models
             self._save_models()
             
             logger.info(f"Models retrained on {len(training_data)} samples")

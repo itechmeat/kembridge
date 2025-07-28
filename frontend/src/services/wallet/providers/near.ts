@@ -3,7 +3,7 @@
  * Based on official NEAR wallet-selector examples
  */
 
-import { NearWalletContextType } from "@/contexts/NearWalletContext";
+import type { NearWalletContextType } from "../../../types/nearWallet";
 import {
   WalletProvider,
   WalletType,

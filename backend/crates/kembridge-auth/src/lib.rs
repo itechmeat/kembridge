@@ -82,6 +82,12 @@ impl AuthService {
             .await?;
 
         // Verify signature
+        tracing::info!(
+            "🔍 AuthService: Verifying signature with message: '{}', signature: '{}'",
+            request.message,
+            request.signature
+        );
+        
         let is_valid = self
             .multi_chain_verifier
             .verify_signature(
@@ -92,12 +98,17 @@ impl AuthService {
             )
             .await?;
 
+        tracing::info!(
+            "🔍 AuthService: Signature verification result: {}",
+            is_valid
+        );
+
         if !is_valid {
             return Err(AuthError::InvalidSignature);
         }
 
         // Create or get user
-        let user_id = self
+        let (user_id, auth_method_id) = self
             .get_or_create_user(&request.wallet_address, request.chain_type)
             .await?;
 
@@ -108,7 +119,7 @@ impl AuthService {
             .await?;
 
         // Save session to database
-        self.save_session(user_id, &jwt_token, &request).await?;
+        self.save_session(user_id, auth_method_id, &jwt_token, &request).await?;
 
         // Consume nonce
         self.nonce_manager
@@ -130,11 +141,11 @@ impl AuthService {
         &self,
         wallet_address: &str,
         chain_type: ChainType,
-    ) -> Result<uuid::Uuid, AuthError> {
+    ) -> Result<(uuid::Uuid, uuid::Uuid), AuthError> {
         // Check if user exists
-        let existing_user: Option<(uuid::Uuid,)> = sqlx::query_as(
+        let existing_user: Option<(uuid::Uuid, uuid::Uuid)> = sqlx::query_as(
             r#"
-            SELECT u.id 
+            SELECT u.id, uam.id
             FROM users u
             JOIN user_auth_methods uam ON u.id = uam.user_id
             WHERE uam.wallet_address = $1 AND uam.chain_type = $2 AND uam.auth_type = 'web3_wallet'
@@ -145,8 +156,8 @@ impl AuthService {
         .fetch_optional(&self.db_pool)
         .await?;
 
-        if let Some((user_id,)) = existing_user {
-            return Ok(user_id);
+        if let Some((user_id, auth_method_id)) = existing_user {
+            return Ok((user_id, auth_method_id));
         }
 
         // Create new user
@@ -163,52 +174,56 @@ impl AuthService {
         .await?;
 
         // Create auth method
-        sqlx::query(
+        let auth_method_id: uuid::Uuid = sqlx::query_scalar(
             r#"
             INSERT INTO user_auth_methods (
                 user_id, auth_type, chain_type, wallet_address, is_primary, is_verified, first_used_at
             ) VALUES ($1, 'web3_wallet', $2, $3, true, true, NOW())
+            RETURNING id
             "#,
         )
         .bind(user_id)
         .bind(chain_type.to_string())
         .bind(wallet_address)
-        .execute(&mut *tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
 
-        Ok(user_id)
+        Ok((user_id, auth_method_id))
     }
 
     /// Save session to database
     async fn save_session(
         &self,
         user_id: uuid::Uuid,
+        auth_method_id: uuid::Uuid,
         jwt_token: &str,
         request: &AuthRequest,
     ) -> Result<(), AuthError> {
         let mut hasher = sha2::Sha256::new();
         hasher.update(jwt_token.as_bytes());
         let token_hash = hasher.finalize();
+        let token_hash_hex = hex::encode(token_hash);
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
 
         sqlx::query(
             r#"
             INSERT INTO user_sessions (
-                user_id, jwt_token_hash, wallet_address, chain_type,
-                session_metadata, expires_at
-            ) VALUES ($1, $2, $3, $4, $5, $6)
+                user_id, auth_method_id, jwt_token_hash,
+                session_data, expires_at
+            ) VALUES ($1, $2, $3, $4, $5)
             "#,
         )
         .bind(user_id)
-        .bind(token_hash.as_slice())
-        .bind(&request.wallet_address)
-        .bind(request.chain_type.to_string())
+        .bind(auth_method_id)
+        .bind(token_hash_hex)
         .bind(serde_json::json!({
             "auth_method": "direct_wallet",
             "signature": request.signature,
-            "message": request.message
+            "message": request.message,
+            "wallet_address": request.wallet_address,
+            "chain_type": request.chain_type.to_string()
         }))
         .bind(expires_at)
         .execute(&self.db_pool)
