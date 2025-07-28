@@ -1,0 +1,164 @@
+// KEMBridge Design System Variables
+@use "sass:color";
+
+// ===== BRAND COLORS =====
+$primary-color: #0066cc; // Quantum Blue
+$secondary-color: #00aa44; // Secure Green
+$accent-color: #ff6600; // Energy Orange
+$neutral-color: #f5f7fa; // Modern Gray
+$warning-color: #ff3366; // Alert Red
+
+// Color variations using modern syntax
+$primary-light: color.adjust($primary-color, $lightness: 20%);
+$primary-dark: color.adjust($primary-color, $lightness: -20%);
+$secondary-light: color.adjust($secondary-color, $lightness: 20%);
+$secondary-dark: color.adjust($secondary-color, $lightness: -20%);
+
+// Neutral colors
+$white: #ffffff;
+$black: #000000;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Semantic colors
+$success: $secondary-color;
+$error: $warning-color;
+$warning: #fbbf24;
+$info: $primary-color;
+
+// Background colors
+$bg-primary: $white;
+$bg-secondary: $gray-50;
+$bg-dark: $gray-900;
+$bg-card: $white;
+$bg-overlay: rgba($black, 0.5);
+
+// Text colors
+$text-primary: $gray-900;
+$text-secondary: $gray-600;
+$text-muted: $gray-500;
+$text-inverse: $white;
+
+// Border colors
+$border-light: $gray-200;
+$border-medium: $gray-300;
+$border-dark: $gray-400;
+
+// Spacing
+$spacing-xs: 0.25rem; // 4px
+$spacing-sm: 0.5rem; // 8px
+$spacing-md: 1rem; // 16px
+$spacing-lg: 1.5rem; // 24px
+$spacing-xl: 2rem; // 32px
+$spacing-2xl: 3rem; // 48px
+$spacing-3xl: 4rem; // 64px
+
+// Breakpoints
+$breakpoint-mobile: 320px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;
+$breakpoint-wide: 1440px;
+
+// Breakpoints map for mixins
+$breakpoints: (
+  "mobile": $breakpoint-mobile,
+  "tablet": $breakpoint-tablet,
+  "desktop": $breakpoint-desktop,
+  "wide": $breakpoint-wide,
+);
+
+// Typography
+$font-family-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  "Roboto", sans-serif;
+$font-family-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+$font-family-system: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+  sans-serif;
+
+// Font weights
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-extrabold: 800;
+
+// Font sizes
+$font-size-xs: 0.75rem; // 12px
+$font-size-sm: 0.875rem; // 14px
+$font-size-base: 1rem; // 16px
+$font-size-lg: 1.125rem; // 18px
+$font-size-xl: 1.25rem; // 20px
+$font-size-2xl: 1.5rem; // 24px
+$font-size-3xl: 1.875rem; // 30px
+$font-size-4xl: 2.25rem; // 36px
+$font-size-5xl: 3rem; // 48px
+
+// Line heights
+$line-height-tight: 1.25;
+$line-height-base: 1.5; // Added for compatibility
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// Border radius
+$border-radius-sm: 0.25rem; // 4px
+$border-radius-md: 0.5rem; // 8px
+$border-radius-lg: 0.75rem; // 12px
+$border-radius-xl: 1rem; // 16px
+$border-radius-2xl: 1.5rem; // 24px
+$border-radius-full: 9999px;
+
+// Shadows
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// Z-index layers
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// Animation
+$transition-fast: 0.15s ease-in-out;
+$transition-normal: 0.3s ease-in-out;
+$transition-slow: 0.5s ease-in-out;
+
+// Component specific
+$button-height: 2.5rem;
+$button-height-sm: 2rem;
+$button-height-lg: 3rem;
+
+$input-height: 2.5rem;
+$input-height-sm: 2rem;
+$input-height-lg: 3rem;
+
+$navbar-height: 4rem;
+$sidebar-width: 16rem;
+$sidebar-width-collapsed: 4rem;
+
+// Container
+$container-max-width: 1200px;
+$container-padding: $spacing-md;
+
+// Background colors - add missing variables
+$background-color: $bg-primary;
+$surface-color: $bg-secondary;
+$surface-dark: $gray-800;
+
+// Border colors - add missing variables
+$border-color: $border-light;

@@ -15,4 +15,21 @@ export default defineConfig({
     port: 4001,
     host: "0.0.0.0",
   },
+  optimizeDeps: {
+    include: ["react", "react-dom"], // Pre-bundle dependencies
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          wallet: [
+            "@near-wallet-selector/core",
+            "@rainbow-me/rainbowkit",
+            "wagmi",
+          ],
+        },
+      },
+    },
+  },
 });

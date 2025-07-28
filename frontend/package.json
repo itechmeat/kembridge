@@ -4,11 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "tsc && vite build",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "docker:dev": "docker-compose up frontend",
+    "docker:build": "docker-compose build frontend"
   },
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@near-wallet-selector/core": "^9.0.3",
     "@near-wallet-selector/modal-ui": "^9.0.3",

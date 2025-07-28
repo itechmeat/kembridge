@@ -1,0 +1,354 @@
+@use "../abstracts/variables";
+@use "sass:color";
+
+// Home page styles
+.home {
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    variables.$background-color 0%,
+    color.adjust(variables.$background-color, $lightness: -5%) 100%
+  );
+}
+
+// Hero Section
+.hero {
+  padding: 4rem 0 6rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at 50% 50%,
+      color.adjust(variables.$primary-color, $alpha: -0.95) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__branding {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    &-main {
+      background: linear-gradient(
+        135deg,
+        variables.$primary-color,
+        variables.$accent-color
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    &-quantum {
+      font-size: 0.8em;
+      animation: quantum-pulse 3s ease-in-out infinite;
+    }
+  }
+
+  &__subtitle {
+    font-size: 1.25rem;
+    color: variables.$text-muted;
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+
+  &__description {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+  }
+
+  &__text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: variables.$text-secondary;
+
+    strong {
+      color: variables.$accent-color;
+      font-weight: 600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  &__status {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: color.adjust(variables.$success, $alpha: -0.9);
+  border: 1px solid color.adjust(variables.$success, $alpha: -0.7);
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  color: variables.$success;
+  font-weight: 500;
+}
+
+// Features Section
+.features {
+  padding: 6rem 0;
+  background: variables.$surface-color;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  &__title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 4rem;
+    color: variables.$text-primary;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+}
+
+.feature-card {
+  background: variables.$background-color;
+  border: 1px solid variables.$border-color;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px color.adjust(variables.$primary-color, $alpha: -0.9);
+    border-color: color.adjust(variables.$primary-color, $alpha: -0.7);
+  }
+
+  &__icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: variables.$text-primary;
+  }
+
+  &__description {
+    color: variables.$text-secondary;
+    line-height: 1.6;
+  }
+}
+
+// Stats Section
+.stats {
+  padding: 4rem 0;
+  background: linear-gradient(
+    135deg,
+    variables.$primary-color,
+    color.adjust(variables.$primary-color, $hue: 20deg)
+  );
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+  }
+}
+
+.stat-item {
+  text-align: center;
+  color: white;
+
+  &__value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  &__label {
+    font-size: 1rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+// Footer
+.footer {
+  background: variables.$surface-dark;
+  color: variables.$text-secondary;
+  padding: 3rem 0 1rem;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    margin-bottom: 2rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  &__branding {
+    h3 {
+      color: variables.$primary-color;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: variables.$text-muted;
+    }
+  }
+
+  &__links {
+    display: flex;
+    gap: 3rem;
+
+    @media (max-width: 768px) {
+      gap: 2rem;
+    }
+  }
+
+  &__section {
+    h4 {
+      color: variables.$text-primary;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    a {
+      color: variables.$text-secondary;
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: variables.$primary-color;
+      }
+    }
+  }
+
+  &__bottom {
+    padding-top: 2rem;
+    border-top: 1px solid variables.$border-color;
+    text-align: center;
+    color: variables.$text-muted;
+    font-size: 0.875rem;
+  }
+}
+
+// Animations
+@keyframes quantum-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .hero {
+    padding: 2rem 0 4rem;
+
+    &__actions {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  .features {
+    padding: 4rem 0;
+
+    &__title {
+      font-size: 2rem;
+      margin-bottom: 3rem;
+    }
+  }
+
+  .stats {
+    padding: 3rem 0;
+
+    &__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  .stat-item {
+    &__value {
+      font-size: 2rem;
+    }
+  }
+}

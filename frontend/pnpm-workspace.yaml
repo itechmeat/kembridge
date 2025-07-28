@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - bufferutil
+  - esbuild
+  - keccak
+  - secp256k1
+  - utf-8-validate
