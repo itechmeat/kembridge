@@ -1,0 +1,24 @@
+[package]
+name = "kembridge-near-contract"
+version = "0.2.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+near-sdk = "5.15.1"
+
+[dev-dependencies]
+near-sdk = { version = "5.15.1", features = ["unit-testing"] }
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
+
+[profile.dev]
+panic = "abort"

@@ -11,6 +11,7 @@ KEMBridge is an autonomous cross-chain bridge that enables secure asset transfer
 - **Docker** (v28.3.1 or later)
 - **Docker Compose** (included with Docker Desktop)
 - **Git**
+- **Rust** 1.86.0 (automatically managed via `rust-toolchain.toml`)
 
 ### Setup
 
@@ -28,6 +29,16 @@ make dev
 ```
 
 📋 **For detailed API configuration see "API Configuration" section below**
+
+### Rust Version Management
+
+This project uses **Rust 1.86.0** for NEAR blockchain compatibility. The version is automatically managed via `rust-toolchain.toml` files:
+
+- **Global Rust**: You can use any version globally (e.g., 1.88.0)
+- **Project Rust**: Automatically switches to 1.86.0 in project directories
+- **Why 1.86.0**: Ensures compatibility with NEAR VM (1.87+ has WebAssembly ABI changes)
+
+📋 **See [RUST_VERSION_POLICY.md](RUST_VERSION_POLICY.md) for details**
 
 This single command will:
 
@@ -198,6 +209,9 @@ To run all containers in the background so you can close the terminal:
 ```bash
 # Start all services in background mode
 docker-compose up -d --build
+
+# Start all services in background mode with build
+docker-compose build --no-cache && docker-compose down && docker-compose up -d
 
 # Check status of all services
 docker-compose ps
