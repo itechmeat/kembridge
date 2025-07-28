@@ -110,7 +110,7 @@ fn determine_user_tier(wallet_address: &str) -> &'static str {
 }
 
 /// Extract user ID from request headers (set by auth middleware)
-pub fn extract_user_id(request: &Request) -> Option<String> {
+pub fn extract_user_id<T>(request: &Request<T>) -> Option<String> {
     request.headers()
         .get("x-user-id")
         .and_then(|h| h.to_str().ok())
@@ -118,7 +118,7 @@ pub fn extract_user_id(request: &Request) -> Option<String> {
 }
 
 /// Extract wallet address from request headers
-pub fn extract_wallet_address(request: &Request) -> Option<String> {
+pub fn extract_wallet_address<T>(request: &Request<T>) -> Option<String> {
     request.headers()
         .get("x-wallet-address")
         .and_then(|h| h.to_str().ok())
@@ -126,7 +126,7 @@ pub fn extract_wallet_address(request: &Request) -> Option<String> {
 }
 
 /// Check if request has quantum signature protection
-pub fn is_quantum_protected(request: &Request) -> bool {
+pub fn is_quantum_protected<T>(request: &Request<T>) -> bool {
     request.headers()
         .get("x-quantum-protected")
         .and_then(|h| h.to_str().ok())
@@ -153,7 +153,7 @@ pub enum UserTier {
 
 impl AuthContext {
     /// Extract authentication context from request headers
-    pub fn from_request(request: &Request) -> Self {
+    pub fn from_request<T>(request: &Request<T>) -> Self {
         let user_tier = request.headers()
             .get("x-user-tier")
             .and_then(|h| h.to_str().ok())

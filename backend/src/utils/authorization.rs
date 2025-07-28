@@ -57,7 +57,8 @@ pub async fn require_system(auth_user: &AuthUser) -> Result<(), ApiError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::extractors::auth::{AuthUser, UserTier};
+    use crate::extractors::auth::AuthUser;
+    use crate::middleware::auth::UserTier;
     use kembridge_auth::ChainType;
 
     fn create_test_user(user_id: Uuid, tier: UserTier) -> AuthUser {
@@ -74,7 +75,7 @@ mod tests {
     #[tokio::test]
     async fn test_require_self_or_admin_self_access() {
         let user_id = Uuid::new_v4();
-        let auth_user = create_test_user(user_id, UserTier::Standard);
+        let auth_user = create_test_user(user_id, UserTier::Free);
         
         let result = require_self_or_admin(&auth_user, user_id).await;
         assert!(result.is_ok());
@@ -94,7 +95,7 @@ mod tests {
     async fn test_require_self_or_admin_denied() {
         let user_id = Uuid::new_v4();
         let other_user_id = Uuid::new_v4();
-        let auth_user = create_test_user(user_id, UserTier::Standard);
+        let auth_user = create_test_user(user_id, UserTier::Free);
         
         let result = require_self_or_admin(&auth_user, other_user_id).await;
         assert!(result.is_err());
@@ -112,7 +113,7 @@ mod tests {
     #[tokio::test]
     async fn test_require_admin_denied() {
         let user_id = Uuid::new_v4();
-        let auth_user = create_test_user(user_id, UserTier::Standard);
+        let auth_user = create_test_user(user_id, UserTier::Free);
         
         let result = require_admin(&auth_user).await;
         assert!(result.is_err());

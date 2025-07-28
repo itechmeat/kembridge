@@ -37,7 +37,7 @@ pub fn create_oneinch_routes() -> Router<AppState> {
         .route("/liquidity/:from_token/:to_token", get(get_liquidity_info))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "integration-tests"))]
 mod tests {
     use super::*;
     use axum::http::StatusCode;

@@ -11,3 +11,4 @@ pub mod price_oracle;
 pub mod oneinch;
 pub mod bridge_oneinch;
 pub mod fusion_plus;
+pub mod rate_limiting;
