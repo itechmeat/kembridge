@@ -101,6 +101,12 @@ use constants::*;
         handlers::fusion_plus::get_active_cross_chain_orders,
         handlers::fusion_plus::get_cross_chain_order_by_hash,
         handlers::fusion_plus::get_escrow_factory,
+        // Rate limiting monitoring endpoints
+        handlers::rate_limiting::get_rate_limit_dashboard,
+        handlers::rate_limiting::get_endpoint_rate_limits,
+        handlers::rate_limiting::get_top_violators,
+        handlers::rate_limiting::get_real_time_metrics,
+        handlers::rate_limiting::get_active_alerts,
     ),
     components(
         schemas(
@@ -189,6 +195,15 @@ use constants::*;
             handlers::fusion_plus::ActiveOrdersQuery,
             handlers::fusion_plus::ActiveOrdersResponse,
             handlers::fusion_plus::OrderSummary,
+            // Rate limiting monitoring schemas
+            handlers::rate_limiting::RateLimitStatsQuery,
+            handlers::rate_limiting::RateLimitDashboard,
+            handlers::rate_limiting::RateLimitOverview,
+            handlers::rate_limiting::RealTimeMetrics,
+            services::RateLimitStats,
+            services::ViolatorInfo,
+            services::AlertCondition,
+            services::AlertSeverity,
         )
     ),
     tags(
@@ -202,7 +217,8 @@ use constants::*;
         (name = "Admin", description = "Administrative endpoints"),
         (name = "1inch Swap", description = "1inch Fusion+ integration for optimal swap routing"),
         (name = "Fusion+", description = "1inch Fusion+ cross-chain atomic swaps"),
-        (name = "Bridge Integration", description = "Cross-chain bridge with 1inch optimization")
+        (name = "Bridge Integration", description = "Cross-chain bridge with 1inch optimization"),
+        (name = "Rate Limiting", description = "Rate limiting monitoring and statistics")
     ),
     servers(
         (url = "http://localhost:4000", description = "Development server"),
@@ -310,6 +326,9 @@ fn create_v1_routes() -> Router<AppState> {
 
         // Monitoring dashboard routes (protected)
         .nest("/monitoring", routes::monitoring::monitoring_routes())
+        
+        // Rate limiting monitoring routes (admin only)
+        .nest("/monitoring/rate-limits", routes::rate_limiting::create_rate_limiting_routes())
         
         // Price Oracle routes (protected)
         .nest("/price", routes::price_oracle::price_oracle_routes())

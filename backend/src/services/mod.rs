@@ -33,6 +33,10 @@ pub use manual_review::ManualReviewService;
 pub mod bridge_integration;
 pub use bridge_integration::BridgeIntegrationService;
 
+/// Rate limiting service - implemented in Phase 7 (H7)
+pub mod rate_limit;
+pub use rate_limit::{RateLimitService, RateLimitResult, RateLimitStats, ViolatorInfo, AlertCondition, AlertSeverity};
+
 #[cfg(test)]
 mod user_service_tests;
 

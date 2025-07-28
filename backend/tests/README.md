@@ -58,16 +58,45 @@ Comprehensive integration test for authentication updates:
 cargo run --bin test_auth_integration
 ```
 
+### 5. Rate Limiting Test (`test_rate_limiting.rs`)
+
+Unit tests for rate limiting functionality:
+
+- Tests rate limiting constants validation
+- Rate limiting configuration logic verification
+- Time window calculations
+- Mock implementation for real integration tests
+
+```bash
+cargo test test_rate_limiting
+```
+
+### 6. Rate Limiting HTTP Integration Test (`test_rate_limiting.sh`)
+
+Shell script for HTTP integration testing of rate limiting endpoints:
+
+- Tests rate limiting monitoring endpoints
+- Verifies authentication requirements for admin endpoints
+- Checks API documentation accessibility
+- Real HTTP requests to running server
+
+```bash
+# Requires running backend server
+./tests/test_rate_limiting.sh
+```
+
 ## Prerequisites
 
 ### Test Dependencies
 
-| Test                       | PostgreSQL | Backend Server | External APIs | Notes                  |
-| -------------------------- | ---------- | -------------- | ------------- | ---------------------- |
-| `test_api_integration.rs`  | ❌         | ❌             | ✅            | Requires 1inch API key |
-| `test_auth_system.rs`      | ❌         | ❌             | ❌            | Standalone unit tests  |
-| `test_auth_http.rs`        | ✅         | ✅             | ❌            | Full HTTP integration  |
-| `test_auth_integration.rs` | ❌         | ❌             | ❌            | Component integration  |
+| Test                       | PostgreSQL | Backend Server | External APIs | Notes                    |
+| -------------------------- | ---------- | -------------- | ------------- | ------------------------ |
+| `test_api_integration.rs`  | ❌         | ❌             | ✅            | Requires 1inch API key   |
+| `test_auth_system.rs`      | ❌         | ❌             | ❌            | Standalone unit tests    |
+| `test_auth_http.rs`        | ✅         | ✅             | ❌            | Full HTTP integration    |
+| `test_auth_integration.rs` | ❌         | ❌             | ❌            | Component integration    |
+| `test_rate_limiting.rs`    | ❌         | ❌             | ❌            | Unit tests for constants |
+| `test_rate_limiting.sh`    | ✅         | ✅             | ❌            | HTTP integration script  |
 
 ### General Requirements:
 

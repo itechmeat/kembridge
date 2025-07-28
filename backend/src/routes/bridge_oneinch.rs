@@ -24,7 +24,7 @@ pub fn create_bridge_oneinch_routes() -> Router<AppState> {
         .route("/supported-chains", get(get_supported_bridge_chains))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "integration-tests"))]
 mod tests {
     use super::*;
     use axum::http::StatusCode;

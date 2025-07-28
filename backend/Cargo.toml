@@ -205,10 +205,18 @@ path = "tests/test_auth_http.rs"
 name = "test_auth_integration"
 path = "tests/test_auth_integration.rs"
 
+[dev-dependencies]
+# Testing dependencies
+axum-test = "16.2.1"
+ethers.workspace = true
+futures = "0.3"
+dotenvy = "0.15"
+
 [features]
 default = ["production"]
 development = ["tracing-subscriber/env-filter"]
 production = ["tower-http/compression-gzip"]
+integration-tests = []
 
 
 # Examples

@@ -368,3 +368,67 @@ pub fn get_bridge_contract_deployed_block() -> Result<u64, Box<dyn std::error::E
 pub const BRIDGE_MIN_LOCK_AMOUNT_WEI: u64 = 1_000_000_000_000_000; // 0.001 ETH
 pub const BRIDGE_MAX_LOCK_AMOUNT_WEI: u64 = 10_000_000_000_000_000_000; // 10 ETH
 
+// Rate Limiting Configuration Constants
+pub const RATE_LIMIT_DEFAULT_WINDOW_SEC: u64 = 60; // 1 minute default window
+pub const RATE_LIMIT_EXTENDED_WINDOW_SEC: u64 = 300; // 5 minutes for strict endpoints
+
+// Health endpoint limits - very high
+pub const RATE_LIMIT_HEALTH_LIMIT: u32 = 1000;
+pub const RATE_LIMIT_HEALTH_WINDOW_SEC: u64 = 60;
+
+// Authentication endpoint limits - prevent brute force
+pub const RATE_LIMIT_AUTH_UNAUTH_LIMIT: u32 = 10;
+pub const RATE_LIMIT_AUTH_AUTH_LIMIT: u32 = 20;
+pub const RATE_LIMIT_AUTH_WINDOW_SEC: u64 = 60;
+
+// Bridge operation limits - progressive by user type
+pub const RATE_LIMIT_BRIDGE_UNAUTH_LIMIT: u32 = 5;
+pub const RATE_LIMIT_BRIDGE_UNAUTH_WINDOW_SEC: u64 = 300; // 5 minutes
+pub const RATE_LIMIT_BRIDGE_AUTH_LIMIT: u32 = 50;
+pub const RATE_LIMIT_BRIDGE_PREMIUM_LIMIT: u32 = 200;
+pub const RATE_LIMIT_BRIDGE_WINDOW_SEC: u64 = 60;
+
+// Quantum crypto limits - moderate
+pub const RATE_LIMIT_QUANTUM_UNAUTH_LIMIT: u32 = 2;
+pub const RATE_LIMIT_QUANTUM_AUTH_LIMIT: u32 = 20;
+pub const RATE_LIMIT_QUANTUM_PREMIUM_LIMIT: u32 = 100;
+pub const RATE_LIMIT_QUANTUM_WINDOW_SEC: u64 = 60;
+
+// User management limits
+pub const RATE_LIMIT_USER_AUTH_LIMIT: u32 = 60;
+pub const RATE_LIMIT_USER_PREMIUM_LIMIT: u32 = 120;
+pub const RATE_LIMIT_USER_WINDOW_SEC: u64 = 60;
+
+// Admin endpoint limits
+pub const RATE_LIMIT_ADMIN_LIMIT: u32 = 30;
+pub const RATE_LIMIT_ADMIN_WINDOW_SEC: u64 = 60;
+
+// Documentation limits - high
+pub const RATE_LIMIT_DOCS_LIMIT: u32 = 200;
+pub const RATE_LIMIT_DOCS_WINDOW_SEC: u64 = 60;
+
+// WebSocket connection limits
+pub const RATE_LIMIT_WEBSOCKET_LIMIT: u32 = 10;
+pub const RATE_LIMIT_WEBSOCKET_WINDOW_SEC: u64 = 300; // 5 minutes
+
+// Default limits by user type
+pub const RATE_LIMIT_DEFAULT_UNAUTH_LIMIT: u32 = 30;
+pub const RATE_LIMIT_DEFAULT_AUTH_LIMIT: u32 = 100;
+pub const RATE_LIMIT_DEFAULT_PREMIUM_LIMIT: u32 = 500;
+
+// Rate Limiting Statistics Configuration
+pub const RATE_LIMIT_STATS_CACHE_TTL_SEC: u64 = 300; // 5 minutes cache
+pub const RATE_LIMIT_STATS_AGGREGATION_INTERVAL_SEC: u64 = 60; // 1 minute aggregation
+pub const RATE_LIMIT_TOP_VIOLATORS_COUNT: usize = 10; // Top 10 violators
+pub const RATE_LIMIT_HOURLY_STATS_RETENTION_HOURS: i64 = 24; // Keep 24 hours
+
+// Rate Limiting Alert Thresholds
+pub const RATE_LIMIT_ALERT_VIOLATION_RATE_THRESHOLD: f64 = 0.8; // 80% violation rate
+pub const RATE_LIMIT_ALERT_MIN_REQUESTS_THRESHOLD: u64 = 50; // Minimum 50 requests
+pub const RATE_LIMIT_ALERT_TIME_WINDOW_MIN: i64 = 5; // 5 minute alert window
+
+// Rate Limiting Redis Key Prefixes
+pub const RATE_LIMIT_REDIS_PREFIX: &str = "rate_limit";
+pub const RATE_LIMIT_STATS_REDIS_PREFIX: &str = "rate_limit_stats";
+pub const RATE_LIMIT_BLOCKED_REDIS_PREFIX: &str = "rate_limit_blocked";
+

@@ -6,6 +6,7 @@ use crate::config::AppConfig;
 use crate::services::{
     AuthService, UserService, BridgeService, QuantumService, AiClient,
     RiskIntegrationService, ManualReviewService, BridgeIntegrationService,
+    RateLimitService,
 };
 use crate::websocket::WebSocketRegistry;
 use crate::monitoring::MonitoringService;
@@ -35,6 +36,7 @@ pub struct AppState {
     pub oneinch_service: Arc<OneinchService>,
     pub dynamic_pricing_service: Arc<DynamicPricingService>,
     pub bridge_integration_service: Arc<BridgeIntegrationService>,
+    pub rate_limit_service: Arc<RateLimitService>,
     pub metrics: Arc<metrics_exporter_prometheus::PrometheusHandle>,
 }
 
@@ -147,9 +149,14 @@ impl AppState {
             )
         );
 
+        // Initialize rate limiting service (Phase 7 - H7)
+        let rate_limit_service = Arc::new(
+            RateLimitService::new(redis.clone(), db.clone())
+        );
+
         tracing::info!(
-            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, dynamic pricing service, and bridge integration service",
-            15 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, dynamic_pricing, bridge_integration, metrics
+            "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, dynamic pricing service, bridge integration service, and rate limiting service",
+            16 // auth, user, bridge, quantum, ai, risk, manual_review, transaction, websocket, monitoring, price_oracle, oneinch, dynamic_pricing, bridge_integration, rate_limit, metrics
         );
 
         Ok(Self {
@@ -171,6 +178,7 @@ impl AppState {
             oneinch_service,
             dynamic_pricing_service,
             bridge_integration_service,
+            rate_limit_service,
             metrics,
         })
     }
