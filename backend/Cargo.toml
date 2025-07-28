@@ -112,6 +112,10 @@ edition = "2021"
 rust-version = "1.86"
 default-run = "kembridge-backend"
 
+[lib]
+name = "kembridge_backend"
+path = "src/lib.rs"
+
 [[bin]]
 name = "kembridge-backend"
 path = "src/main.rs"
@@ -206,6 +210,11 @@ default = ["production"]
 development = ["tracing-subscriber/env-filter"]
 production = ["tower-http/compression-gzip"]
 
+
+# Examples
+[[example]]
+name = "oneinch_fusion_plus_complete"
+path = "examples/oneinch_fusion_plus_complete.rs"
 
 # Performance optimizations for production
 [profile.release]

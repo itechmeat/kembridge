@@ -396,7 +396,8 @@ mod tests {
         
         assert!(analysis.is_acceptable);
         assert_eq!(analysis.severity, SlippageSeverity::Medium);
-        assert_eq!(analysis.slippage_percent, BigDecimal::from(0.5));
+        let expected_slippage = BigDecimal::from(1) / BigDecimal::from(2);
+        assert_eq!(analysis.slippage_percent, expected_slippage);
     }
 
     #[test]

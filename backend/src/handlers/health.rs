@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use redis::{aio::ConnectionManager, AsyncCommands};
 use utoipa::ToSchema;
 use serde::{Deserialize, Serialize};
-use crate::AppState;
+use crate::state::AppState;
 
 /// Basic health check endpoint
 /// 

@@ -3,7 +3,7 @@ use axum::{
     routing::{get, put, delete, post},
     Router,
 };
-use crate::AppState;
+use crate::state::AppState;
 
 /// Create user management routes - Now fully implemented
 pub fn create_routes() -> Router<AppState> {

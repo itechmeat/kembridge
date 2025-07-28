@@ -327,7 +327,8 @@ mod tests {
         
         assert_eq!(engine.get_recommendation(&BigDecimal::from(5)), QuoteRecommendation::HighlyRecommended);
         assert_eq!(engine.get_recommendation(&BigDecimal::from(1)), QuoteRecommendation::Recommended);
-        assert_eq!(engine.get_recommendation(&BigDecimal::from(-0.5)), QuoteRecommendation::Acceptable);
+        let negative_half = &(BigDecimal::from(-1) / BigDecimal::from(2));
+        assert_eq!(engine.get_recommendation(negative_half), QuoteRecommendation::Acceptable);
         assert_eq!(engine.get_recommendation(&BigDecimal::from(-2)), QuoteRecommendation::Caution);
         assert_eq!(engine.get_recommendation(&BigDecimal::from(-5)), QuoteRecommendation::NotRecommended);
     }
@@ -341,7 +342,8 @@ mod tests {
         let market_price = BigDecimal::from(2); // Expected: 2000
         
         let price_impact = engine.calculate_price_impact(&input_amount, &output_amount, &market_price);
-        assert_eq!(price_impact, BigDecimal::from(-2.5)); // -2.5% price impact
+        let expected_impact = BigDecimal::from(-5) / BigDecimal::from(2);
+        assert_eq!(price_impact, expected_impact); // -2.5% price impact
     }
 
     #[test]

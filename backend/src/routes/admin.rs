@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post, put},
     Router,
 };
-use crate::AppState;
+use crate::state::AppState;
 
 /// Create admin routes
 /// These will be implemented later for system administration

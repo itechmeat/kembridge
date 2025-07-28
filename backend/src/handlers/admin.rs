@@ -1,7 +1,7 @@
 // src/handlers/admin.rs - Admin handlers (Future implementation)
 use axum::{extract::{State, Path}, response::Json, http::StatusCode};
 use serde_json::{json, Value};
-use crate::AppState;
+use crate::state::AppState;
 
 /// Get system statistics
 pub async fn get_system_stats(State(_state): State<AppState>) -> Result<Json<Value>, StatusCode> {

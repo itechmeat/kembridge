@@ -18,6 +18,8 @@ pub mod exchange_rates;
 pub mod impact_analyzer;
 pub mod slippage_control;
 pub mod types;
+pub mod demo_scenarios;
+pub mod price_service;
 
 pub use types::*;
 
@@ -37,8 +39,9 @@ impl DynamicPricingService {
         price_oracle: Arc<PriceOracleService>,
         oneinch_service: Arc<OneinchService>,
     ) -> Self {
-        let fee_calculator = Arc::new(fee_calculator::FeeCalculator::new(
+        let fee_calculator = Arc::new(fee_calculator::FeeCalculator::new_with_oneinch(
             price_oracle.clone(),
+            oneinch_service.clone(),
         ));
         
         let exchange_rates = Arc::new(exchange_rates::ExchangeRateCalculator::new(

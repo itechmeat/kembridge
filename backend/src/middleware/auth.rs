@@ -4,7 +4,7 @@ use axum::{
     middleware::Next,
     response::Response,
 };
-use crate::{middleware::error_handler::ApiError, AppState};
+use crate::{middleware::error_handler::ApiError, state::AppState};
 use crate::constants::*;
 
 /// JWT Authentication middleware

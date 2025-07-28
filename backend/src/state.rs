@@ -121,12 +121,14 @@ impl AppState {
             PriceOracleService::new(redis.clone(), Arc::new(config.clone())).await?
         );
 
-        // Initialize 1inch service (Phase 6.2)
+        // Initialize 1inch service with Fusion+ (Phase 6.2)
         let oneinch_service = Arc::new(
             OneinchService::new(
                 config.oneinch_api_key.clone().unwrap_or_else(|| "test_key".to_string()),
                 config.ethereum_chain_id.unwrap_or(11155111), // Default to Sepolia testnet
             )
+            .with_price_oracle(price_oracle_service.clone())
+            .with_fusion_plus(config.oneinch_api_key.clone()) // Enable Fusion+ cross-chain functionality
         );
 
         // Initialize dynamic pricing service (Phase 6.3)

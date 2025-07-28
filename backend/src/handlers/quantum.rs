@@ -4,7 +4,7 @@ use serde_json::Value;
 use utoipa;
 use uuid;
 
-use crate::AppState;
+use crate::state::AppState;
 use crate::extractors::auth::{AuthUser, AdminAuth};
 use crate::middleware::error_handler::ApiError;
 use crate::models::quantum::{

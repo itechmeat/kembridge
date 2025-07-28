@@ -1,6 +1,6 @@
 // src/routes/websocket.rs - WebSocket routes (Phase 5.3.1)
 use axum::{routing::get, Router};
-use crate::{handlers::websocket, AppState};
+use crate::{handlers::websocket, state::AppState};
 
 /// WebSocket routes
 pub fn websocket_routes() -> Router<AppState> {
