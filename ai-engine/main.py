@@ -12,6 +12,8 @@ from contextlib import asynccontextmanager
 import json
 from models.simple_risk_analyzer import SimpleRiskAnalyzer
 from models.blacklist_checker import BlacklistChecker
+from models.risk_analyzer_base import RiskAnalyzerBase
+from config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,10 +22,7 @@ logger = logging.getLogger(__name__)
 # Database connection management
 class DatabaseManager:
     def __init__(self):
-        self.database_url = os.getenv(
-            "DATABASE_URL", 
-            "postgresql://postgres:postgres@postgres:5432/kembridge"
-        )
+        self.database_url = settings.database_url
         self.pool = None
     
     async def create_pool(self):
@@ -82,12 +81,7 @@ app = FastAPI(
 # CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4001",  # Frontend
-        "http://localhost:4000",  # Backend
-        "http://frontend:4001",   # Docker frontend
-        "http://backend:4000"     # Docker backend
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -166,7 +160,7 @@ async def health_check():
         logger.error(f"Database health check failed: {e}")
     
     try:
-        # SimpleRiskAnalyzer всегда готов
+        # SimpleRiskAnalyzer is always ready
         ml_status = "simple_analyzer_ready"
     except Exception as e:
         logger.error(f"ML models health check failed: {e}")
@@ -199,8 +193,10 @@ blacklist_checker = BlacklistChecker()
 
 # Risk Analysis Service
 class RiskAnalysisService:
-    @staticmethod
-    async def get_user_history(conn: asyncpg.Connection, user_id: str) -> UserHistoryData:
+    def __init__(self, analyzer: RiskAnalyzerBase):
+        self.analyzer = analyzer
+
+    async def get_user_history(self, conn: asyncpg.Connection, user_id: str) -> UserHistoryData:
         """Get user transaction history for risk analysis"""
         try:
             query = """
@@ -238,10 +234,9 @@ class RiskAnalysisService:
             logger.error(f"Error getting user history: {e}")
             return UserHistoryData(is_new_user=True)
     
-    @staticmethod
-    def analyze_transaction_risk(request: RiskAnalysisRequest, user_history: UserHistoryData) -> RiskAnalysisResponse:
+    def analyze_transaction_risk(self, request: RiskAnalysisRequest, user_history: UserHistoryData) -> RiskAnalysisResponse:
         """ML-powered risk analysis with user history"""
-        # Подготовка данных для ML анализа
+        # Prepare data for ML analysis
         transaction_data = {
             "user_id": request.user_id,
             "transaction_id": request.transaction_id,
@@ -256,8 +251,8 @@ class RiskAnalysisService:
             "day_of_week": datetime.now().weekday()
         }
         
-        # ML анализ через RiskAnalyzer
-        analysis_result = risk_analyzer.analyze_risk(transaction_data)
+        # ML analysis using RiskAnalyzer
+        analysis_result = self.analyzer.analyze_risk(transaction_data)
         
         return RiskAnalysisResponse(
             risk_score=analysis_result['risk_score'],
@@ -270,6 +265,9 @@ class RiskAnalysisService:
             analysis_timestamp=datetime.now().isoformat()
         )
 
+# Create risk service instance
+risk_service = RiskAnalysisService(risk_analyzer)
+
 @app.post("/api/risk/analyze", response_model=RiskAnalysisResponse)
 async def analyze_transaction_risk(
     request: RiskAnalysisRequest,
@@ -280,10 +278,10 @@ async def analyze_transaction_risk(
         logger.info(f"Analyzing risk for user {request.user_id}, amount: {request.amount_in}")
         
         # Get user history
-        user_history = await RiskAnalysisService.get_user_history(conn, request.user_id)
+        user_history = await risk_service.get_user_history(conn, request.user_id)
         
         # Perform risk analysis
-        analysis = RiskAnalysisService.analyze_transaction_risk(request, user_history)
+        analysis = risk_service.analyze_transaction_risk(request, user_history)
         
         # Log the analysis result
         logger.info(f"Risk analysis completed: score={analysis.risk_score}, level={analysis.risk_level}")
@@ -301,7 +299,7 @@ async def get_user_risk_profile(
 ):
     """Get user risk profile based on transaction history"""
     try:
-        user_history = await RiskAnalysisService.get_user_history(conn, user_id)
+        user_history = await risk_service.get_user_history(conn, user_id)
         
         # Determine overall risk level
         if user_history.is_new_user:
@@ -328,10 +326,10 @@ async def get_user_risk_profile(
 
 @app.post("/api/risk/retrain")
 async def retrain_models():
-    """Переобучение ML моделей (admin endpoint)"""
+    """Retrain ML models (admin endpoint)."""
     try:
-        # В production здесь будет получение training data из БД
-        # Пока используем заглушку
+        # In production training data would come from the database
+        # Currently this is a stub
         training_data = []  # Placeholder
         
         if len(training_data) == 0:
@@ -341,7 +339,7 @@ async def retrain_models():
                 "timestamp": datetime.now().isoformat()
             }
         
-        # В SimpleRiskAnalyzer нет retrain_models
+        # SimpleRiskAnalyzer does not support retraining
         return {
             "status": "skipped",
             "message": "Simple risk analyzer does not support retraining",
@@ -354,7 +352,7 @@ async def retrain_models():
 
 @app.get("/api/risk/blacklist/stats")
 async def get_blacklist_stats():
-    """Статистика blacklist"""
+    """Return basic statistics about the blacklist."""
     try:
         stats = blacklist_checker.get_blacklist_stats()
         return stats
@@ -364,7 +362,7 @@ async def get_blacklist_stats():
 
 @app.post("/api/risk/blacklist/check")
 async def check_address_blacklist(address: str, chain: str):
-    """Проверка конкретного адреса в blacklist"""
+    """Check a specific address against the blacklist."""
     try:
         result = blacklist_checker.check_address(address, chain)
         return {
@@ -383,6 +381,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    import os
-    port = int(os.getenv("PORT", 4003))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=settings.port)

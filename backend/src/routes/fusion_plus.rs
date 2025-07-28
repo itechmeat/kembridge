@@ -22,8 +22,8 @@ pub fn create_fusion_plus_routes() -> Router<AppState> {
         
         // Order tracking endpoints
         .route("/orders/active", get(fusion_plus::get_active_cross_chain_orders))
-        .route("/orders/:order_hash", get(fusion_plus::get_cross_chain_order_by_hash))
+        .route("/orders/{order_hash}", get(fusion_plus::get_cross_chain_order_by_hash))
         
         // Utility endpoints
-        .route("/escrow-factory/:chain_id", get(fusion_plus::get_escrow_factory))
+        .route("/escrow-factory/{chain_id}", get(fusion_plus::get_escrow_factory))
 }

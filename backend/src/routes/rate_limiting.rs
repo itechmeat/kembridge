@@ -24,7 +24,7 @@ pub fn create_rate_limiting_routes() -> Router<AppState> {
         .route("/", get(get_rate_limit_dashboard))
         
         // Endpoint-specific statistics
-        .route("/endpoints/:endpoint_class", get(get_endpoint_rate_limits))
+        .route("/endpoints/{endpoint_class}", get(get_endpoint_rate_limits))
         
         // Security monitoring
         .route("/top-violators", get(get_top_violators))

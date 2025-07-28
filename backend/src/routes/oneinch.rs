@@ -34,7 +34,7 @@ pub fn create_oneinch_routes() -> Router<AppState> {
         .route("/health", get(health_check))
         .route("/health/comprehensive", get(comprehensive_health_check))
         .route("/validate-api-key", get(validate_api_key))
-        .route("/liquidity/:from_token/:to_token", get(get_liquidity_info))
+        .route("/liquidity/{from_token}/{to_token}", get(get_liquidity_info))
 }
 
 #[cfg(all(test, feature = "integration-tests"))]

@@ -1,7 +1,4 @@
-"""
-Blacklist Checker Module
-Проверка адресов против known malicious addresses
-"""
+"""Module for checking addresses against known malicious lists."""
 
 import logging
 from typing import Set, List, Dict, Optional
@@ -14,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 class BlacklistChecker:
     def __init__(self):
-        # Static blacklist для демонстрации
+        # Static blacklist used for demonstration
         self.static_blacklist: Set[str] = {
-            # Известные мошеннические адреса Ethereum (примеры)
+            # Known fraudulent Ethereum addresses (examples)
             "0x000000000000000000000000000000000000dead",
             "0x0000000000000000000000000000000000000000",
-            # Fake addresses для тестирования
+            # Fake addresses for testing
             "0x1234567890123456789012345678901234567890",
             "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
         }
@@ -31,12 +28,12 @@ class BlacklistChecker:
             "fake-wallet.near"
         }
         
-        # Cache для external API results
+        # Cache for external API results
         self.cache: Dict[str, Dict] = {}
         self.cache_ttl = timedelta(hours=1)
         
     def is_ethereum_address_blacklisted(self, address: str) -> Dict[str, any]:
-        """Проверка Ethereum адреса в blacklist"""
+        """Check an Ethereum address against the blacklist."""
         address_lower = address.lower()
         
         result = {
@@ -46,17 +43,17 @@ class BlacklistChecker:
             "risk_score_increase": 0.0
         }
         
-        # Проверка в static blacklist
+        # Check against the static blacklist
         if address_lower in self.static_blacklist:
             result.update({
                 "is_blacklisted": True,
                 "reason": "Address in static blacklist",
                 "source": "kembridge_static",
-                "risk_score_increase": 1.0  # Максимальный риск
+                "risk_score_increase": 1.0  # Maximum risk
             })
             return result
         
-        # Проверка паттернов подозрительных адресов
+        # Check common suspicious patterns
         suspicious_patterns = [
             "0x000000",  # Null-like addresses
             "0xffffff",  # Suspicious patterns
@@ -76,7 +73,7 @@ class BlacklistChecker:
         return result
     
     def is_near_address_blacklisted(self, address: str) -> Dict[str, any]:
-        """Проверка NEAR адреса в blacklist"""
+        """Check a NEAR address against the blacklist."""
         result = {
             "is_blacklisted": False,
             "reason": None,
@@ -93,7 +90,7 @@ class BlacklistChecker:
             })
             return result
         
-        # Проверка подозрительных паттернов NEAR
+        # Check suspicious NEAR account name patterns
         suspicious_keywords = ["scam", "phish", "fake", "fraud", "hack"]
         for keyword in suspicious_keywords:
             if keyword in address.lower():
@@ -108,7 +105,7 @@ class BlacklistChecker:
         return result
     
     def check_address(self, address: str, chain: str) -> Dict[str, any]:
-        """Универсальная проверка адреса"""
+        """Unified method to check an address."""
         try:
             if chain.lower() == "ethereum":
                 return self.is_ethereum_address_blacklisted(address)
@@ -132,20 +129,17 @@ class BlacklistChecker:
             }
     
     async def check_external_api(self, address: str, chain: str) -> Dict[str, any]:
-        """
-        Проверка через внешние API (заглушка для будущей интеграции)
-        В production можно интегрировать с Chainalysis, TRM Labs, etc.
-        """
+        """Placeholder for future external API integration."""
         cache_key = f"{chain}:{address}"
         
-        # Проверка cache
+        # Check cache
         if cache_key in self.cache:
             cached_data = self.cache[cache_key]
             if datetime.now() - cached_data["timestamp"] < self.cache_ttl:
                 return cached_data["result"]
         
-        # Заглушка для external API call
-        # В production здесь будет реальный API call
+        # Placeholder for external API call
+        # In production this would be a real API call
         result = {
             "is_blacklisted": False,
             "reason": None,
@@ -153,7 +147,7 @@ class BlacklistChecker:
             "risk_score_increase": 0.0
         }
         
-        # Кеширование результата
+        # Cache the result
         self.cache[cache_key] = {
             "result": result,
             "timestamp": datetime.now()
@@ -162,7 +156,7 @@ class BlacklistChecker:
         return result
     
     def add_to_blacklist(self, address: str, chain: str, reason: str) -> bool:
-        """Добавление адреса в blacklist (admin функция)"""
+        """Add an address to the blacklist (admin function)."""
         try:
             if chain.lower() == "ethereum":
                 self.static_blacklist.add(address.lower())
@@ -179,7 +173,7 @@ class BlacklistChecker:
             return False
     
     def get_blacklist_stats(self) -> Dict[str, any]:
-        """Статистика blacklist"""
+        """Return blacklist statistics."""
         return {
             "ethereum_blacklist_size": len(self.static_blacklist),
             "near_blacklist_size": len(self.near_blacklist),
