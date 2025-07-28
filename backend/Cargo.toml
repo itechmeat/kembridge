@@ -83,10 +83,13 @@ pqcrypto = "0.18"
 # Blockchain integration
 ethers = { version = "2.0.14", features = ["rustls"] }
 
-# NEAR Protocol integration (Phase 4.2) - Minimal compatible versions
+# NEAR Protocol integration - Updated to latest versions
 near-jsonrpc-client = "0.17"
-near-crypto = "0.17"
-# Use only the versions that are compatible with jsonrpc-client
+near-jsonrpc-primitives = "0.30"
+near-crypto = "0.31.0-rc.2"
+near-primitives = "0.31.0-rc.2"
+near-gas = "0.3"
+# Use latest RC versions compatible with NEAR SDK 5.15.1
 
 # Security & Rate limiting
 tower_governor = "0.4"
@@ -106,7 +109,7 @@ kembridge-blockchain = { path = "crates/kembridge-blockchain" }
 name = "kembridge-backend"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version = "1.86"
 default-run = "kembridge-backend"
 
 [[bin]]

@@ -12,8 +12,11 @@ ethers = { version = "2.0.14", features = ["rustls", "ws"] }
 
 # NEAR Protocol dependencies (Phase 4.2) - Minimal set
 near-jsonrpc-client.workspace = true
+near-jsonrpc-primitives.workspace = true
 near-crypto.workspace = true
-# We'll use types from jsonrpc-client to avoid version conflicts
+near-primitives.workspace = true
+near-gas.workspace = true
+# We'll use types from jsonrpc-primitives to avoid version conflicts
 # For Chain Signatures testing (near-workspaces will be feature-gated)
 near-workspaces = { version = "0.20.1", optional = true }
 

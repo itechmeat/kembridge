@@ -44,4 +44,7 @@ pub enum NearError {
 
     #[error("Transaction error: {0}")]
     TransactionError(String),
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 }
