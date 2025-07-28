@@ -1,6 +1,6 @@
 // src/routes/monitoring.rs - Monitoring dashboard routes
 use axum::{routing::get, Router};
-use crate::{handlers::monitoring, AppState};
+use crate::{handlers::monitoring, state::AppState};
 
 /// Monitoring dashboard routes
 pub fn monitoring_routes() -> Router<AppState> {

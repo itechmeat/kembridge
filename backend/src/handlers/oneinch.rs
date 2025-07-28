@@ -784,3 +784,246 @@ fn get_quote_cons(quote: &FusionQuote, best_quote: &FusionQuote) -> Vec<String> 
     
     cons
 }
+
+/// Comprehensive 1inch integration health check response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct OneinchIntegrationHealthResponse {
+    pub status: String,
+    pub chain_id: u64,
+    pub chain_supported: bool,
+    pub api_connectivity: serde_json::Value,
+    pub api_key: serde_json::Value,
+    pub tokens: serde_json::Value,
+    pub timestamp: String,
+    pub recommendations: Vec<String>,
+}
+
+/// Liquidity information response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct LiquidityInfoResponse {
+    pub from_token: String,
+    pub to_token: String,
+    pub available: bool,
+    pub liquidity_score: Option<f64>,
+    pub protocols: Option<Vec<ProtocolInfo>>,
+    pub estimated_gas: Option<String>,
+    pub error: Option<String>,
+}
+
+/// API key validation response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApiKeyValidationResponse {
+    pub valid: bool,
+    pub message: String,
+    pub chain_id: u64,
+    pub timestamp: String,
+}
+
+/// Comprehensive 1inch integration health check
+/// 
+/// Performs a complete health check of the 1inch integration including:
+/// - API connectivity test
+/// - API key validation
+/// - Token listing verification
+/// - Chain support verification
+#[utoipa::path(
+    get,
+    path = "/api/v1/swap/health/comprehensive",
+    responses(
+        (status = 200, description = "Comprehensive health check completed", body = OneinchIntegrationHealthResponse),
+        (status = 503, description = "Service unavailable")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "1inch Integration"
+)]
+pub async fn comprehensive_health_check(
+    State(state): State<AppState>,
+    _user: AuthUser,
+) -> Result<Json<OneinchIntegrationHealthResponse>, StatusCode> {
+    info!("🔍 Starting comprehensive 1inch health check");
+
+    let oneinch_service = &state.oneinch_service;
+    
+    match oneinch_service.comprehensive_health_check().await {
+        Ok(health_data) => {
+            let mut recommendations = Vec::new();
+            
+            // Generate recommendations based on health check results
+            if let Some(api_connectivity) = health_data.get("api_connectivity") {
+                if api_connectivity.get("accessible") == Some(&serde_json::Value::Bool(false)) {
+                    recommendations.push("Check network connectivity to 1inch API".to_string());
+                }
+            }
+            
+            if let Some(api_key) = health_data.get("api_key") {
+                if api_key.get("authenticated") == Some(&serde_json::Value::Bool(false)) {
+                    recommendations.push("Verify 1inch API key is valid and has proper permissions".to_string());
+                }
+            }
+            
+            if let Some(tokens) = health_data.get("tokens") {
+                if let Some(count) = tokens.get("count") {
+                    if count.as_u64().unwrap_or(0) < 10 {
+                        recommendations.push("Low token count - check chain ID and API access".to_string());
+                    }
+                }
+            }
+            
+            if !health_data.get("chain_supported").unwrap_or(&serde_json::Value::Bool(false)).as_bool().unwrap_or(false) {
+                recommendations.push("Current chain ID is not officially supported by 1inch".to_string());
+            }
+
+            let response = OneinchIntegrationHealthResponse {
+                status: "completed".to_string(),
+                chain_id: health_data.get("chain_id").unwrap_or(&serde_json::Value::Number(serde_json::Number::from(1))).as_u64().unwrap_or(1),
+                chain_supported: health_data.get("chain_supported").unwrap_or(&serde_json::Value::Bool(false)).as_bool().unwrap_or(false),
+                api_connectivity: health_data.get("api_connectivity").cloned().unwrap_or(serde_json::json!({"status": "unknown"})),
+                api_key: health_data.get("api_key").cloned().unwrap_or(serde_json::json!({"status": "unknown"})),
+                tokens: health_data.get("tokens").cloned().unwrap_or(serde_json::json!({"status": "unknown"})),
+                timestamp: health_data.get("timestamp").unwrap_or(&serde_json::Value::String("unknown".to_string())).as_str().unwrap_or("unknown").to_string(),
+                recommendations,
+            };
+
+            info!("✅ Comprehensive 1inch health check completed successfully");
+            Ok(Json(response))
+        },
+        Err(e) => {
+            warn!("❌ Comprehensive 1inch health check failed: {}", e);
+            Err(StatusCode::SERVICE_UNAVAILABLE)
+        }
+    }
+}
+
+/// Validate 1inch API key
+/// 
+/// Tests the provided API key by making a real request to 1inch API
+#[utoipa::path(
+    get,
+    path = "/api/v1/swap/validate-api-key",
+    responses(
+        (status = 200, description = "API key validation completed", body = ApiKeyValidationResponse),
+        (status = 503, description = "Service unavailable")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "1inch Integration"
+)]
+pub async fn validate_api_key(
+    State(state): State<AppState>,
+    _user: AuthUser,
+) -> Result<Json<ApiKeyValidationResponse>, StatusCode> {
+    info!("🔑 Validating 1inch API key");
+
+    let oneinch_service = &state.oneinch_service;
+    
+    match oneinch_service.validate_api_key().await {
+        Ok(valid) => {
+            let message = if valid {
+                "API key is valid and authenticated".to_string()
+            } else {
+                "API key is invalid or lacks proper permissions".to_string()
+            };
+
+            let response = ApiKeyValidationResponse {
+                valid,
+                message,
+                chain_id: oneinch_service.adapter.client.get_chain_id(),
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            };
+
+            info!("✅ API key validation completed: {}", valid);
+            Ok(Json(response))
+        },
+        Err(e) => {
+            warn!("❌ API key validation failed: {}", e);
+            
+            let response = ApiKeyValidationResponse {
+                valid: false,
+                message: format!("Validation failed: {}", e),
+                chain_id: oneinch_service.adapter.client.get_chain_id(),
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            };
+
+            Ok(Json(response))
+        }
+    }
+}
+
+/// Get liquidity information for token pair
+/// 
+/// Checks real-time liquidity availability and quality for a specific token pair
+#[utoipa::path(
+    get,
+    path = "/api/v1/swap/liquidity/{from_token}/{to_token}",
+    params(
+        ("from_token" = String, Path, description = "Source token address"),
+        ("to_token" = String, Path, description = "Destination token address")
+    ),
+    responses(
+        (status = 200, description = "Liquidity information retrieved", body = LiquidityInfoResponse),
+        (status = 503, description = "Service unavailable")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "1inch Integration"
+)]
+pub async fn get_liquidity_info(
+    State(state): State<AppState>,
+    Path((from_token, to_token)): Path<(String, String)>,
+    _user: AuthUser,
+) -> Result<Json<LiquidityInfoResponse>, StatusCode> {
+    info!("🔍 Getting liquidity info for {}/{}", from_token, to_token);
+
+    let oneinch_service = &state.oneinch_service;
+    
+    match oneinch_service.get_liquidity_info(&from_token, &to_token).await {
+        Ok(liquidity_data) => {
+            let available = liquidity_data.get("available").unwrap_or(&serde_json::Value::Bool(false)).as_bool().unwrap_or(false);
+            
+            let response = LiquidityInfoResponse {
+                from_token: from_token.clone(),
+                to_token: to_token.clone(),
+                available,
+                liquidity_score: liquidity_data.get("liquidity_score").and_then(|v| v.as_f64()),
+                protocols: if available {
+                    liquidity_data.get("protocols").and_then(|protocols| {
+                        if let Some(protocols_array) = protocols.as_array() {
+                            Some(protocols_array.iter().map(|p| ProtocolInfo {
+                                name: p.get("name").unwrap_or(&serde_json::Value::String("unknown".to_string())).as_str().unwrap_or("unknown").to_string(),
+                                percentage: p.get("part").unwrap_or(&serde_json::Value::Number(serde_json::Number::from(0))).as_f64().unwrap_or(0.0),
+                            }).collect())
+                        } else {
+                            None
+                        }
+                    })
+                } else {
+                    None
+                },
+                estimated_gas: liquidity_data.get("estimated_gas").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                error: liquidity_data.get("error").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            };
+
+            info!("✅ Liquidity info retrieved: available={}, score={:?}", available, response.liquidity_score);
+            Ok(Json(response))
+        },
+        Err(e) => {
+            warn!("❌ Failed to get liquidity info: {}", e);
+            
+            let response = LiquidityInfoResponse {
+                from_token,
+                to_token,
+                available: false,
+                liquidity_score: None,
+                protocols: None,
+                estimated_gas: None,
+                error: Some(e.to_string()),
+            };
+
+            Ok(Json(response))
+        }
+    }
+}

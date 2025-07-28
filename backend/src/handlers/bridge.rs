@@ -5,7 +5,7 @@ use serde::Deserialize;
 use bigdecimal::BigDecimal;
 use std::str::FromStr;
 use chrono::{Duration, Utc};
-use crate::AppState;
+use crate::state::AppState;
 use crate::dynamic_pricing::types::BridgeQuoteRequest;
 
 /// Query parameters for bridge quote request

@@ -9,7 +9,7 @@ use tracing::{debug, error, info, warn};
 
 /// High-level adapter for 1inch Fusion+ operations
 pub struct OneinchAdapter {
-    client: Arc<FusionClient>,
+    pub client: Arc<FusionClient>,
 }
 
 impl OneinchAdapter {

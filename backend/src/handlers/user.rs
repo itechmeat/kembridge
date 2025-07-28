@@ -1,7 +1,7 @@
 // src/handlers/user.rs - User management handlers (Phase 2.3 implementation)
 use axum::{extract::{State, Path}, response::Json, http::StatusCode};
 use serde_json::{json, Value};
-use crate::AppState;
+use crate::state::AppState;
 use crate::extractors::auth::AuthUser;
 use crate::models::user::{UserProfileResponse, UpdateUserRequest, AddWalletRequest};
 use validator::Validate;

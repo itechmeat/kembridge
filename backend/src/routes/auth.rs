@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use crate::AppState;
+use crate::state::AppState;
 
 /// Create authentication routes
 pub fn create_routes() -> Router<AppState> {

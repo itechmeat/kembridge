@@ -5,7 +5,7 @@ use axum::{
     http::StatusCode,
 };
 use serde_json::{json, Value};
-use crate::AppState;
+use crate::state::AppState;
 
 /// WebSocket connection upgrade handler
 pub async fn websocket_handler(

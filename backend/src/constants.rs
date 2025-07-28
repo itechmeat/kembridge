@@ -207,18 +207,32 @@ pub const ONEINCH_DEFAULT_SOURCE: &str = "kembridge";
 pub const ONEINCH_BRIDGE_INTEGRATION_SOURCE: &str = "kembridge-bridge-integration";
 pub const ONEINCH_ROUTING_SOURCE: &str = "kembridge-routing";
 
-// 1inch execution probability base
-pub const ONEINCH_EXECUTION_PROBABILITY_BASE: f64 = 0.9;
+// 1inch execution probability calculation - NO HARDCODED BASE!
+// Probability is calculated dynamically based on real market conditions
 
-// ETH price fallback for gas calculations
-pub const ONEINCH_ETH_PRICE_FALLBACK_USD: f64 = 2000.0;
+// ETH price - NO FALLBACK! Always use real price oracle data
 
 // Ethereum zero address constant
 pub const ETHEREUM_ZERO_ADDRESS: &str = "0x0000000000000000000000000000000000000000";
 
+// Token contract addresses
+pub const ETHEREUM_USDT_ADDRESS: &str = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+pub const ETHEREUM_USDC_ADDRESS: &str = "0xA0b86a33E6441041946Ffc3e6ED01E73c23e632";
+
+// Token decimals
+pub const USDT_DECIMALS: u8 = 6;
+pub const USDC_DECIMALS: u8 = 6;
+pub const ETH_DECIMALS: u8 = 18;
+pub const NEAR_DECIMALS: u8 = 24;
+
 // Ethereum transaction constants
 pub const ETHEREUM_BASE_GAS: u64 = 21000;
 pub const ETHEREUM_WEI_MULTIPLIER: u64 = 1_000_000_000_000_000_000;
+
+// Token decimal multipliers
+pub const USDT_DECIMAL_MULTIPLIER: f64 = 1_000_000.0; // 10^6
+pub const USDC_DECIMAL_MULTIPLIER: f64 = 1_000_000.0; // 10^6
+pub const ETH_DECIMAL_MULTIPLIER: f64 = 1_000_000_000_000_000_000.0; // 10^18
 
 // API routes
 pub const API_ROUTE_HEALTH: &str = "/health";
@@ -325,6 +339,22 @@ pub const SLIPPAGE_STANDARD_TIMEOUT_MINUTES: i64 = 10; // 10 minutes standard
 pub const SLIPPAGE_ADVANCED_TIMEOUT_MINUTES: i64 = 15; // 15 minutes advanced
 pub const SLIPPAGE_MAXIMUM_TIMEOUT_MINUTES: i64 = 30; // 30 minutes maximum
 pub const SLIPPAGE_MIN_TIMEOUT_MINUTES: i64 = 2; // 2 minutes minimum
+
+// Market scenario constants for demo purposes
+pub const MARKET_SCENARIO_STABLE_MULTIPLIER: f64 = 1.0; // Stable market conditions
+pub const MARKET_SCENARIO_VOLATILE_MULTIPLIER: f64 = 1.3; // Volatile market conditions
+pub const MARKET_SCENARIO_EXTREME_MULTIPLIER: f64 = 1.8; // Extreme volatility conditions
+
+// Demo pricing scenario constants
+pub const DEMO_SMALL_TRADE_THRESHOLD: f64 = 1000.0; // $1k small trade
+pub const DEMO_MEDIUM_TRADE_THRESHOLD: f64 = 10000.0; // $10k medium trade
+pub const DEMO_LARGE_TRADE_THRESHOLD: f64 = 100000.0; // $100k large trade
+
+// Time-based pricing demo constants
+pub const DEMO_PEAK_HOURS_START: u32 = 14; // 2 PM UTC
+pub const DEMO_PEAK_HOURS_END: u32 = 18; // 6 PM UTC
+pub const DEMO_OFF_PEAK_DISCOUNT: f64 = 0.95; // 5% discount during off-peak
+pub const DEMO_PEAK_PREMIUM: f64 = 1.08; // 8% premium during peak hours
 
 pub fn get_bridge_contract_address() -> Result<String, std::env::VarError> {
     std::env::var("BRIDGE_CONTRACT_ADDRESS")

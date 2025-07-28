@@ -5,7 +5,7 @@ use axum::{
     http::StatusCode
 };
 use kembridge_auth::{NonceRequest, NonceResponse, AuthRequest, AuthResponse};
-use crate::AppState;
+use crate::state::AppState;
 
 /// Generate nonce for Web3 signature
 pub async fn generate_nonce(

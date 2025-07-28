@@ -15,21 +15,21 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use redis::aio::ConnectionManager;
 use utoipa::OpenApi;
 
-mod config;
-mod routes;
-mod middleware;
-mod handlers;
-mod extractors;
-mod models;
-mod services;
-mod utils;
-mod state;
-mod websocket;
-mod monitoring;
-mod price_oracle;
-mod oneinch;
-mod dynamic_pricing;
-mod constants;
+pub mod config;
+pub mod routes;
+pub mod middleware;
+pub mod handlers;
+pub mod extractors;
+pub mod models;
+pub mod services;
+pub mod utils;
+pub mod state;
+pub mod websocket;
+pub mod monitoring;
+pub mod price_oracle;
+pub mod oneinch;
+pub mod constants;
+pub mod dynamic_pricing;
 
 // Services are used via full paths in AppState
 
@@ -86,11 +86,21 @@ use constants::*;
         handlers::oneinch::get_supported_tokens,
         handlers::oneinch::get_intelligent_routing,
         handlers::oneinch::health_check,
+        handlers::oneinch::comprehensive_health_check,
+        handlers::oneinch::validate_api_key,
+        handlers::oneinch::get_liquidity_info,
         // Bridge integration endpoints
         handlers::bridge_oneinch::execute_optimized_bridge_swap,
         handlers::bridge_oneinch::get_bridge_swap_status,
         handlers::bridge_oneinch::calculate_bridge_swap_savings,
         handlers::bridge_oneinch::get_supported_bridge_chains,
+        // Fusion+ cross-chain endpoints
+        handlers::fusion_plus::get_cross_chain_quote,
+        handlers::fusion_plus::build_cross_chain_order,
+        handlers::fusion_plus::submit_cross_chain_order,
+        handlers::fusion_plus::get_active_cross_chain_orders,
+        handlers::fusion_plus::get_cross_chain_order_by_hash,
+        handlers::fusion_plus::get_escrow_factory,
     ),
     components(
         schemas(
@@ -154,6 +164,9 @@ use constants::*;
             handlers::oneinch::FillInfo,
             handlers::oneinch::SupportedTokensResponse,
             handlers::oneinch::OneinchHealthResponse,
+            handlers::oneinch::OneinchIntegrationHealthResponse,
+            handlers::oneinch::ApiKeyValidationResponse,
+            handlers::oneinch::LiquidityInfoResponse,
             handlers::oneinch::IntelligentRoutingResponse,
             handlers::oneinch::RouteInfo,
             handlers::oneinch::RouteScores,
@@ -164,6 +177,18 @@ use constants::*;
             handlers::bridge_oneinch::ChainOptimizationResponse,
             handlers::bridge_oneinch::OptimizationSummaryResponse,
             handlers::bridge_oneinch::BridgeSwapStatusResponse,
+            // Fusion+ cross-chain schemas
+            handlers::fusion_plus::CrossChainQuoteRequest,
+            handlers::fusion_plus::CrossChainQuoteResponse,
+            handlers::fusion_plus::TimeLocksInfo,
+            handlers::fusion_plus::TokenPairPrices,
+            handlers::fusion_plus::BuildOrderRequest,
+            handlers::fusion_plus::BuildOrderResponse,
+            handlers::fusion_plus::OrderInfo,
+            handlers::fusion_plus::SubmitOrderRequest,
+            handlers::fusion_plus::ActiveOrdersQuery,
+            handlers::fusion_plus::ActiveOrdersResponse,
+            handlers::fusion_plus::OrderSummary,
         )
     ),
     tags(
@@ -176,6 +201,7 @@ use constants::*;
         (name = "Manual Review", description = "Manual review queue management for suspicious transactions"),
         (name = "Admin", description = "Administrative endpoints"),
         (name = "1inch Swap", description = "1inch Fusion+ integration for optimal swap routing"),
+        (name = "Fusion+", description = "1inch Fusion+ cross-chain atomic swaps"),
         (name = "Bridge Integration", description = "Cross-chain bridge with 1inch optimization")
     ),
     servers(
@@ -290,6 +316,9 @@ fn create_v1_routes() -> Router<AppState> {
         
         // 1inch Fusion+ routes (protected)
         .nest("/swap", routes::oneinch::create_oneinch_routes())
+        
+        // 1inch Fusion+ cross-chain routes (protected)
+        .nest("/fusion-plus", routes::fusion_plus::create_fusion_plus_routes())
         
         // Bridge-1inch integration routes (protected)
         .nest("/bridge-oneinch", routes::bridge_oneinch::create_bridge_oneinch_routes())

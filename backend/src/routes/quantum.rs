@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use crate::AppState;
+use crate::state::AppState;
 
 /// Create quantum cryptography routes
 /// These will be fully implemented in Phase 3.2 - Quantum Key Management

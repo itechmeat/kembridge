@@ -3,7 +3,7 @@ use axum::{
     routing::{get, post, delete},
     Router,
 };
-use crate::{handlers::price_oracle, AppState};
+use crate::{handlers::price_oracle, state::AppState};
 
 /// Price Oracle API routes
 pub fn price_oracle_routes() -> Router<AppState> {

@@ -336,38 +336,60 @@ impl PriceComparisonService {
         gas_amount * gas_price_gwei * 1e-9 * eth_price_usd
     }
 
-    /// Get current ETH price from price oracle with fallback
+    /// Get current ETH price from price oracle
     fn get_eth_price_from_oracle(&self) -> f64 {
         // Try to get ETH price from our price oracle service
         if let Ok(runtime) = tokio::runtime::Handle::try_current() {
             if let Ok(price_data) = runtime.block_on(self.price_oracle.get_price("ETH/USD")) {
-                return price_data.price.to_string().parse::<f64>().unwrap_or(ONEINCH_ETH_PRICE_FALLBACK_USD);
+                if let Ok(price) = price_data.price.to_string().parse::<f64>() {
+                    if price > 0.0 {
+                        return price;
+                    }
+                }
             }
         }
         
-        // Fallback to conservative estimate if oracle unavailable
-        ONEINCH_ETH_PRICE_FALLBACK_USD
+        // If we can't get real price, return 0 to indicate failure
+        // This will cause gas cost calculation to be 0, which is better than fake data
+        warn!("❌ Failed to get real ETH price from oracle - returning 0 (no fake fallbacks!)");
+        0.0
     }
 
     fn calculate_execution_probability(&self, quote: &FusionQuote, oracle: &OraclePriceComparison) -> f64 {
-        let mut probability: f64 = ONEINCH_EXECUTION_PROBABILITY_BASE; // Base 90% probability
+        // Calculate probability based on real market conditions - NO HARDCODED BASE!
+        let mut probability: f64 = 1.0; // Start with 100% and adjust down based on real factors
 
-        // Adjust based on price deviation
+        // Adjust based on price deviation from oracle
         let deviation = oracle.price_deviation_percentage.parse::<f64>().unwrap_or(0.0);
-        if deviation > 5.0 {
-            probability -= 0.2;
+        if deviation > 10.0 {
+            probability -= 0.4; // Very high deviation = low probability
+        } else if deviation > 5.0 {
+            probability -= 0.2; // High deviation
         } else if deviation > 2.0 {
-            probability -= 0.1;
+            probability -= 0.1; // Medium deviation
         }
+        // Small deviations (< 2%) don't reduce probability
 
-        // Adjust based on gas cost
+        // Adjust based on gas cost efficiency
         let gas_cost = self.estimate_gas_cost_usd(quote);
-        if gas_cost > 50.0 {
-            probability -= 0.1;
+        if gas_cost > 100.0 {
+            probability -= 0.3; // Very expensive gas
+        } else if gas_cost > 50.0 {
+            probability -= 0.15; // Expensive gas
         } else if gas_cost > 20.0 {
-            probability -= 0.05;
+            probability -= 0.05; // Moderate gas cost
         }
+        // Low gas costs (< $20) don't reduce probability
 
+        // Adjust based on oracle confidence
+        let confidence_penalty = (1.0 - oracle.oracle_confidence) * 0.2;
+        probability -= confidence_penalty;
+
+        // Adjust based on protocol complexity (more protocols = higher risk)
+        let protocol_complexity_penalty = (quote.protocols.len() as f64 - 1.0) * 0.05;
+        probability -= protocol_complexity_penalty;
+
+        // Ensure probability stays within reasonable bounds
         probability.max(0.1).min(1.0)
     }
 

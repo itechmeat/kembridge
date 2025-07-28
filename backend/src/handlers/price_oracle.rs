@@ -10,7 +10,7 @@ use tracing::{info, error};
 use uuid::Uuid;
 use bigdecimal::{BigDecimal, FromPrimitive};
 
-use crate::AppState;
+use crate::state::AppState;
 use crate::extractors::auth::AuthUser;
 use crate::price_oracle::types::{AggregatedPrice, PriceData, TradingPair};
 use crate::constants::*;

@@ -8,7 +8,7 @@ use axum::{
 use redis::AsyncCommands;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
-use crate::{middleware::error_handler::ApiError, AppState};
+use crate::{middleware::error_handler::ApiError, state::AppState};
 
 /// Rate limiting middleware with sliding window algorithm and Redis
 pub async fn rate_limit_with_state(
