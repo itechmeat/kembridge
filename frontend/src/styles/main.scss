@@ -10,27 +10,117 @@
 @use "base/reset";
 @use "base/animations";
 
+// ===== COMPONENTS =====
+@use "../components/ui/Button";
+@use "../components/ui/Modal";
+@use "../components/ui/Spinner";
+
 // ===== PAGES =====
 @use "pages/home";
 
-// ===== RESPONSIVE STYLES =====
-// Mobile-first approach with modern clamp() for fluid typography
+// ===== NEAR WALLET SELECTOR OVERRIDES =====
+// Ensure NEAR modal appears above our main modal
+:global(.near-wallet-selector-modal) {
+  z-index: 1100 !important; // Higher than our modal's 1000
+}
+
+:global(.near-wallet-selector-modal .modal-overlay) {
+  z-index: 1100 !important;
+}
+
+:global(.near-wallet-selector-modal .modal-right) {
+  z-index: 1101 !important;
+}
+
+// Additional NEAR modal styling for better mobile experience
+:global(.near-wallet-selector-modal) {
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  .modal-right {
+    border-radius: 1rem !important;
+    max-width: 90vw !important;
+    max-height: 80vh !important;
+    margin: 2rem !important;
+  }
+}
+
+// ===== CSS CUSTOM PROPERTIES =====
+:root {
+  // Brand colors
+  --primary: #{variables.$primary-color};
+  --primary-light: #{variables.$primary-light};
+  --primary-dark: #{variables.$primary-dark};
+  --secondary: #{variables.$secondary-color};
+  --accent: #{variables.$accent-color};
+
+  // Background colors
+  --background: #{variables.$bg-primary};
+  --background-secondary: #{variables.$bg-secondary};
+  --surface: #{variables.$bg-card};
+
+  // Text colors
+  --text-primary: #{variables.$text-primary};
+  --text-secondary: #{variables.$text-secondary};
+  --text-tertiary: #{variables.$text-muted};
+
+  // Border colors
+  --border: #{variables.$border-light};
+  --border-medium: #{variables.$border-medium};
+  --border-dark: #{variables.$border-dark};
+
+  // Semantic colors
+  --success: #{variables.$success};
+  --error: #{variables.$error};
+  --warning: #{variables.$warning};
+  --info: #{variables.$info};
+
+  // Fonts
+  --font-mono: #{variables.$font-family-mono};
+
+  // Shadows
+  --shadow-sm: #{variables.$shadow-sm};
+  --shadow-md: #{variables.$shadow-md};
+  --shadow-lg: #{variables.$shadow-lg};
+  --shadow-xl: #{variables.$shadow-xl};
+}
+
+// ===== HTML AND BODY =====
 html {
-  font-size: clamp(14px, 2.5vw, 16px);
+  height: 100%;
+  font-size: 16px; // Base font size for rem calculations
+
+  // Mobile viewport fixes
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 }
 
 body {
   font-family: variables.$font-family-primary;
-  line-height: variables.$line-height-base;
+  line-height: 1.4; // Tighter line height for mobile
   color: variables.$text-primary;
-  background-color: variables.$background-color;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
 
-  // Smooth scrolling for better UX
-  scroll-behavior: smooth;
-
-  // Improved text rendering
+  // Mobile optimizations
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+
+  // Disable bounce scrolling on iOS
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 // ===== QUANTUM THEME UTILITIES =====
@@ -46,12 +136,36 @@ body {
   color: variables.$accent-color;
 }
 
-// ===== RESPONSIVE UTILITIES =====
+// ===== MOBILE CONTAINER =====
 .container {
   width: 100%;
-  max-width: variables.$container-max-width;
-  margin: 0 auto;
-  padding: 0 variables.$container-padding;
+  padding: 0 1rem; // 16px mobile padding
+  margin: 0;
+  max-width: 100%;
+}
+
+// ===== MOBILE APP LAYOUT =====
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.app-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-content {
+  flex: 1;
+  padding: 1rem;
+  padding-bottom: 2rem;
 }
 
 // ===== ACCESSIBILITY =====

@@ -1,0 +1,279 @@
+/**
+ * Mobile-first WalletConnect component styles
+ * Compact design for mobile app experience
+ */
+
+.wallet-connect {
+  padding: 1rem;
+  width: 100%;
+
+  &__header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  &__description {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  &__error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__error-text {
+    color: #dc2626;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__providers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  // Mobile-optimized wallet provider buttons
+  &__provider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: left !important;
+    width: 100% !important;
+    min-height: 60px !important;
+    position: relative !important;
+
+    // Reset button styles
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    text-decoration: none !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+
+    &:active {
+      transform: scale(0.98) !important;
+      background: #f8fafc !important;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: #3b82f6 !important;
+      background: #f8fafc !important;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1) !important;
+    }
+
+    &:focus {
+      outline: none !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+
+    &:disabled {
+      opacity: 0.6 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+
+    &--loading {
+      border-color: #3b82f6 !important;
+      background: #f8fafc !important;
+    }
+  }
+
+  // Compact icon design
+  &__provider-icon {
+    font-size: 1.5rem !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f1f5f9 !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #e2e8f0 !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  &__provider-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+  }
+
+  // Mobile typography
+  &__provider-name {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin: 0 0 0.125rem 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  &__provider-description {
+    font-size: 0.8125rem !important;
+    color: #64748b !important;
+    margin: 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  &__provider-status {
+    font-size: 0.6875rem !important;
+    color: #f59e0b !important;
+    font-weight: 600 !important;
+    padding: 0.25rem 0.5rem !important;
+    background: #fef3cd !important;
+    border: 1px solid #fde68a !important;
+    border-radius: 0.375rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.025em !important;
+  }
+
+  &__no-providers {
+    text-align: center;
+    padding: 1.5rem;
+    color: #64748b;
+
+    p {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.875rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  &__footer {
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  &__footer-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+// Compact trigger button
+.wallet-connect-trigger {
+  min-width: 120px !important;
+  height: 2.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+
+  .spinner {
+    margin-right: 0.5rem;
+  }
+}
+
+// Mobile-optimized modal
+.wallet-connect-modal {
+  .modal__backdrop {
+    background: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .modal__content {
+    margin: 1rem !important;
+    border-radius: 1rem !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: calc(100% - 2rem) !important;
+    max-height: calc(100vh - 2rem) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .modal__header {
+    padding: 1rem 1rem 0.5rem 1rem !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .modal__title {
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+  }
+
+  .modal__close {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    padding: 0 !important;
+    font-size: 1rem !important;
+  }
+}
+
+// Global button override for mobile
+button.wallet-connect__provider,
+.wallet-connect__provider {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+
+  // Remove default styles
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  outline: none !important;
+
+  &:active {
+    transform: scale(0.98) !important;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: #3b82f6 !important;
+    background: #f8fafc !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1) !important;
+
+    .wallet-connect__provider-icon {
+      background: #e0f2fe !important;
+      border-color: #3b82f6 !important;
+    }
+  }
+
+  &:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  &:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+  }
+}

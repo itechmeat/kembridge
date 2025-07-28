@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ export interface ModalProps {
   size?: "sm" | "md" | "lg";
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
+  position?: "bottom" | "center";
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -18,6 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
   size = "md",
   closeOnOverlayClick = true,
   closeOnEscape = true,
+  position = "center",
 }) => {
   useEffect(() => {
     if (!closeOnEscape) return;
@@ -47,8 +50,13 @@ export const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
+  const modalContent = (
+    <div
+      className={`modal-overlay ${
+        position === "center" ? "modal-overlay--center" : ""
+      }`}
+      onClick={handleOverlayClick}
+    >
       <div className={`modal modal--${size}`}>
         {title && (
           <div className="modal__header">
@@ -66,6 +74,9 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  // Render modal in document.body using Portal
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

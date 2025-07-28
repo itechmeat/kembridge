@@ -1,0 +1,88 @@
+/**
+ * Wallet Provider Card Styles
+ */
+
+.wallet-provider-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-surface-hover);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &--loading {
+    border-color: var(--color-primary);
+    background: var(--color-surface-active);
+  }
+
+  &--unavailable {
+    opacity: 0.6;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
+      border-color: transparent;
+      background: var(--color-surface);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.wallet-provider-card__icon {
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wallet-provider-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.wallet-provider-card__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.wallet-provider-card__description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.wallet-provider-card__status {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-background-muted);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}

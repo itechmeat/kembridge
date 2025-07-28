@@ -1,4 +1,5 @@
 import React from "react";
+import "./Spinner.scss";
 
 export interface SpinnerProps {
   size?: "sm" | "md" | "lg";

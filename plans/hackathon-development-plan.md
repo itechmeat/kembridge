@@ -307,49 +307,59 @@
 
 ### 7.2 Optimized Wallet Integration
 
-- [ ] **7.2.1** Интеграция с MetaMask (минимальный bundle size)
-- [ ] **7.2.2** Интеграция с NEAR Wallet (оптимизированная загрузка)
-- [ ] **7.2.3** Добавление WalletConnect поддержки (lazy loading)
-- [ ] **7.2.4** Создание custom WalletConnection компонента
-- [ ] **7.2.5** Реализация wallet state с TanStack Query
-- [ ] **7.2.6** Создание быстрого wallet switching (кеширование)
-- [ ] **7.2.7** Добавление real-time баланса с оптимизированными запросами
+- [x] **7.2.1** Интеграция с MetaMask через RainbowKit (полная реализация)
+- [x] **7.2.2** Интеграция с NEAR Wallet через wallet-selector (90% готово, требует отладки)
+- [x] **7.2.3** Добавление WalletConnect поддержки через RainbowKit
+- [x] **7.2.4** Создание custom WalletConnection компонентов (WalletConnect, WalletInfo)
+- [x] **7.2.5** Реализация wallet state управления через React Context
+- [x] **7.2.6** Создание wallet provider системы с типизацией
+- [x] **7.2.7** Добавление real-time баланса через RPC запросы
 - [ ] **7.2.8** Реализация автоматического переподключения с retry logic
 
-### 7.3 Custom Authentication UI
+### 7.3 Backend Integration & API Client
 
-- [ ] **7.3.1** Создание custom Login компонента (zero dependencies)
-- [ ] **7.3.2** Реализация быстрого процесса подписи сообщений
-- [ ] **7.3.3** Создание optimized user profile компонента
-- [ ] **7.3.4** Добавление efficient JWT token management
-- [ ] **7.3.5** Реализация performance-optimized protected routes
-- [ ] **7.3.6** Создание instant logout функциональности
-- [ ] **7.3.7** Добавление comprehensive error handling для auth flows
+- [ ] **7.3.1** Создание centralized API client с Axios
+- [ ] **7.3.2** Реализация Web3 authentication flow (nonce + signature)
+- [ ] **7.3.3** Интеграция JWT token management с автоматическим обновлением
+- [ ] **7.3.4** Создание API hooks для TanStack Query интеграции
+- [ ] **7.3.5** Реализация user profile API интеграции
+- [ ] **7.3.6** Добавление comprehensive error handling для API calls
+- [ ] **7.3.7** Настройка real-time WebSocket подключения для мониторинга
 
-### 7.4 High-Performance Bridge Interface
+### 7.4 Custom Authentication UI
 
-- [ ] **7.4.1** Создание optimized SwapForm с custom валидацией
-- [ ] **7.4.2** Реализация fast token selection dropdown (virtual scrolling)
-- [ ] **7.4.3** Добавление instant amount input с real-time валидацией
-- [ ] **7.4.4** Создание dynamic price quote display с TanStack Query
-- [ ] **7.4.5** Интеграция с NEAR 1Click API для one-click swaps
-- [ ] **7.4.6** Реализация lightning-fast swap confirmation modal
-- [ ] **7.4.7** Добавление smooth transaction progress tracking (🔗 завершит задачу 3.4.6 - интеграция TransactionCrypto API в веб-интерфейс)
-- [ ] **7.4.8** Создание virtualized transaction history компонента
-- [ ] **7.4.9** Реализация WebSocket real-time status updates
+- [ ] **7.4.1** Создание custom Login компонента (zero dependencies)
+- [ ] **7.4.2** Реализация быстрого процесса подписи сообщений
+- [ ] **7.4.3** Создание optimized user profile компонента
+- [ ] **7.4.4** Добавление efficient JWT token management UI
+- [ ] **7.4.5** Реализация performance-optimized protected routes
+- [ ] **7.4.6** Создание instant logout функциональности
+- [ ] **7.4.7** Добавление comprehensive error handling для auth flows
+
+### 7.5 High-Performance Bridge Interface
+
+- [ ] **7.5.1** Создание optimized SwapForm с custom валидацией
+- [ ] **7.5.2** Реализация fast token selection dropdown (virtual scrolling)
+- [ ] **7.5.3** Добавление instant amount input с real-time валидацией
+- [ ] **7.5.4** Создание dynamic price quote display с TanStack Query
+- [ ] **7.5.5** Интеграция с NEAR 1Click API для one-click swaps
+- [ ] **7.5.6** Реализация lightning-fast swap confirmation modal
+- [ ] **7.5.7** Добавление smooth transaction progress tracking (🔗 завершит задачу 3.4.6 - интеграция TransactionCrypto API в веб-интерфейс)
+- [ ] **7.5.8** Создание virtualized transaction history компонента
+- [ ] **7.5.9** Реализация WebSocket real-time status updates
 
 **⚠️ ВАЖНО: В этой фазе нужно завершить следующие отложенные задачи:**
 
 - [ ] **3.4.6** Интеграция TransactionCrypto API в веб-интерфейс (требует frontend)
 
-### 7.5 Custom Security & Risk Display
+### 7.6 Custom Security & Risk Display
 
-- [ ] **7.5.1** Создание lightweight SecurityIndicator компонента
-- [ ] **7.5.2** Отображение real-time quantum protection status
-- [ ] **7.5.3** Показ fast AI risk analysis результатов
-- [ ] **7.5.4** Создание instant security alerts системы
-- [ ] **7.5.5** Добавление animated risk score visualizations (CSS-only)
-- [ ] **7.5.6** Реализация performance-focused security settings страницы
+- [ ] **7.6.1** Создание lightweight SecurityIndicator компонента
+- [ ] **7.6.2** Отображение real-time quantum protection status
+- [ ] **7.6.3** Показ fast AI risk analysis результатов
+- [ ] **7.6.4** Создание instant security alerts системы
+- [ ] **7.6.5** Добавление animated risk score visualizations (CSS-only)
+- [ ] **7.6.6** Реализация performance-focused security settings страницы
 
 **Checkpoint 7.5:** Высокопроизводительный custom UI для всех операций моста без внешних библиотек
 
