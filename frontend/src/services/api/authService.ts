@@ -109,8 +109,8 @@ class AuthService {
       status: "success",
       responseKeys: Object.keys(response),
       responseData: response,
-      hasToken: "token" in response,
-      tokenValue: response.token,
+      hasToken: "access_token" in response,
+      tokenValue: response.access_token,
     });
 
     // Save token in API client

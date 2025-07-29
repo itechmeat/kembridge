@@ -17,15 +17,20 @@ export const config = createConfig({
   }),
   connectors: [
     injected(),
-    walletConnect({
-      projectId: appConfig.wallet.walletConnectProjectId,
-      metadata: {
-        name: appConfig.app.name,
-        description: appConfig.app.description,
-        url: appConfig.app.url,
-        icons: [appConfig.app.iconUrl],
-      },
-    }),
+    // Only enable WalletConnect if project ID is configured
+    ...(appConfig.wallet.walletConnectProjectId
+      ? [
+          walletConnect({
+            projectId: appConfig.wallet.walletConnectProjectId,
+            metadata: {
+              name: appConfig.app.name,
+              description: appConfig.app.description,
+              url: appConfig.app.url,
+              icons: [appConfig.app.iconUrl],
+            },
+          }),
+        ]
+      : []),
     coinbaseWallet({
       appName: appConfig.app.name,
       appLogoUrl: appConfig.app.iconUrl,

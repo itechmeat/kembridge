@@ -137,6 +137,9 @@ pub const ADMIN_WALLET_PREFIX_2: &str = "admin";
 
 // Premium tier criteria
 pub const PREMIUM_WALLET_SUFFIX: &str = "premium";
+
+// 1inch API test constants
+pub const ONEINCH_TEST_FROM_ADDRESS: &str = "0x1111111254fb6c44bac0bed2854e76f90643097d"; // Test wallet address for 1inch quotes
 pub const PREMIUM_WALLET_MIN_LENGTH: usize = 42;
 
 // Price oracle defaults
@@ -218,6 +221,8 @@ pub const ETHEREUM_ZERO_ADDRESS: &str = "0x0000000000000000000000000000000000000
 // Token contract addresses
 pub const ETHEREUM_USDT_ADDRESS: &str = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 pub const ETHEREUM_USDC_ADDRESS: &str = "0xA0b86a33E6441041946Ffc3e6ED01E73c23e632";
+pub const ETHEREUM_DAI_ADDRESS: &str = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+pub const ETHEREUM_WBTC_ADDRESS: &str = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
 
 // Token decimals
 pub const USDT_DECIMALS: u8 = 6;

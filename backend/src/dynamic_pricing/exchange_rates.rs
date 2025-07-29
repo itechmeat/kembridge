@@ -1,17 +1,14 @@
 // src/dynamic_pricing/exchange_rates.rs - Exchange rate calculation logic
 
-use std::sync::Arc;
-use bigdecimal::BigDecimal;
 use anyhow::Result;
-use tracing::{debug, info, warn};
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
+use std::sync::Arc;
+use tracing::{debug, error, info, warn};
 
-use crate::{
-    price_oracle::PriceOracleService,
-    oneinch::OneinchService,
-    constants::*,
-};
+use crate::{constants::*, oneinch::OneinchService, price_oracle::PriceOracleService, utils::token_mapping::symbol_to_token_address};
 
-use super::types::*;
+use super::types::{DynamicPricingError, ExchangeRate};
 
 /// Exchange rate calculator for cross-chain operations
 pub struct ExchangeRateCalculator {
@@ -38,7 +35,10 @@ impl ExchangeRateCalculator {
         to_token: &str,
         amount: &BigDecimal,
     ) -> Result<ExchangeRate, DynamicPricingError> {
-        info!("Calculating exchange rate for {} {} -> {}", amount, from_token, to_token);
+        info!(
+            "Calculating exchange rate for {} {} -> {}",
+            amount, from_token, to_token
+        );
 
         // TODO (feat): Implement comprehensive exchange rate calculation (P3.2)
         // This should include:
@@ -49,15 +49,35 @@ impl ExchangeRateCalculator {
         // 5. Time-based rate stability analysis
 
         let oracle_rate = self.calculate_oracle_rate(from_token, to_token).await?;
-        let oneinch_rate = self.calculate_oneinch_rate(from_token, to_token, amount).await?;
-        let optimized_rate = self.optimize_rate(oracle_rate, oneinch_rate, amount).await?;
+        
+        // Check if this is a cross-chain pair that 1inch doesn't support
+        let is_cross_chain = self.is_cross_chain_pair(from_token, to_token);
+        
+        let (optimized_rate, rate_source) = if is_cross_chain {
+            // For cross-chain pairs, use only oracle data
+            info!("Cross-chain pair detected: {} -> {}, using oracle-only rate", from_token, to_token);
+            (oracle_rate, "oracle_cross_chain".to_string())
+        } else {
+            // For same-chain pairs, try 1inch integration
+            let oneinch_rate = self
+                .calculate_oneinch_rate(from_token, to_token, amount)
+                .await?;
+            let optimized = self
+                .optimize_rate(oracle_rate, oneinch_rate, amount)
+                .await?;
+            (optimized, "hybrid_oracle_oneinch".to_string())
+        };
 
-        let confidence_score = self.calculate_confidence_score(from_token, to_token, &optimized_rate).await?;
-        let volatility_indicator = self.calculate_volatility_indicator(from_token, to_token).await?;
+        let confidence_score = self
+            .calculate_confidence_score(from_token, to_token, &optimized_rate)
+            .await?;
+        let volatility_indicator = self
+            .calculate_volatility_indicator(from_token, to_token)
+            .await?;
 
         Ok(ExchangeRate {
             rate: optimized_rate,
-            rate_source: "hybrid_oracle_oneinch".to_string(),
+            rate_source,
             confidence_score,
             last_updated: chrono::Utc::now(),
             volatility_indicator,
@@ -70,26 +90,55 @@ impl ExchangeRateCalculator {
         from_token: &str,
         to_token: &str,
     ) -> Result<BigDecimal, DynamicPricingError> {
-        debug!("Calculating oracle-based rate for {} -> {}", from_token, to_token);
+        debug!(
+            "Calculating oracle-based rate for {} -> {}",
+            from_token, to_token
+        );
 
         // TODO (feat): Implement multi-oracle rate calculation (P3.2)
         // This should aggregate rates from multiple oracles
         // For now, using simple USD-based conversion
 
-        let from_price = self.price_oracle.get_price(&format!("{}/USD", from_token))
-            .await
-            .map_err(|e| DynamicPricingError::OracleError(e.to_string()))?;
+        // Try getting prices from oracle
+        let from_price_result = self
+            .price_oracle
+            .get_price(&format!("{}/USD", from_token))
+            .await;
+        let to_price_result = self
+            .price_oracle
+            .get_price(&format!("{}/USD", to_token))
+            .await;
 
-        let to_price = self.price_oracle.get_price(&format!("{}/USD", to_token))
-            .await
-            .map_err(|e| DynamicPricingError::OracleError(e.to_string()))?;
-
-        if to_price.price == BigDecimal::from(0) {
-            return Err(DynamicPricingError::ExchangeRateError("Zero to_price".to_string()));
+        match (from_price_result, to_price_result) {
+            (Ok(from_price), Ok(to_price)) => {
+                if to_price.price == BigDecimal::from(0) {
+                    return Err(DynamicPricingError::OracleError(
+                        "Zero price returned from oracle".to_string(),
+                    ));
+                } else {
+                    let rate = &from_price.price / &to_price.price;
+                    Ok(rate)
+                }
+            }
+            (Err(e1), Err(e2)) => {
+                return Err(DynamicPricingError::OracleError(format!(
+                    "Both price lookups failed: {} / {}",
+                    e1, e2
+                )));
+            }
+            (Err(e), Ok(_)) => {
+                return Err(DynamicPricingError::OracleError(format!(
+                    "From price failed: {}",
+                    e
+                )));
+            }
+            (Ok(_), Err(e)) => {
+                return Err(DynamicPricingError::OracleError(format!(
+                    "To price failed: {}",
+                    e
+                )));
+            }
         }
-
-        let rate = &from_price.price / &to_price.price;
-        Ok(rate)
     }
 
     /// Calculate 1inch-based exchange rate
@@ -99,29 +148,44 @@ impl ExchangeRateCalculator {
         to_token: &str,
         amount: &BigDecimal,
     ) -> Result<BigDecimal, DynamicPricingError> {
-        debug!("Calculating 1inch-based rate for {} {} -> {}", amount, from_token, to_token);
+        debug!(
+            "Calculating 1inch-based rate for {} {} -> {}",
+            amount, from_token, to_token
+        );
 
         // TODO (feat): Implement 1inch rate calculation (P3.2)
         // This should use actual 1inch quotes for real market rates
         // For now, using basic oracle fallback
 
-        match self.oneinch_service.get_quote(&crate::oneinch::types::QuoteParams {
-            from_token: from_token.to_string(),
-            to_token: to_token.to_string(),
-            amount: amount.clone(),
-            from_address: "".to_string(),
-            slippage: Some(EXCHANGE_RATE_DEFAULT_SLIPPAGE),
-            disable_estimate: Some(false),
-            allow_partial_fill: Some(true),
-            source: None,
-        }).await {
+        // Convert token symbols to addresses for 1inch API
+        let from_token_addr = symbol_to_token_address(from_token)
+            .map_err(|e| DynamicPricingError::QuoteValidationError(format!("Invalid from_token: {}", e)))?;
+        let to_token_addr = symbol_to_token_address(to_token)
+            .map_err(|e| DynamicPricingError::QuoteValidationError(format!("Invalid to_token: {}", e)))?;
+            
+        match self
+            .oneinch_service
+            .get_quote(&crate::oneinch::types::QuoteParams {
+                from_token: from_token_addr,
+                to_token: to_token_addr,
+                amount: amount.clone(),
+                from_address: "".to_string(),
+                slippage: Some(EXCHANGE_RATE_DEFAULT_SLIPPAGE),
+                disable_estimate: Some(false),
+                allow_partial_fill: Some(true),
+                source: None,
+            })
+            .await
+        {
             Ok(quote) => {
                 let rate = &quote.to_amount / &quote.from_amount;
                 Ok(rate)
             }
             Err(e) => {
-                warn!("Failed to get 1inch rate, falling back to oracle: {}", e);
-                self.calculate_oracle_rate(from_token, to_token).await
+                return Err(DynamicPricingError::OracleError(format!(
+                    "Failed to get 1inch rate: {}",
+                    e
+                )));
             }
         }
     }
@@ -133,7 +197,10 @@ impl ExchangeRateCalculator {
         oneinch_rate: BigDecimal,
         amount: &BigDecimal,
     ) -> Result<BigDecimal, DynamicPricingError> {
-        debug!("Optimizing rate: oracle={}, oneinch={}, amount={}", oracle_rate, oneinch_rate, amount);
+        debug!(
+            "Optimizing rate: oracle={}, oneinch={}, amount={}",
+            oracle_rate, oneinch_rate, amount
+        );
 
         // TODO (feat): Implement sophisticated rate optimization (P3.2)
         // This should consider:
@@ -143,12 +210,15 @@ impl ExchangeRateCalculator {
         // 4. Historical rate stability
         // For now, using weighted average
 
-        let oracle_weight = BigDecimal::try_from(EXCHANGE_RATE_ORACLE_WEIGHT).unwrap_or(BigDecimal::from(1));
-        let oneinch_weight = BigDecimal::try_from(EXCHANGE_RATE_ONEINCH_WEIGHT).unwrap_or(BigDecimal::from(1));
+        let oracle_weight =
+            BigDecimal::try_from(EXCHANGE_RATE_ORACLE_WEIGHT).unwrap_or(BigDecimal::from(1));
+        let oneinch_weight =
+            BigDecimal::try_from(EXCHANGE_RATE_ONEINCH_WEIGHT).unwrap_or(BigDecimal::from(1));
         let total_weight = &oracle_weight + &oneinch_weight;
 
-        let weighted_rate = (oracle_rate * oracle_weight + oneinch_rate * oneinch_weight) / total_weight;
-        
+        let weighted_rate =
+            (oracle_rate * oracle_weight + oneinch_rate * oneinch_weight) / total_weight;
+
         Ok(weighted_rate)
     }
 
@@ -157,9 +227,12 @@ impl ExchangeRateCalculator {
         &self,
         from_token: &str,
         to_token: &str,
-        rate: &BigDecimal,
+        _rate: &BigDecimal,
     ) -> Result<f64, DynamicPricingError> {
-        debug!("Calculating confidence score for {} -> {} rate", from_token, to_token);
+        debug!(
+            "Calculating confidence score for {} -> {} rate",
+            from_token, to_token
+        );
 
         // TODO (feat): Implement confidence score calculation (P3.2)
         // This should consider:
@@ -170,7 +243,7 @@ impl ExchangeRateCalculator {
         // For now, using basic score
 
         let base_confidence = EXCHANGE_RATE_BASE_CONFIDENCE;
-        
+
         // Adjust based on token pair popularity
         let popularity_bonus = match (from_token, to_token) {
             ("ETH", "NEAR") | ("NEAR", "ETH") => 0.1,
@@ -189,7 +262,10 @@ impl ExchangeRateCalculator {
         from_token: &str,
         to_token: &str,
     ) -> Result<f64, DynamicPricingError> {
-        debug!("Calculating volatility indicator for {} -> {}", from_token, to_token);
+        debug!(
+            "Calculating volatility indicator for {} -> {}",
+            from_token, to_token
+        );
 
         // TODO (feat): Implement volatility calculation (P3.2)
         // This should analyze:
@@ -208,6 +284,21 @@ impl ExchangeRateCalculator {
 
         Ok(base_volatility)
     }
+    
+    /// Check if token pair is cross-chain (requires bridge instead of 1inch)
+    fn is_cross_chain_pair(&self, from_token: &str, to_token: &str) -> bool {
+        // Define which tokens belong to which chains
+        let ethereum_tokens = ["ETH", "USDT", "USDC", "DAI", "WBTC"];
+        let near_tokens = ["NEAR", "wNEAR", "USDC.e"];
+        
+        let from_is_eth = ethereum_tokens.contains(&from_token);
+        let from_is_near = near_tokens.contains(&from_token);
+        let to_is_eth = ethereum_tokens.contains(&to_token);
+        let to_is_near = near_tokens.contains(&to_token);
+        
+        // Cross-chain if tokens are on different chains
+        (from_is_eth && to_is_near) || (from_is_near && to_is_eth)
+    }
 
     /// Get historical exchange rate
     pub async fn get_historical_rate(
@@ -216,16 +307,21 @@ impl ExchangeRateCalculator {
         to_token: &str,
         timestamp: chrono::DateTime<chrono::Utc>,
     ) -> Result<ExchangeRate, DynamicPricingError> {
-        debug!("Getting historical rate for {} -> {} at {}", from_token, to_token, timestamp);
+        debug!(
+            "Getting historical rate for {} -> {} at {}",
+            from_token, to_token, timestamp
+        );
 
         // TODO (feat): Implement historical rate retrieval (P3.2)
         // This would require historical data storage and retrieval
         // For now, returning current rate with historical timestamp
 
-        let mut current_rate = self.calculate_rate(from_token, to_token, &BigDecimal::from(1)).await?;
+        let mut current_rate = self
+            .calculate_rate(from_token, to_token, &BigDecimal::from(1))
+            .await?;
         current_rate.last_updated = timestamp;
         current_rate.rate_source = "historical_fallback".to_string();
-        
+
         Ok(current_rate)
     }
 }

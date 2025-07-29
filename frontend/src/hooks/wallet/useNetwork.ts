@@ -99,7 +99,7 @@ export const useNetwork = (): UseNetworkReturn => {
 
   // Switch network
   const switchNetwork = useCallback(
-    async (network: NetworkInfo): Promise<void> => {
+    async (): Promise<void> => {
       // TODO: Implement network switching
       console.warn("Network switching not yet implemented in new useWallet");
       throw new Error("Network switching not implemented");

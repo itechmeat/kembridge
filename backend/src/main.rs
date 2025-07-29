@@ -272,7 +272,7 @@ async fn main() -> anyhow::Result<()> {
 
 async fn create_application(state: AppState) -> anyhow::Result<Router> {
     let app = Router::new()
-        // Health & Status endpoints
+        // Health & Status endpoints (public)
         .route(API_ROUTE_HEALTH, get(handlers::health::health_check))
         .route(API_ROUTE_READY, get(handlers::health::readiness_check))
         .route(API_ROUTE_METRICS, get(handlers::health::metrics))
@@ -280,14 +280,17 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
         // WebSocket routes (before authentication middleware)
         .merge(routes::websocket::websocket_routes())
 
-        // API v1 routes
-        .nest("/api/v1", create_v1_routes())
-        
-        // JWT Authentication middleware for all API routes
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            middleware::auth::auth_middleware
-        ))
+        // Public API v1 routes (no authentication required)
+        .nest("/api/v1", create_public_v1_routes())
+
+        // Protected API v1 routes (authentication required)
+        .nest("/api/v1", 
+            create_protected_v1_routes()
+                .layer(axum::middleware::from_fn_with_state(
+                    state.clone(),
+                    middleware::auth::auth_middleware
+                ))
+        )
 
         // OpenAPI documentation (enabled conditionally)
         .merge(create_docs_routes(&state.config))
@@ -304,21 +307,31 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
     Ok(app)
 }
 
-fn create_v1_routes() -> Router<AppState> {
+fn create_public_v1_routes() -> Router<AppState> {
     Router::new()
-        // Authentication routes
+        // Authentication routes (public for login/register)
         .nest("/auth", routes::auth::create_routes())
+        
+        // Public bridge information routes
+        .route("/bridge/tokens", axum::routing::get(crate::handlers::bridge::get_supported_tokens))
+        .route("/bridge/quote", axum::routing::get(crate::handlers::bridge::get_quote))
+        
+        // Public swap information routes
+        .nest("/swap", create_public_swap_routes())
+}
 
-        // Bridge operation routes
+fn create_protected_v1_routes() -> Router<AppState> {
+    Router::new()
+        // Bridge operation routes (protected)
         .nest("/bridge", routes::bridge::create_routes())
 
-        // Quantum cryptography routes
+        // Quantum cryptography routes (protected)
         .nest("/crypto", routes::quantum::create_routes())
 
-        // User management routes
+        // User management routes (protected)
         .nest("/user", routes::user::create_routes())
 
-        // Risk analysis routes
+        // Risk analysis routes (protected)
         .nest("/risk", routes::risk::create_routes())
 
         // Admin routes (protected)
@@ -333,14 +346,47 @@ fn create_v1_routes() -> Router<AppState> {
         // Price Oracle routes (protected)
         .nest("/price", routes::price_oracle::price_oracle_routes())
         
-        // 1inch Fusion+ routes (protected)
-        .nest("/swap", routes::oneinch::create_oneinch_routes())
+        // Protected 1inch Fusion+ routes (swap execution, quotes with private data)
+        .nest("/swap", create_protected_swap_routes())
         
         // 1inch Fusion+ cross-chain routes (protected)
         .nest("/fusion-plus", routes::fusion_plus::create_fusion_plus_routes())
         
         // Bridge-1inch integration routes (protected)
         .nest("/bridge-oneinch", routes::bridge_oneinch::create_bridge_oneinch_routes())
+}
+
+fn create_public_swap_routes() -> Router<AppState> {
+    use axum::routing::get;
+    
+    Router::new()
+        // Public token information endpoints
+        .route("/tokens", get(handlers::oneinch::get_supported_tokens))
+        .route("/health", get(handlers::oneinch::health_check))
+}
+
+fn create_protected_swap_routes() -> Router<AppState> {
+    use axum::routing::{get, post};
+    
+    Router::new()
+        // Quote endpoints (protected)
+        .route("/quote", post(handlers::oneinch::get_quote))
+        .route("/quote/enhanced", post(handlers::oneinch::get_enhanced_quote))
+        
+        // Intelligent routing endpoints (protected)
+        .route("/routing/intelligent", post(handlers::oneinch::get_intelligent_routing))
+        
+        // Swap execution endpoints (protected)
+        .route("/execute", post(handlers::oneinch::execute_swap))
+        .route("/execute-signed", post(handlers::oneinch::execute_signed_swap))
+        
+        // Order management endpoints (protected)
+        .route("/order/{order_hash}", get(handlers::oneinch::get_order_status))
+        
+        // Advanced health and status endpoints (protected)
+        .route("/health/comprehensive", get(handlers::oneinch::comprehensive_health_check))
+        .route("/validate-api-key", get(handlers::oneinch::validate_api_key))
+        .route("/liquidity/{from_token}/{to_token}", get(handlers::oneinch::get_liquidity_info))
 }
 
 fn create_docs_routes(config: &AppConfig) -> Router<AppState> {

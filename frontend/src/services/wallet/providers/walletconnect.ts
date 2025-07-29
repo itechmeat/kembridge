@@ -26,7 +26,9 @@ export class WalletConnectProvider implements WalletProvider {
   readonly name = "WalletConnect";
   readonly icon = "🔗";
   readonly isInstalled = true; // WalletConnect doesn't require installation
-  readonly isAvailable = true;
+  get isAvailable(): boolean {
+    return !!appConfig.wallet.walletConnectProjectId;
+  }
 
   /**
    * Event handler methods for wallet event system
@@ -56,6 +58,12 @@ export class WalletConnectProvider implements WalletProvider {
    * Initialize WalletConnect provider with real configuration
    */
   private async initializeProvider(): Promise<EthereumProvider> {
+    if (!this.isAvailable) {
+      throw new Error(
+        "WalletConnect is not available - Project ID not configured"
+      );
+    }
+
     if (this.provider) {
       return this.provider;
     }

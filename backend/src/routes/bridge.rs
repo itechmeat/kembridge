@@ -5,13 +5,10 @@ use axum::{
 };
 use crate::state::AppState;
 
-/// Create bridge operation routes
+/// Create bridge operation routes (protected)
 /// These will be fully implemented in Phase 4.3 - Basic Bridge Logic
 pub fn create_routes() -> Router<AppState> {
     Router::new()
-        // Get swap quote (Phase 6.3.5)
-        .route("/quote", get(crate::handlers::bridge::get_quote))
-        
         // Initiate cross-chain swap (Phase 4.3.4)
         .route("/swap", post(crate::handlers::bridge::initiate_swap))
         

@@ -1,6 +1,7 @@
 // src/oneinch/client.rs - HTTP client for 1inch Fusion+ API
 
 use super::{types::*, validation::*};
+use bigdecimal::BigDecimal;
 use crate::constants::*;
 use reqwest::{Client, header::{HeaderMap, HeaderValue, AUTHORIZATION}};
 use serde_json::Value;
@@ -71,10 +72,10 @@ impl FusionClient {
         }
     }
 
-    /// Get quote for token swap using proper 1inch Fusion API
+    /// Get quote for token swap using 1inch Swap API (more reliable for price data)
     pub async fn get_quote(&self, params: &QuoteParams) -> Result<FusionQuote, OneinchError> {
-        // Use proper 1inch Fusion quote endpoint
-        let url = format!("{}/quote", self.base_url);
+        // Use 1inch Swap API instead of Fusion API for better reliability
+        let url = format!("{}/{}/quote", ONEINCH_SWAP_API_BASE, self.chain_id);
         
         // Validate required parameters
         if params.from_token.is_empty() || params.to_token.is_empty() {
@@ -85,44 +86,78 @@ impl FusionClient {
             return Err(OneinchError::InvalidParams("Amount must be greater than 0".to_string()));
         }
 
-        // Build request according to 1inch Fusion API spec
-        let mut request_body = serde_json::json!({
-            "fromTokenAddress": params.from_token,
-            "toTokenAddress": params.to_token,
-            "amount": params.amount.to_string(),
-            "walletAddress": params.from_address,
-            "source": params.source.as_ref().unwrap_or(&ONEINCH_DEFAULT_SOURCE.to_string())
-        });
+        // Build request according to 1inch Swap API spec (GET with query parameters)
+        let amount_str = params.amount.to_string();
+        let mut query_params = vec![
+            ("src", params.from_token.as_str()),
+            ("dst", params.to_token.as_str()),
+            ("amount", &amount_str),
+            ("from", &params.from_address),
+        ];
 
         // Add optional parameters if provided
+        let slippage_str;
         if let Some(slippage) = params.slippage {
             if slippage < 0.0 || slippage > 50.0 {
                 return Err(OneinchError::InvalidParams("Slippage must be between 0 and 50%".to_string()));
             }
-            request_body["slippage"] = serde_json::Value::Number(
-                serde_json::Number::from_f64(slippage)
-                    .ok_or_else(|| OneinchError::InvalidParams("Invalid slippage value".to_string()))?
-            );
+            slippage_str = slippage.to_string();
+            query_params.push(("slippage", &slippage_str));
         }
 
+        let disable_estimate_str;
         if let Some(disable_estimate) = params.disable_estimate {
-            request_body["disableEstimate"] = serde_json::Value::Bool(disable_estimate);
+            disable_estimate_str = disable_estimate.to_string();
+            query_params.push(("disableEstimate", &disable_estimate_str));
         }
 
+        let allow_partial_fill_str;
         if let Some(allow_partial_fill) = params.allow_partial_fill {
-            request_body["allowPartialFill"] = serde_json::Value::Bool(allow_partial_fill);
+            allow_partial_fill_str = allow_partial_fill.to_string();
+            query_params.push(("allowPartialFill", &allow_partial_fill_str));
         }
 
-        info!("🔄 Requesting 1inch Fusion quote: {} {} -> {}", 
+        info!("🔄 Requesting 1inch Swap quote: {} {} -> {}", 
             params.amount, params.from_token, params.to_token);
 
         let response = self.execute_with_retry(|| {
-            self.client.post(&url).json(&request_body).send()
+            self.client.get(&url).query(&query_params).send()
         }).await?;
 
-        let quote: FusionQuote = self.handle_response(response).await?;
+        let swap_quote: SwapQuote = self.handle_response(response).await?;
         
-        info!("✅ Received 1inch Fusion quote: {} -> {} (gas: {})", 
+        // Convert SwapQuote to FusionQuote for compatibility
+        // Create minimal token objects from addresses since 1inch Swap API doesn't return full token data
+        let from_token = Token {
+            address: params.from_token.clone(),
+            symbol: "FROM".to_string(), // Placeholder
+            name: "From Token".to_string(),
+            decimals: 18,
+            logo_uri: None,
+        };
+        
+        let to_token = Token {
+            address: params.to_token.clone(),
+            symbol: "TO".to_string(), // Placeholder
+            name: "To Token".to_string(),
+            decimals: 18,
+            logo_uri: None,
+        };
+        
+        let quote = FusionQuote {
+            from_token,
+            to_token,
+            from_amount: params.amount.clone(), // Use original amount
+            to_amount: swap_quote.dst_amount.parse().unwrap_or_default(), // Use dst_amount from response
+            protocols: swap_quote.protocols.unwrap_or_default(),
+            estimated_gas: swap_quote.estimated_gas.unwrap_or_else(|| "0".to_string()).parse().unwrap_or_default(),
+            gas_price: BigDecimal::from(0), // Not provided by Swap API
+            quote_id: format!("swap-{}", chrono::Utc::now().timestamp()), // Generate for compatibility
+            created_at: chrono::Utc::now(),
+            expires_at: chrono::Utc::now() + chrono::Duration::minutes(5), // 5 minute default
+        };
+        
+        info!("✅ Received 1inch Swap quote: {} -> {} (gas: {})", 
             quote.from_amount, quote.to_amount, quote.estimated_gas);
             
         Ok(quote)
@@ -199,12 +234,13 @@ impl FusionClient {
 
     /// Get supported tokens for current chain from 1inch
     pub async fn get_tokens(&self) -> Result<Vec<Token>, OneinchError> {
-        let url = format!("{}/tokens", self.base_url);
+        // Use Swap API for tokens instead of Fusion API as it has better support
+        let swap_api_url = format!("{}/{}/tokens", ONEINCH_SWAP_API_BASE, self.chain_id);
 
-        info!("🔄 Fetching supported tokens from 1inch for chain {}", self.chain_id);
+        info!("🔄 Fetching supported tokens from 1inch Swap API for chain {}", self.chain_id);
 
         let response = self.execute_with_retry(|| {
-            self.client.get(&url).send()
+            self.client.get(&swap_api_url).send()
         }).await?;
 
         // 1inch returns tokens as a map with address as key
@@ -222,7 +258,7 @@ impl FusionClient {
             }
         }
 
-        info!("✅ Fetched {} supported tokens from 1inch", tokens.len());
+        info!("✅ Fetched {} supported tokens from 1inch Swap API", tokens.len());
         Ok(tokens)
     }
 

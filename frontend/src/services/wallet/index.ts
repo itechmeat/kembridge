@@ -22,6 +22,7 @@ import { WalletManager } from "./manager";
 import { MetaMaskProvider } from "./providers/metamask";
 import { NearProvider } from "./providers/near";
 import { WalletConnectProvider } from "./providers/walletconnect";
+import { appConfig } from "../../config/env";
 
 let globalWalletManager: WalletManager | null = null;
 
@@ -45,7 +46,22 @@ export const initializeWalletService = (): WalletManager => {
     globalWalletManager.registerProvider(new NearProvider());
     console.log("✅ Wallet Service: NEAR provider registered");
 
-    globalWalletManager.registerProvider(new WalletConnectProvider());
+    // Only register WalletConnect if properly configured
+    const walletConnectProvider = new WalletConnectProvider();
+    console.log("🔍 Wallet Service: WalletConnect check", {
+      projectId: appConfig.wallet.walletConnectProjectId,
+      isAvailable: walletConnectProvider.isAvailable,
+    });
+
+    if (walletConnectProvider.isAvailable) {
+      console.log("📦 Wallet Service: Registering WalletConnect provider...");
+      globalWalletManager.registerProvider(walletConnectProvider);
+      console.log("✅ Wallet Service: WalletConnect provider registered");
+    } else {
+      console.log(
+        "⚠️ Wallet Service: WalletConnect provider skipped (Project ID not configured)"
+      );
+    }
 
     // TODO (feat): Add Coinbase provider
     // globalWalletManager.registerProvider(new CoinbaseProvider());

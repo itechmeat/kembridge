@@ -25,7 +25,7 @@ export const API_CONFIG = {
   TOKEN_STORAGE_KEY: "kembridge_auth_token",
 
   // WebSocket URL for real-time monitoring
-  WS_URL: import.meta.env.VITE_WS_URL || "ws://localhost:4000/api/ws",
+  WS_URL: import.meta.env.VITE_WS_URL || "ws://localhost:4000/ws",
 } as const;
 // API endpoints - following the backend routes structure
 export const API_ENDPOINTS = {
@@ -48,10 +48,11 @@ export const API_ENDPOINTS = {
 
   // Bridge endpoints - from bridge.rs routes
   BRIDGE: {
-    INIT_SWAP: "/bridge/init-swap",
+    INIT_SWAP: "/bridge/swap",
     STATUS: "/bridge/status",
     QUOTE: "/bridge/quote",
     HISTORY: "/bridge/history",
+    SUPPORTED_TOKENS: "/bridge/tokens",
   },
 
   // Quantum crypto endpoints - from quantum.rs routes
@@ -76,8 +77,8 @@ export const API_ENDPOINTS = {
 
   // WebSocket endpoints
   WEBSOCKET: {
-    CONNECT: "/api/ws",
-    MONITORING: "/api/ws/monitoring",
+    CONNECT: "/ws",
+    MONITORING: "/ws/monitoring",
   },
 } as const;
 

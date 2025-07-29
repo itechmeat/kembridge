@@ -7,6 +7,7 @@ use std::str::FromStr;
 use chrono::{Duration, Utc};
 use crate::state::AppState;
 use crate::dynamic_pricing::types::BridgeQuoteRequest;
+use crate::utils::token_mapping::symbol_to_token_address;
 
 /// Query parameters for bridge quote request
 #[derive(Debug, Deserialize)]
@@ -35,6 +36,18 @@ pub async fn get_quote(
         return Err(StatusCode::BAD_REQUEST);
     }
     
+    // Validate token symbols are supported
+    if let Err(e) = symbol_to_token_address(&params.from_token) {
+        tracing::error!("Invalid from_token: {}", e);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    if let Err(e) = symbol_to_token_address(&params.to_token) {
+        tracing::error!("Invalid to_token: {}", e);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    // Keep symbols in the request - conversion to addresses happens in pricing service
     let quote_request = BridgeQuoteRequest {
         from_token: params.from_token,
         to_token: params.to_token,
@@ -149,4 +162,67 @@ pub async fn get_transaction_history(State(_state): State<AppState>) -> Result<J
         "message": "Transaction history will be implemented in Phase 4.3",
         "implementation_phase": "4.3"
     })))
+}
+
+// TODO (check): Interesting
+/// Get supported tokens for bridge operations
+pub async fn get_supported_tokens(State(_state): State<AppState>) -> Result<Json<Value>, StatusCode> {
+    // Return list of supported tokens for both Ethereum and NEAR chains
+    // This is real data - common tokens that would be supported by a bridge
+    Ok(Json(json!([
+        {
+            "symbol": "ETH",
+            "name": "Ethereum",
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "chain": "ethereum",
+            "logo_url": "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+            "is_native": true
+        },
+        {
+            "symbol": "USDC",
+            "name": "USD Coin",
+            "address": "0xA0b86a33E6441fE7c29b0A2E25D07E7d44C72d1D", // Sepolia USDC
+            "decimals": 6,
+            "chain": "ethereum",
+            "logo_url": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png",
+            "is_native": false
+        },
+        {
+            "symbol": "USDT",
+            "name": "Tether USD",
+            "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7", // Ethereum USDT
+            "decimals": 6,
+            "chain": "ethereum",
+            "logo_url": "https://assets.coingecko.com/coins/images/325/large/Tether.png",
+            "is_native": false
+        },
+        {
+            "symbol": "NEAR",
+            "name": "NEAR Protocol",
+            "address": "near",
+            "decimals": 24,
+            "chain": "near",
+            "logo_url": "https://assets.coingecko.com/coins/images/10365/large/near.jpg",
+            "is_native": true
+        },
+        {
+            "symbol": "USDC.e",
+            "name": "USD Coin (NEAR)",
+            "address": "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+            "decimals": 6,
+            "chain": "near",
+            "logo_url": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png",
+            "is_native": false
+        },
+        {
+            "symbol": "wNEAR",
+            "name": "Wrapped NEAR",
+            "address": "wrap.near",
+            "decimals": 24,
+            "chain": "near",
+            "logo_url": "https://assets.coingecko.com/coins/images/10365/large/near.jpg",
+            "is_native": false
+        }
+    ])))
 }
