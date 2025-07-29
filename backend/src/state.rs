@@ -110,14 +110,15 @@ impl AppState {
         );
 
         // Initialize 1inch service FIRST (Phase 6.2) - needed for price oracle
+        let oneinch_api_key = config.oneinch_api_key.clone()
+            .ok_or_else(|| anyhow::anyhow!("1inch API key is required! Set ONEINCH_API_KEY environment variable. 1inch services will be unavailable."))?;
+        
         let oneinch_service = Arc::new(
             OneinchService::new(
-                config.oneinch_api_key.clone().unwrap_or_else(|| {
-                    panic!("1inch API key is required! Set ONEINCH_API_KEY environment variable")
-                }),
+                oneinch_api_key.clone(),
                 config.ethereum_chain_id.unwrap_or(11155111), // Default to Sepolia testnet
             )
-            .with_fusion_plus(config.oneinch_api_key.clone()), // Enable Fusion+ cross-chain functionality
+            .with_fusion_plus(Some(oneinch_api_key)), // Enable Fusion+ cross-chain functionality
         );
 
         // Initialize price oracle service with 1inch as primary (Phase 6.1)
@@ -127,7 +128,10 @@ impl AppState {
                 Arc::new(config.clone()),
                 oneinch_service.clone(),
             )
-            .await?,
+            .await
+            .map_err(|e| {
+                anyhow::anyhow!("Failed to initialize PriceOracleService: {}. This will affect price quotes but won't crash the server.", e)
+            })?
         );
 
         // Initialize dynamic pricing service (Phase 6.3)

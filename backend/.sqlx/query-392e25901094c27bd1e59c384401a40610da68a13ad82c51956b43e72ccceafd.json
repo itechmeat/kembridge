@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                id,\n                transaction_id,\n                old_risk_score,\n                new_risk_score,\n                COALESCE(risk_factors, '{}'::jsonb) as risk_factors,\n                ai_analysis_version,\n                created_at as change_timestamp\n            FROM risk_score_history \n            WHERE transaction_id = $1\n            ORDER BY created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "transaction_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "old_risk_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "new_risk_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "risk_factors",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_analysis_version",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "change_timestamp",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      null,
+      true,
+      false
+    ]
+  },
+  "hash": "392e25901094c27bd1e59c384401a40610da68a13ad82c51956b43e72ccceafd"
+}

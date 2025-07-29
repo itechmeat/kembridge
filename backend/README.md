@@ -4,15 +4,36 @@ Rust 1.88+ backend for KEMBridge quantum-secure cross-chain bridge with PostgreS
 
 ## Quick Start
 
+### Using Makefile (Recommended)
+
 ```bash
-# Start all services
+# Start all services with hot reload
 make dev
+
+# Start in background mode
+make dev-detached
 
 # Check system health
 curl http://localhost:4000/health
 
 # View API documentation
 open http://localhost:4000/docs
+```
+
+### Manual Docker Commands
+
+```bash
+# Build and start all services
+docker-compose up --build
+
+# Start in background
+docker-compose up -d
+
+# Rebuild without cache
+docker-compose build --no-cache && docker-compose down && docker-compose up -d
+
+# Start specific service
+docker-compose up -d postgres redis backend
 ```
 
 ## Architecture
@@ -58,41 +79,105 @@ open http://localhost:4000/docs
 | AI Engine   | 4003 | http://localhost:4003 |
 | Prometheus  | 4004 | http://localhost:4004 |
 
-## Development
+## Development Setup
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Rust 1.88+ (with nightly toolchain for edition 2024)
-- PostgreSQL 18 Beta 1
+- **Docker & Docker Compose** (required)
+- **Rust 1.88+** (with edition 2024 support)
+- **Make** (for convenience commands)
 
-### Commands
+### Development Commands
+
+#### Primary Commands (Use Makefile)
 
 ```bash
-# Development mode with hot reload
+# Start all services with hot reload
 make dev
 
-# Check compilation
-cargo check --package kembridge-auth
+# Start in background mode
+make dev-detached
+
+# View logs from all services
+make logs
+
+# View logs from specific service
+make logs-backend
+make logs-frontend
+make logs-postgres
+
+# Run health checks
+make health
 
 # Database migrations
 make migrate
 
-# View logs
-make logs
+# Access service shells
+make shell-backend
+make shell-frontend
 
-# Cleanup
+# Complete cleanup (removes all data)
 make clean
 ```
 
-### Database Connection
+#### Docker Compose Commands
+
+```bash
+# Build and start all services
+docker-compose up --build
+
+# Start specific service
+docker-compose up -d postgres redis
+
+# View logs for specific service
+docker-compose logs -f backend
+docker-compose logs -f postgres
+
+# Restart specific service
+docker-compose restart backend
+
+# Stop all services
+docker-compose down
+
+# Clean rebuild (removes cached layers)
+docker-compose build --no-cache
+docker-compose down
+docker-compose up -d
+```
+
+#### Backend Commands (within container)
+
+```bash
+# Access backend container shell
+make shell-backend
+# OR: docker-compose exec backend bash
+
+# Run specific binary
+cargo run --bin kembridge-backend
+
+# Run integration tests
+cargo run --bin test_api_integration
+cargo run --bin test_auth_system
+cargo run --bin test_auth_http
+
+# Check code compilation
+cargo check
+
+# Database migrations (from within container)
+sqlx migrate run
+```
+
+### Database & Cache Access
 
 ```bash
 # Connect to PostgreSQL
 docker-compose exec postgres psql -U postgres -d kembridge_dev
 
-# Check Redis
-docker-compose exec redis redis-cli
+# Connect to Redis
+docker-compose exec redis redis-cli -a dev_redis_password
+
+# Check database connection
+docker-compose exec postgres pg_isready -U postgres
 ```
 
 ## Testing Authentication & JWT
@@ -175,37 +260,156 @@ curl -X POST http://localhost:4000/api/v1/auth/logout \
 | `006_transactions_advanced_postgresql18.sql`    | Cross-chain transactions       |
 | `007_audit_logs_comprehensive_postgresql18.sql` | Audit logging                  |
 
-## Environment Variables
+## Configuration
+
+### Environment Variables
+
+The project uses environment variables defined in `docker-compose.yml`. For local development, these are automatically configured:
 
 ```env
-DATABASE_URL=postgresql://postgres:dev_password@localhost:5432/kembridge_dev
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-secret-key
+# Database
+DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+REDIS_URL=redis://:dev_redis_password@redis:6379
+
+# Authentication
+JWT_SECRET=hackathon-super-secret-key-change-in-production
+
+# API Services
+ONEINCH_API_KEY=your_api_key_here
+ETHEREUM_RPC_URL=https://rpc.sepolia.org
+NEAR_RPC_URL=https://rpc.testnet.near.org
+AI_ENGINE_URL=http://ai-engine:8000
+
+# Server Configuration
 PORT=4000
+HOST=0.0.0.0
 ENVIRONMENT=development
+ENABLE_SWAGGER_UI=true
+CORS_ALLOWED_ORIGINS=http://localhost:4001,http://localhost:4100
+
+# Blockchain
+ETHEREUM_CHAIN_ID=11155111  # Sepolia testnet
 ```
+
+### Docker Services Configuration
+
+| Service    | Container Port | Host Port | Purpose                   |
+|------------|----------------|-----------|---------------------------|
+| backend    | 4000           | 4000      | Rust API server          |
+| frontend   | 3000           | 4001      | React development server |
+| grafana    | 3000           | 4002      | Monitoring dashboards    |
+| ai-engine  | 8000           | 4003      | Python FastAPI service   |
+| prometheus | 9090           | 4004      | Metrics collection       |
+| postgres   | 5432           | 5432      | PostgreSQL database      |
+| redis      | 6379           | 6379      | Cache and sessions       |
 
 ## Troubleshooting
 
-### Common Issues
+### Health Checks
 
 ```bash
-# Check services status
+# Check all services status
 docker-compose ps
 
-# View specific logs
-docker-compose logs backend
-docker-compose logs postgres
-docker-compose logs redis
+# Health check via Makefile
+make health
 
-# Database health
-docker-compose exec postgres pg_isready -U postgres
-
-# Check compilation
-cargo check --package kembridge-auth
+# Manual health checks
+curl http://localhost:4000/health        # Backend API
+curl http://localhost:4003/health        # AI Engine
+open http://localhost:4002               # Grafana (admin:admin)
+open http://localhost:4004               # Prometheus
 ```
 
-### Performance
+### Viewing Logs
+
+```bash
+# All services logs
+make logs
+
+# Specific service logs
+docker-compose logs -f backend
+docker-compose logs -f postgres
+docker-compose logs -f redis
+docker-compose logs -f ai-engine
+
+# Backend with timestamp
+docker-compose logs -f --timestamps backend
+```
+
+### Common Issues & Solutions
+
+#### Backend Not Starting
+
+```bash
+# Check compilation errors
+docker-compose logs backend
+
+# Access container for debugging
+docker-compose exec backend bash
+cargo check
+
+# Rebuild backend service
+docker-compose build backend
+docker-compose restart backend
+```
+
+#### Database Connection Issues
+
+```bash
+# Check PostgreSQL health
+docker-compose exec postgres pg_isready -U postgres
+
+# Check database logs
+docker-compose logs postgres
+
+# Test connection from backend
+docker-compose exec backend bash
+psql postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+```
+
+#### Redis Connection Issues
+
+```bash
+# Check Redis health
+docker-compose exec redis redis-cli -a dev_redis_password ping
+
+# Check Redis logs
+docker-compose logs redis
+
+# Clear Redis cache if needed
+docker-compose exec redis redis-cli -a dev_redis_password FLUSHALL
+```
+
+#### Port Conflicts
+
+```bash
+# Check what's using ports
+lsof -i :4000  # Backend
+lsof -i :4001  # Frontend
+lsof -i :5432  # PostgreSQL
+lsof -i :6379  # Redis
+
+# Kill conflicting processes
+sudo lsof -ti:4000 | xargs kill -9
+```
+
+#### Complete Reset
+
+```bash
+# Nuclear option - removes all data
+make clean
+
+# Manual cleanup
+docker-compose down -v --remove-orphans
+docker system prune -f
+docker volume prune -f
+make dev
+```
+
+### Performance Monitoring
+
+#### Database Performance
 
 ```sql
 -- Monitor query performance
@@ -217,6 +421,35 @@ ORDER BY total_time DESC LIMIT 10;
 SELECT schemaname, tablename, attname, n_distinct
 FROM pg_stats
 WHERE tablename IN ('users', 'transactions', 'audit_logs');
+
+-- Check active connections
+SELECT count(*), state FROM pg_stat_activity GROUP BY state;
+```
+
+#### Service Monitoring
+
+```bash
+# View Prometheus metrics
+open http://localhost:4004/metrics
+
+# View Grafana dashboards
+open http://localhost:4002  # admin:admin
+
+# Backend metrics endpoint
+curl http://localhost:4000/metrics
+```
+
+#### Docker Resource Usage
+
+```bash
+# Monitor container resources
+docker stats
+
+# Check disk usage
+docker system df
+
+# Container logs size
+docker-compose logs --tail=0 backend | wc -l
 ```
 
 ## Current Implementation Status

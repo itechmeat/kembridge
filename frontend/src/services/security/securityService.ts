@@ -18,7 +18,7 @@ export class SecurityService {
     try {
       // TODO (feat): Replace with real API endpoint when quantum crypto status API is ready
       // For now using mock data to enable development
-      const response = await apiClient.get<SecurityStatusResponse>('/api/v1/crypto/status');
+      const response = await apiClient.get<SecurityStatusResponse>('/crypto/status');
       return response.data;
     } catch (error) {
       console.warn('Security status API not available, using fallback', error);
@@ -49,7 +49,7 @@ export class SecurityService {
    */
   static async getSecuritySettings(): Promise<SecuritySettings> {
     try {
-      const response = await apiClient.get<SecuritySettingsResponse>('/api/v1/user/security-settings');
+      const response = await apiClient.get<SecuritySettingsResponse>('/user/security-settings');
       return response.data;
     } catch (error) {
       console.warn('Security settings API not available, using defaults', error);
@@ -87,7 +87,7 @@ export class SecurityService {
   static async updateSecuritySettings(settings: SecuritySettings): Promise<SecuritySettings> {
     try {
       const response = await apiClient.put<SecuritySettingsResponse>(
-        '/api/v1/user/security-settings',
+        '/user/security-settings',
         settings
       );
       return response.data;
@@ -102,7 +102,7 @@ export class SecurityService {
    */
   static async checkKeyRotationDue(): Promise<boolean> {
     try {
-      const response = await apiClient.get('/api/v1/crypto/keys/check-rotation') as { data: { rotationDue?: boolean } };
+      const response = await apiClient.get('/crypto/keys/check-rotation') as { data: { rotationDue?: boolean } };
       return Boolean(response.data.rotationDue);
     } catch (error) {
       console.warn('Key rotation check failed:', error);
@@ -115,7 +115,7 @@ export class SecurityService {
    */
   static async triggerKeyRotation(): Promise<void> {
     try {
-      await apiClient.post('/api/v1/crypto/keys/rotate', {
+      await apiClient.post('/crypto/keys/rotate', {
         reason: 'manual_user_request'
       });
     } catch (error) {
@@ -135,8 +135,8 @@ export class SecurityService {
     try {
       const [backendHealth, aiHealth, blockchainHealth] = await Promise.allSettled([
         apiClient.get('/health'),
-        apiClient.get('/api/v1/risk/health'),
-        apiClient.get('/api/v1/blockchain/health')
+        apiClient.get('/risk/health'),
+        apiClient.get('/blockchain/health')
       ]);
 
       return {

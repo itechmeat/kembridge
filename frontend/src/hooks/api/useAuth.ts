@@ -8,6 +8,7 @@ import { useState, useCallback, useEffect } from "react";
 import { authService } from "../../services/api/authService";
 import { useAccount } from "wagmi";
 import { useSignMessage } from "wagmi";
+import { Buffer } from "buffer";
 import { useNearWallet } from "../wallet/useNearWallet";
 
 // Query keys for caching
@@ -196,16 +197,16 @@ export const useEthereumAuth = () => {
  * Hook for NEAR authentication
  */
 export const useNearAuth = () => {
-  const { accountId, isConnected } = useNearWallet();
-  // TODO: Implement NEAR authentication
-  // const getNonce = useGetNonce();
-  // const verifyWallet = useVerifyWallet();
+  const { accountId, isConnected, selector } = useNearWallet();
+  const getNonce = useGetNonce();
+  const verifyWallet = useVerifyWallet();
+  const queryClient = useQueryClient();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const authenticate = useCallback(async () => {
-    if (!accountId || !isConnected) {
-      throw new Error("NEAR wallet not connected");
+    if (!accountId || !isConnected || !selector) {
+      throw new Error("NEAR wallet not connected or selector not available");
     }
 
     setIsAuthenticating(true);
@@ -214,14 +215,66 @@ export const useNearAuth = () => {
     try {
       console.log("🔐 NEAR Auth: Starting authentication for:", accountId);
 
-      console.log(
-        "📝 NEAR Auth: Using message from nonce response for signing"
-      );
+      // 1. Get nonce from backend
+      const nonceData = await getNonce.mutateAsync({
+        walletAddress: accountId,
+        chainType: "near",
+      });
 
-      // Real NEAR message signing required - no mock implementation
-      throw new Error(
-        "NEAR wallet message signing not implemented - real signature required"
-      );
+      // 2. Use message from backend nonce response
+      const message = nonceData.message;
+      console.log("📝 NEAR Auth: Using message from nonce response for signing");
+
+      // 3. Sign message using NEAR Wallet Selector
+      console.log("🖊️ NEAR Auth: Requesting signature for message:", message);
+
+      const wallet = await selector.wallet();
+      
+      // NEAR wallet signing requires specific format
+      const signRequest = {
+        message: message,
+        recipient: "kembridge.testnet",
+        nonce: Buffer.from(nonceData.nonce, 'hex'),
+      };
+      
+      const signedMessage = await (wallet.signMessage as (request: typeof signRequest) => Promise<{accountId: string; publicKey: string; signature: string; state?: string} | void>)(signRequest);
+
+      if (!signedMessage) {
+        throw new Error("Failed to sign message with NEAR wallet");
+      }
+
+      console.log("✍️ NEAR Auth: Message signed successfully", {
+        signature: signedMessage.signature,
+        publicKey: signedMessage.publicKey,
+      });
+
+      // The signature is already a string from NEAR Wallet Selector
+      const signatureBase64 = signedMessage.signature;
+
+      // 4. Verify signature on backend
+      const authResult = await verifyWallet.mutateAsync({
+        walletAddress: accountId,
+        signature: signatureBase64,
+        nonce: nonceData.nonce,
+        chainType: "near",
+        message,
+      });
+
+      console.log("🎉 NEAR Auth: Authentication completed successfully");
+
+      // Check if token is actually saved after authentication
+      const tokenAfterAuth = authService.getToken();
+      const isAuthAfterAuth = authService.isAuthenticated();
+      console.log("🔍 NEAR Auth: Post-auth token check", {
+        tokenExists: !!tokenAfterAuth,
+        isAuthenticated: isAuthAfterAuth,
+        tokenLength: tokenAfterAuth?.length || 0,
+      });
+
+      // Invalidate queries for UI updates
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+
+      return authResult;
     } catch (err) {
       console.error("❌ NEAR Auth: Authentication failed:", err);
       const authError = err instanceof Error ? err : new Error(String(err));
@@ -230,12 +283,12 @@ export const useNearAuth = () => {
     } finally {
       setIsAuthenticating(false);
     }
-  }, [accountId, isConnected]);
+  }, [accountId, isConnected, selector, getNonce, verifyWallet, queryClient]);
 
   return {
     authenticate,
     isAuthenticating,
-    isReady: isConnected && !!accountId,
+    isReady: isConnected && !!accountId && !!selector,
     walletAddress: accountId,
     isPending: isAuthenticating,
     error,

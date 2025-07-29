@@ -14,7 +14,7 @@ use tracing::{info, warn};
 
 pub struct BridgeService {
     ethereum_adapter: Arc<EthereumAdapter>,
-    near_adapter: Arc<NearAdapter>,
+    near_adapter: Option<Arc<NearAdapter>>,
     quantum_manager: Arc<QuantumKeyManager>,
     swap_engine: SwapEngine,
     state_machine: StateMachine,
@@ -26,13 +26,17 @@ pub struct BridgeService {
 impl BridgeService {
     pub async fn new(
         ethereum_adapter: Arc<EthereumAdapter>,
-        near_adapter: Arc<NearAdapter>,
+        near_adapter: Option<Arc<NearAdapter>>,
         quantum_manager: Arc<QuantumKeyManager>,
         db_pool: PgPool,
     ) -> Result<Self, BridgeError> {
+        if near_adapter.is_none() {
+            warn!("BridgeService initialized without NEAR adapter - NEAR operations will be unavailable");
+        }
+        
         Ok(Self {
             ethereum_adapter: ethereum_adapter.clone(),
-            near_adapter: near_adapter.clone(),
+            near_adapter,
             quantum_manager: quantum_manager.clone(),
             swap_engine: SwapEngine::new(quantum_manager.clone()).await?,
             state_machine: StateMachine::new(),
@@ -51,6 +55,14 @@ impl BridgeService {
         recipient: &str,
     ) -> Result<SwapInitResponse, BridgeError> {
         tracing::info!("Initializing swap for user {}: {} {} -> {}", user_id, amount, from_chain, to_chain);
+
+        // Check if NEAR adapter is available for NEAR operations
+        if (from_chain.to_lowercase().contains("near") || to_chain.to_lowercase().contains("near")) 
+            && self.near_adapter.is_none() {
+            return Err(BridgeError::ServiceUnavailable(
+                "NEAR blockchain operations are currently unavailable due to connection issues. Please try again later.".to_string()
+            ));
+        }
 
         // Validate swap parameters
         self.validation_service.validate_swap_params(
@@ -171,8 +183,10 @@ impl BridgeService {
         let near_address = format!("derived_{}", swap_operation.recipient);
         
         // Mint wrapped tokens on NEAR
+        let near_adapter = self.near_adapter.as_ref()
+            .ok_or_else(|| BridgeError::AdapterNotAvailable("NEAR adapter not initialized".to_string()))?;
         let near_mint_result = self.swap_engine.mint_near_tokens(
-            &self.near_adapter,
+            near_adapter,
             swap_operation.amount,
             &near_address,
             &protected_data,
@@ -223,8 +237,10 @@ impl BridgeService {
         let (quantum_key_id, protected_data) = self.swap_engine.generate_quantum_protection(swap_operation).await?;
         
         // Lock NEAR tokens
+        let near_adapter = self.near_adapter.as_ref()
+            .ok_or_else(|| BridgeError::AdapterNotAvailable("NEAR adapter not initialized".to_string()))?;
         let near_lock_result = self.swap_engine.lock_near_tokens(
-            &self.near_adapter,
+            near_adapter,
             &swap_operation.swap_id.to_string(),
             swap_operation.amount,
             &protected_data,

@@ -30,6 +30,13 @@ export interface WindowEthereum extends EthereumProvider {
 
 // Note: Window.ethereum is already declared by coinbase SDK
 
+// Global Window Extensions
+declare global {
+  interface Window {
+    Buffer: typeof Buffer;
+  }
+}
+
 // NEAR Wallet Selector Types
 export interface NEARWalletModal {
   show: () => void;

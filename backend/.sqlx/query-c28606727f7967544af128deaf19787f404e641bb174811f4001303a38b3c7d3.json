@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE review_queue \n            SET status = $2, reviewed_by = $3, reviewed_at = $4, updated_at = $4\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c28606727f7967544af128deaf19787f404e641bb174811f4001303a38b3c7d3"
+}

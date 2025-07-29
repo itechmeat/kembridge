@@ -21,7 +21,7 @@ import { bridgeService } from "../../../services/api/bridgeService";
 import type { BridgeSwapRequest } from "../../../types/bridge";
 
 export interface SwapFormProps {
-  onSwapExecute?: (data: SwapFormData) => void;
+  onSwapExecute?: (data: SwapFormData) => Promise<unknown> | void;
   className?: string;
   disabled?: boolean;
 }
@@ -188,15 +188,25 @@ export const SwapForm: React.FC<SwapFormProps> = ({
 
         // Execute callback if provided
         if (onSwapExecute && formData.fromToken && formData.toToken) {
-          onSwapExecute({
-            fromToken: formData.fromToken,
-            toToken: formData.toToken,
-            fromChain: formData.fromChain!,
-            toChain: formData.toChain!,
-            amount: formData.amount!,
-            slippage: formData.slippage || 0.5,
-            recipient: request.recipient,
-          });
+          try {
+            const callbackResult = onSwapExecute({
+              fromToken: formData.fromToken,
+              toToken: formData.toToken,
+              fromChain: formData.fromChain!,
+              toChain: formData.toChain!,
+              amount: formData.amount!,
+              slippage: formData.slippage || 0.5,
+              recipient: request.recipient,
+            });
+            
+            // Handle async callback
+            if (callbackResult && typeof callbackResult.then === 'function') {
+              await callbackResult;
+            }
+          } catch (callbackError) {
+            console.error("Swap callback failed:", callbackError);
+            // Don't throw here - the swap might still have been initiated successfully
+          }
         }
 
         setShowConfirmation(false);

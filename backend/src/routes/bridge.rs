@@ -9,7 +9,7 @@ use crate::state::AppState;
 /// These will be fully implemented in Phase 4.3 - Basic Bridge Logic
 pub fn create_routes() -> Router<AppState> {
     Router::new()
-        // Initiate cross-chain swap (Phase 4.3.4)
+        // Initiate cross-chain swap (Phase 8.1.1) - requires authentication
         .route("/swap", post(crate::handlers::bridge::initiate_swap))
         
         // Get transaction status (Phase 4.3.8)

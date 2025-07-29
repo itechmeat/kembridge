@@ -53,9 +53,15 @@ importers:
       axios:
         specifier: ^1.10.0
         version: 1.10.0
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
       near-api-js:
         specifier: ^6.2.2
         version: 6.2.2(01b1337bfe5b037ce4ecba05e33910a1)
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -2322,6 +2328,10 @@ packages:
 
   process-warning@1.0.0:
     resolution: {integrity: sha512-du4wfLyj4yCZq1VupnVSZmRsPJsNuxoDQFdCFHLaYiEbFBD7QE0a+I4D7hOxrVnh78QE/YipFAj9lXHiXocV+Q==}
+
+  process@0.11.10:
+    resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
+    engines: {node: '>= 0.6.0'}
 
   proxy-compare@2.6.0:
     resolution: {integrity: sha512-8xuCeM3l8yqdmbPoYeLbrAXCBWu19XEYc5/F28f5qOaoAIMyfmBUkl5axiK+x9olUvRlcekvnm98AP9RDngOIw==}
@@ -6278,6 +6288,8 @@ snapshots:
   process-nextick-args@2.0.1: {}
 
   process-warning@1.0.0: {}
+
+  process@0.11.10: {}
 
   proxy-compare@2.6.0: {}
 

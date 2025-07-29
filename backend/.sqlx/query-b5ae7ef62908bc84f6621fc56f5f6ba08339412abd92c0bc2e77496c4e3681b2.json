@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                t.id,\n                t.user_id,\n                t.source_chain,\n                t.destination_chain,\n                t.amount_in,\n                t.risk_score,\n                t.status,\n                t.created_at,\n                eth_auth.wallet_address as ethereum_address,\n                near_auth.wallet_address as near_account_id\n            FROM transactions t\n            JOIN users u ON t.user_id = u.id\n            LEFT JOIN user_auth_methods eth_auth ON t.user_id = eth_auth.user_id AND eth_auth.chain_type = 'ethereum'\n            LEFT JOIN user_auth_methods near_auth ON t.user_id = near_auth.user_id AND near_auth.chain_type = 'near'\n            WHERE t.risk_score > 0.6\n            ORDER BY t.risk_score DESC, t.created_at DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "source_chain",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "destination_chain",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "amount_in",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "risk_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "ethereum_address",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "near_account_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "b5ae7ef62908bc84f6621fc56f5f6ba08339412abd92c0bc2e77496c4e3681b2"
+}

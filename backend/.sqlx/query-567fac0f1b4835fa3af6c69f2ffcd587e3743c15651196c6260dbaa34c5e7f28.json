@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT public_key, algorithm, created_at FROM quantum_keys WHERE id = $1 AND user_id = $2 AND is_active = true",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "public_key",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 1,
+        "name": "algorithm",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "567fac0f1b4835fa3af6c69f2ffcd587e3743c15651196c6260dbaa34c5e7f28"
+}

@@ -206,6 +206,26 @@ path = "tests/test_auth_http.rs"
 name = "test_auth_integration"
 path = "tests/test_auth_integration.rs"
 
+[[bin]]
+name = "test_appstate_init"
+path = "tests/test_appstate_init.rs"
+
+[[bin]]
+name = "test_database_simple"
+path = "tests/test_database_simple.rs"
+
+[[bin]]
+name = "test_appstate_minimal"
+path = "tests/test_appstate_minimal.rs"
+
+[[bin]]
+name = "test_services_init"
+path = "tests/test_services_init.rs"
+
+[[bin]]
+name = "test_apply_migrations"
+path = "tests/test_apply_migrations.rs"
+
 [dev-dependencies]
 # Testing dependencies
 axum-test = "16.2.1"

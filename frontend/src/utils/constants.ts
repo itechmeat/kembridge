@@ -56,12 +56,12 @@ export const SUPPORTED_NETWORKS: Network[] = [
 export const DEFAULT_NETWORK = SUPPORTED_NETWORKS[1]; // Ethereum Sepolia for development
 
 export const API_ENDPOINTS = {
-  SWAP_QUOTE: "/api/v1/swap/quote",
-  SWAP_EXECUTE: "/api/v1/swap/execute",
-  SWAP_STATUS: "/api/v1/swap/status",
-  PRICE_DATA: "/api/v1/price",
-  USER_PROFILE: "/api/v1/user/profile",
-  HEALTH: "/api/v1/health",
+  SWAP_QUOTE: "/swap/quote",
+  SWAP_EXECUTE: "/swap/execute",
+  SWAP_STATUS: "/swap/status",
+  PRICE_DATA: "/price",
+  USER_PROFILE: "/user/profile",
+  HEALTH: "/health",
 } as const;
 
 export const WALLET_CONNECT_PROJECT_ID = "YOUR_WALLET_CONNECT_PROJECT_ID";
