@@ -81,6 +81,19 @@
   --warning: #{variables.$warning};
   --info: #{variables.$info};
 
+  // Security colors
+  --security-secure: #{variables.$security-secure};
+  --security-warning: #{variables.$security-warning};
+  --security-danger: #{variables.$security-danger};
+  --security-offline: #{variables.$security-offline};
+
+  // Surface colors
+  --surface-primary: #{variables.$bg-card};
+  --surface-secondary: #{variables.$bg-secondary};
+
+  // Font primary
+  --font-primary: #{variables.$font-family-primary};
+
   // Fonts
   --font-mono: #{variables.$font-family-mono};
 

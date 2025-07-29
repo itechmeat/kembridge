@@ -278,6 +278,43 @@
     line-height: 1.5;
     margin: 0 0 1rem 0;
   }
+
+  // Security components integration
+  &__security {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    margin: 0.5rem 0;
+  }
+
+  &__risk-analysis {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin: 0.5rem 0;
+    
+    // Compact styling for SwapForm integration
+    .risk-analysis-display {
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      
+      &__header {
+        margin-bottom: 0.75rem;
+      }
+      
+      &__section-title {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      &__factors,
+      &__recommendations,
+      &__analysis {
+        margin-bottom: 0.75rem;
+      }
+    }
+  }
 }
 
 // Very small screens (320px and below)

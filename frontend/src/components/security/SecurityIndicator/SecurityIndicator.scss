@@ -1,0 +1,222 @@
+@import '../../../styles/abstracts/variables';
+@import '../../../styles/abstracts/mixins';
+
+.security-indicator {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-primary);
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  font-family: var(--font-primary);
+  
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  &__icon {
+    font-size: 18px;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.2));
+  }
+  
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  &__status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  &__status-text {
+    font-weight: 500;
+    font-size: 16px;
+  }
+  
+  &__connection {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  &__detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-light);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  
+  &__detail-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  
+  &__detail-value {
+    font-size: 12px;
+    font-weight: 600;
+    
+    &.enabled {
+      color: var(--success);
+    }
+    
+    &.disabled {
+      color: var(--danger);
+    }
+  }
+  
+  // Security level variants
+  &--secure {
+    border-color: var(--security-secure);
+    background: linear-gradient(135deg, rgba(0, 170, 68, 0.05) 0%, transparent 100%);
+    
+    .security-indicator__status-text {
+      color: var(--security-secure);
+    }
+    
+    .risk-score--secure {
+      color: var(--security-secure);
+    }
+  }
+  
+  &--warning {
+    border-color: var(--security-warning);
+    background: linear-gradient(135deg, rgba(255, 102, 0, 0.05) 0%, transparent 100%);
+    
+    .security-indicator__status-text {
+      color: var(--security-warning);
+    }
+    
+    .risk-score--warning {
+      color: var(--security-warning);
+    }
+  }
+  
+  &--danger {
+    border-color: var(--security-danger);
+    background: linear-gradient(135deg, rgba(255, 51, 102, 0.05) 0%, transparent 100%);
+    animation: danger-pulse 2s infinite;
+    
+    .security-indicator__status-text {
+      color: var(--security-danger);
+    }
+    
+    .risk-score--danger {
+      color: var(--security-danger);
+    }
+  }
+  
+  &--offline {
+    border-color: var(--security-offline);
+    background: linear-gradient(135deg, rgba(153, 153, 153, 0.05) 0%, transparent 100%);
+    opacity: 0.7;
+    
+    .security-indicator__status-text {
+      color: var(--security-offline);
+    }
+    
+    .risk-score--offline {
+      color: var(--security-offline);
+    }
+  }
+  
+  // Compact variant
+  &--compact {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    
+    .security-indicator__icon {
+      font-size: 16px;
+    }
+    
+    &__score {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    &.security-indicator--secure .security-indicator__score {
+      background: rgba(0, 170, 68, 0.1);
+      color: var(--security-secure);
+    }
+    
+    &.security-indicator--warning .security-indicator__score {
+      background: rgba(255, 102, 0, 0.1);
+      color: var(--security-warning);
+    }
+    
+    &.security-indicator--danger .security-indicator__score {
+      background: rgba(255, 51, 102, 0.1);
+      color: var(--security-danger);
+    }
+    
+    &.security-indicator--offline .security-indicator__score {
+      background: rgba(153, 153, 153, 0.1);
+      color: var(--security-offline);
+    }
+  }
+}
+
+// Animations
+@keyframes danger-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 51, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 51, 102, 0);
+  }
+}
+
+// Responsive design (already handled above)
+// Removed duplicate responsive styles
+
+// Mobile responsive styles
+@include mobile {
+  .security-indicator {
+    padding: 12px;
+    
+    &__header {
+      margin-bottom: 8px;
+    }
+    
+    &__content {
+      gap: 8px;
+    }
+    
+    &__details {
+      gap: 6px;
+    }
+  }
+}

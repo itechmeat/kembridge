@@ -66,6 +66,8 @@ export const API_ENDPOINTS = {
   RISK: {
     ANALYZE: "/risk/analyze",
     PROFILE: "/risk/profile",
+    BLACKLIST_CHECK: "/risk/blacklist/check",
+    THRESHOLDS: "/risk/thresholds",
   },
 
   // Price oracle endpoints - from price_oracle.rs routes

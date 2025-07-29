@@ -7,6 +7,7 @@ import { MobileLayout } from "./components/layout/MobileLayout/MobileLayout";
 import { WalletPage } from "./pages/WalletPage/WalletPage";
 import { BridgePage } from "./pages/BridgePage/BridgePage";
 import { AuthTestPage } from "./pages/AuthTestPage/AuthTestPage";
+import { SecurityTestPage } from "./pages/SecurityTestPage/SecurityTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
 import { useEffect } from "react";
@@ -67,6 +68,7 @@ function AppContent() {
               }
             />
             <Route path="/auth-test" element={<AuthTestPage />} />
+            <Route path="/security-test" element={<SecurityTestPage />} />
           </Routes>
         </MobileLayout>
       </Router>
