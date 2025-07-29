@@ -1,0 +1,176 @@
+/**
+ * Modal Component Styles
+ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: var(--color-background);
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 100%;
+  overflow: hidden;
+  animation: scaleIn 0.2s ease-out;
+  border: 1px solid var(--color-border);
+
+  &:focus {
+    outline: none;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem 0 2rem;
+    border-bottom: 1px solid var(--color-border-light);
+    margin-bottom: 0;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+    padding-bottom: 1.5rem;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -0.5rem;
+
+    &:hover {
+      background: var(--color-background-tertiary);
+      color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  &__content {
+    overflow-y: auto;
+    max-height: calc(90vh - 4rem);
+  }
+}
+
+// When there's no title, remove header border and padding
+.modal:not(:has(.modal__title)) {
+  .modal__header {
+    border-bottom: none;
+    padding: 1rem 1rem 0 1rem;
+    justify-content: flex-end;
+  }
+
+  .modal__close {
+    margin-top: 0;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Responsive design
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-height: 95vh;
+    border-radius: 1rem 1rem 0 0;
+    margin-bottom: 0;
+    animation: slideUp 0.3s ease-out;
+
+    &__header {
+      padding: 1rem 1.5rem 0 1.5rem;
+    }
+
+    &__title {
+      font-size: 1.125rem;
+      padding-bottom: 1rem;
+    }
+
+    &__content {
+      max-height: calc(95vh - 3rem);
+    }
+  }
+
+  .modal:not(:has(.modal__title)) {
+    .modal__header {
+      padding: 0.75rem 1rem 0 1rem;
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Dark mode adjustments
+@media (prefers-color-scheme: dark) {
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .modal {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  }
+}

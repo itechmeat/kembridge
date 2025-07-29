@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { useWallet } from "../../../hooks/wallet/useWallet";
 import { useBalance } from "../../../hooks/wallet/useBalance";
+import { useAuthStatus } from "../../../hooks/api/useAuth";
 import { formatAddress, formatUsdValue } from "../../../services/wallet/utils";
 import {
   formatDisplayBalance,
@@ -18,6 +19,7 @@ import "./WalletInfo.scss";
 interface WalletInfoProps {
   showBalance?: boolean;
   showNetwork?: boolean;
+  showTechnicalInfo?: boolean; // Show technical debugging info
   compact?: boolean;
   className?: string;
 }
@@ -25,10 +27,12 @@ interface WalletInfoProps {
 export const WalletInfo: React.FC<WalletInfoProps> = ({
   showBalance = true,
   showNetwork = true,
+  showTechnicalInfo = true, // Show by default for now
   compact = false,
   className = "",
 }) => {
-  const { isConnected, account, disconnect } = useWallet();
+  const { account, disconnect, isConnected, state } = useWallet();
+  const { isAuthenticated } = useAuthStatus();
   const {
     balances,
     isLoading: balanceLoading,
@@ -180,6 +184,61 @@ export const WalletInfo: React.FC<WalletInfoProps> = ({
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Technical Info */}
+            {showTechnicalInfo && (
+              <div className="wallet-info__dropdown-section">
+                <div className="wallet-info__dropdown-label">
+                  Technical Info
+                </div>
+                <div className="wallet-info__technical-info">
+                  <div className="wallet-info__tech-item">
+                    <span className="wallet-info__tech-label">Connected:</span>
+                    <span className="wallet-info__tech-value">
+                      {isConnected ? "✅ Yes" : "❌ No"}
+                    </span>
+                  </div>
+                  <div className="wallet-info__tech-item">
+                    <span className="wallet-info__tech-label">
+                      Authenticated:
+                    </span>
+                    <span className="wallet-info__tech-value">
+                      {isAuthenticated ? "✅ Yes" : "❌ No"}
+                    </span>
+                  </div>
+                  <div className="wallet-info__tech-item">
+                    <span className="wallet-info__tech-label">
+                      Wallet Type:
+                    </span>
+                    <span className="wallet-info__tech-value">
+                      {account?.type || "None"}
+                    </span>
+                  </div>
+                  {account?.chainId && (
+                    <div className="wallet-info__tech-item">
+                      <span className="wallet-info__tech-label">Chain ID:</span>
+                      <span className="wallet-info__tech-value">
+                        {account.chainId}
+                      </span>
+                    </div>
+                  )}
+                  <div className="wallet-info__tech-item">
+                    <span className="wallet-info__tech-label">Connecting:</span>
+                    <span className="wallet-info__tech-value">
+                      {state.isConnecting ? "⏳ Yes" : "❌ No"}
+                    </span>
+                  </div>
+                  {state.error && (
+                    <div className="wallet-info__tech-item">
+                      <span className="wallet-info__tech-label">Error:</span>
+                      <span className="wallet-info__tech-value wallet-info__tech-error">
+                        ⚠️ {state.error}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

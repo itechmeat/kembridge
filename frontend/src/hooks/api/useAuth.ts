@@ -6,6 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback, useEffect } from "react";
 import { authService } from "../../services/api/authService";
+import { API_CONFIG } from "../../services/api/config";
 import { useAccount } from "wagmi";
 import { useSignMessage } from "wagmi";
 import { useNearWallet } from "../wallet/useNearWallet";
@@ -146,6 +147,15 @@ export const useEthereumAuth = () => {
 
       console.log("🎉 Ethereum Auth: Authentication completed successfully");
 
+      // Check if token is actually saved after authentication
+      const tokenAfterAuth = authService.getToken();
+      const isAuthAfterAuth = authService.isAuthenticated();
+      console.log("🔍 Ethereum Auth: Post-auth token check", {
+        tokenExists: !!tokenAfterAuth,
+        isAuthenticated: isAuthAfterAuth,
+        tokenLength: tokenAfterAuth?.length || 0,
+      });
+
       // Invalidate queries for UI updates
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
@@ -261,18 +271,70 @@ export const useLogout = () => {
  * Hook for checking authentication status
  */
 export const useAuthStatus = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    authService.isAuthenticated()
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(authService.getToken());
 
-  // Subscribe to token changes
+  // Check both Wagmi and custom wallet connection states
+  const { isConnected: isWagmiConnected } = useAccount();
+  const [isCustomWalletConnected, setIsCustomWalletConnected] = useState(false);
+
+  // Check custom wallet connection state
+  useEffect(() => {
+    const checkCustomWallet = async () => {
+      try {
+        const { getWalletManager } = await import("../../services/wallet");
+        const walletManager = getWalletManager();
+        const state = walletManager.getState();
+        setIsCustomWalletConnected(state.isConnected && !!state.account);
+      } catch {
+        setIsCustomWalletConnected(false);
+      }
+    };
+
+    checkCustomWallet();
+    const interval = setInterval(checkCustomWallet, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Subscribe to token and wallet connection changes
   useEffect(() => {
     const checkAuth = () => {
-      const currentAuth = authService.isAuthenticated();
+      const hasToken = authService.isAuthenticated();
       const currentToken = authService.getToken();
+      const hasWalletConnection = isWagmiConnected || isCustomWalletConnected;
+
+      // User is authenticated only if they have BOTH token AND wallet connection
+      const currentAuth = hasToken && hasWalletConnection;
+
+      // Only log when there's a state change to avoid spam
+      if (currentAuth !== isAuthenticated) {
+        console.log(`🔍 AuthStatus Debug: Auth state changing`, {
+          hasToken,
+          tokenExists: !!currentToken,
+          tokenPreview: currentToken
+            ? currentToken.substring(0, 20) + "..."
+            : "none",
+          isWagmiConnected,
+          isCustomWalletConnected,
+          hasWalletConnection,
+          from: isAuthenticated,
+          to: currentAuth,
+          localStorage: localStorage.getItem(API_CONFIG.TOKEN_STORAGE_KEY)
+            ? "exists"
+            : "missing",
+        });
+      }
 
       if (currentAuth !== isAuthenticated) {
+        console.log(
+          `🔐 AuthStatus: Authentication state changed: ${currentAuth}`,
+          {
+            hasToken,
+            isWagmiConnected,
+            isCustomWalletConnected,
+            hasWalletConnection,
+          }
+        );
         setIsAuthenticated(currentAuth);
       }
 
@@ -288,7 +350,7 @@ export const useAuthStatus = () => {
     const interval = setInterval(checkAuth, 1000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, isWagmiConnected, isCustomWalletConnected]);
 
   return {
     isAuthenticated,

@@ -3,7 +3,7 @@
  * Main page for wallet connection and management
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useWallet } from "../../hooks/wallet/useWallet";
 import { useAuthStatus, useLogout } from "../../hooks/api/useAuth";
 import { useUserInfo } from "../../hooks/api/useUser";
@@ -14,17 +14,20 @@ export const WalletPage: React.FC = () => {
   console.log("🏗️ WalletPage: Component rendering");
 
   // Wallet connection status (MetaMask/NEAR)
-  const { isConnected: isWalletConnected } = useWallet();
+  const { state, connect, isConnected } = useWallet();
+  const isWalletConnected = isConnected;
 
   // Backend authentication status
   const { isAuthenticated } = useAuthStatus();
   const { profile, isLoading: isProfileLoading } = useUserInfo();
   const logout = useLogout();
 
+
   console.log("📊 WalletPage: State:", {
     isWalletConnected,
     isAuthenticated,
     hasProfile: !!profile,
+    walletAddress: state.address,
   });
 
   // Logout handler

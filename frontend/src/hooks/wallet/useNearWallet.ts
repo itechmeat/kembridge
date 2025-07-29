@@ -8,17 +8,10 @@ import { NearWalletContext } from "../../contexts/NearWalletContext";
 import type { NearWalletContextType } from "../../types/nearWallet";
 
 export const useNearWallet = (): NearWalletContextType => {
-  console.log("🔄 useNearWallet: Hook called");
   const context = useContext(NearWalletContext);
   if (!context) {
     console.error("❌ useNearWallet: Context not found");
     throw new Error("useNearWallet must be used within NearWalletProvider");
   }
-  console.log("📊 useNearWallet: Context data:", {
-    selector: !!context.selector,
-    modal: !!context.modal,
-    accountId: context.accountId,
-    isConnected: context.isConnected,
-  });
   return context;
 };

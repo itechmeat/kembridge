@@ -105,6 +105,15 @@ sqlx migrate run
 - Grafana: http://localhost:4002 (admin:admin)
 - Prometheus: http://localhost:4004
 
+## Frontend Testing Guidelines
+
+**IMPORTANT**: For frontend testing with browsermcp, ALWAYS use http://localhost:4100/ unless explicitly asked to test the Docker version.
+
+- **Default Testing URL**: http://localhost:4100/ (development server)
+- **Docker Testing URL**: http://localhost:4001 (only when specifically requested)
+
+This ensures consistent testing environment and avoids confusion between different deployment modes.
+
 ## Key Technologies
 
 - **Rust 1.88+**: Latest stable with let chains support

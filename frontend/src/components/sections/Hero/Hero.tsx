@@ -6,7 +6,7 @@
 import { FC } from "react";
 import { Button } from "../../ui/Button";
 import { Spinner } from "../../ui/Spinner";
-import { WalletConnect } from "../../wallet/WalletConnect/WalletConnect";
+import { WalletConnectButton } from "../../wallet/WalletConnectButton/WalletConnectButton";
 import { WalletInfo } from "../../wallet/WalletInfo/WalletInfo";
 import { AuthStatus } from "../../auth/AuthStatus/AuthStatus";
 import { useWallet } from "../../../hooks/wallet/useWallet";
@@ -32,7 +32,7 @@ export const Hero: FC = () => {
           {isConnected ? (
             <WalletInfo showBalance={true} showNetwork={true} />
           ) : (
-            <WalletConnect />
+            <WalletConnectButton />
           )}
         </div>
 

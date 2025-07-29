@@ -13,6 +13,7 @@ export const config = createConfig({
   chains: [mainnet, sepolia],
   storage: createStorage({
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    key: "kembridge-wagmi", // Namespace wagmi storage to avoid conflicts
   }),
   connectors: [
     injected(),

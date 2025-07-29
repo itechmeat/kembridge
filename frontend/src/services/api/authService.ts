@@ -27,14 +27,12 @@ export interface VerifyWalletRequest {
 }
 
 export interface VerifyWalletResponse {
-  token: string;
-  user: {
-    id: string;
-    wallet_addresses: string[];
-    tier: "free" | "premium" | "admin";
-    created_at: string;
-    updated_at: string;
-  };
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user_id: string;
+  wallet_address: string;
+  chain_type: "ethereum" | "near";
 }
 
 export interface RefreshTokenResponse {
@@ -106,10 +104,40 @@ class AuthService {
       request
     );
 
+    // Debug: Log the entire response to see what we're getting
+    console.log("🔍 Auth Service: Full response from backend:", {
+      status: "success",
+      responseKeys: Object.keys(response),
+      responseData: response,
+      hasToken: "token" in response,
+      tokenValue: response.token,
+    });
+
     // Save token in API client
-    if (response.token) {
-      apiClient.setAuthToken(response.token);
-      console.log("✅ Auth Service: Authentication successful, token saved");
+    if (response.access_token) {
+      apiClient.setAuthToken(response.access_token);
+      console.log("✅ Auth Service: Authentication successful, token saved", {
+        tokenLength: response.access_token.length,
+        tokenPreview: response.access_token.substring(0, 20) + "...",
+        tokenType: response.token_type,
+        expiresIn: response.expires_in,
+        userId: response.user_id,
+      });
+
+      // Verify token was actually saved
+      const savedToken = apiClient.getAuthToken();
+      const isAuth = apiClient.isAuthenticated();
+      console.log("🔍 Auth Service: Token verification after save", {
+        tokenSaved: !!savedToken,
+        isAuthenticated: isAuth,
+        tokensMatch: savedToken === response.access_token,
+      });
+    } else {
+      console.error("❌ Auth Service: No access_token in response!", {
+        responseType: typeof response,
+        responseKeys: Object.keys(response || {}),
+        fullResponse: response,
+      });
     }
 
     return response;

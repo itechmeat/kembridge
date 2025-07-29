@@ -186,6 +186,42 @@
     justify-content: center;
   }
 
+  // Technical info styles
+  &__technical-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__tech-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    background: var(--background-secondary, #f8fafc);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  &__tech-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  &__tech-value {
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    color: var(--text-primary);
+    font-weight: 500;
+
+    &.wallet-info__tech-error {
+      color: var(--error, #ef4444);
+      font-size: 0.625rem;
+      max-width: 150px;
+      text-align: right;
+      word-break: break-word;
+    }
+  }
+
   // Compact variant
   &--compact {
     .wallet-info__main {

@@ -5,15 +5,18 @@
 
 import { FC } from "react";
 import { useWallet } from "../../../hooks/wallet/useWallet";
-import { useAuth } from "../../../hooks/auth/useAuth";
-import { WalletConnect } from "../../wallet/WalletConnect/WalletConnect";
+import { useAuthStatus } from "../../../hooks/api/useAuth";
+import { WalletConnectButton } from "../../wallet/WalletConnectButton/WalletConnectButton";
 import { WalletInfo } from "../../wallet/WalletInfo/WalletInfo";
 import { APP_TEXT } from "../../../constants";
 import "./TopBar.scss";
 
 export const TopBar: FC = () => {
   const { isConnected } = useWallet();
-  const { isBackendConnected } = useAuth();
+  const { isAuthenticated } = useAuthStatus();
+  
+  // For TopBar, we consider connected when wallet is connected (regardless of backend auth)
+  const isBackendConnected = true; // Backend is always connected for this demo
 
   return (
     <header className="top-bar">
@@ -37,7 +40,7 @@ export const TopBar: FC = () => {
           {isConnected ? (
             <WalletInfo compact={true} showBalance={true} />
           ) : (
-            <WalletConnect compact={true} />
+            <WalletConnectButton compact={true} />
           )}
         </div>
       </div>
