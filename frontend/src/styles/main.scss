@@ -15,6 +15,10 @@
 @use "../components/ui/Modal";
 @use "../components/ui/Spinner";
 
+// Bridge Components
+@use "../components/bridge/SwapForm/SwapForm";
+@use "../components/bridge/TokenSelector/TokenSelector";
+
 // ===== PAGES =====
 @use "pages/home";
 

@@ -31,23 +31,21 @@ export const useBalance = (): UseBalanceReturn => {
   // Update balances when account changes
   useEffect(() => {
     if (account?.balances) {
-      setBalances(account.balances);
+      // Convert Record<string, string>[] to TokenBalance[]
+      const convertedBalances: TokenBalance[] = account.balances.map((balance) => ({
+        symbol: balance.symbol || '',
+        balance: balance.balance || '0',
+        decimals: parseInt(balance.decimals || '18', 10),
+        usdValue: balance.usdValue,
+      }));
+      setBalances(convertedBalances);
       setError(null);
     } else {
-      // Mock balances for demonstration
-      if (isConnected && state.address) {
-        const mockBalances: TokenBalance[] = [
-          {
-            symbol: state.walletType === "near" ? "NEAR" : "ETH",
-            balance: "1.234567890123456789",
-            decimals: 18,
-            usdValue: state.walletType === "near" ? "3.45" : "2456.78",
-          },
-        ];
-        setBalances(mockBalances);
-      } else {
-        setBalances([]);
-      }
+      // No wallet integration available - real balances required
+      setBalances([]);
+      setError(
+        "Wallet balance integration not implemented. Please connect wallet to see real balances."
+      );
     }
   }, [account, isConnected, state]);
 
@@ -63,20 +61,11 @@ export const useBalance = (): UseBalanceReturn => {
     try {
       // TODO: Implement proper balance refresh with new wallet system
       console.log("🔄 Refreshing balances...");
-      
-      // Mock refresh for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update mock balances based on current wallet
-      const mockBalances: TokenBalance[] = [
-        {
-          symbol: account.type === "near" ? "NEAR" : "ETH",
-          balance: "1.234567890123456789",
-          decimals: 18,
-          usdValue: account.type === "near" ? "3.45" : "2456.78",
-        },
-      ];
-      setBalances(mockBalances);
+
+      // Real wallet balance refresh required - no mock data allowed
+      throw new Error(
+        "Real wallet balance integration not implemented. Cannot refresh balances."
+      );
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to refresh balances";

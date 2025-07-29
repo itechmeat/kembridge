@@ -5,11 +5,13 @@ import { useNearWallet } from "./hooks/wallet/useNearWallet";
 import { setNearWalletContext } from "./services/wallet/providers/near";
 import { MobileLayout } from "./components/layout/MobileLayout/MobileLayout";
 import { WalletPage } from "./pages/WalletPage/WalletPage";
+import { BridgePage } from "./pages/BridgePage/BridgePage";
 import { AuthTestPage } from "./pages/AuthTestPage/AuthTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
 import { useEffect } from "react";
 import "./styles/main.scss";
+import "./pages/BridgePage/BridgePage.scss";
 import "@rainbow-me/rainbowkit/styles.css";
 
 function AppContent() {
@@ -46,14 +48,8 @@ function AppContent() {
         <MobileLayout>
           <Routes>
             <Route path="/" element={<WalletPage />} />
-            <Route
-              path="/swap"
-              element={
-                <div style={{ padding: "2rem", textAlign: "center" }}>
-                  Swap Page Coming Soon
-                </div>
-              }
-            />
+            <Route path="/bridge" element={<BridgePage />} />
+            <Route path="/swap" element={<BridgePage />} />
             <Route
               path="/history"
               element={

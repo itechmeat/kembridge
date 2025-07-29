@@ -33,7 +33,7 @@ export interface WalletAccount {
     type: string;
     chainId: number;
   } | null;
-  balances?: any[];
+  balances?: Record<string, string>[];
 }
 
 export interface UseWalletReturn {
@@ -177,7 +177,10 @@ export const useWallet = (): UseWalletReturn => {
 
           console.log(`✅ useWallet: Auto-authentication successful`);
         } catch (authError) {
-          console.warn(`⚠️ useWallet: Auto-authentication failed:`, authError);
+          console.log(
+            `ℹ️ useWallet: Auto-authentication failed (manual auth still works):`,
+            authError
+          );
           // Reset flag to allow manual retry
           setAutoAuthAttempted(false);
         }
@@ -194,7 +197,9 @@ export const useWallet = (): UseWalletReturn => {
     isConnecting,
     autoAuthAttempted,
     ethereumAuth.isPending,
-    nearAuth.isPending,
+    ethereumAuth,
+    nearAuth,
+    nearAuth.isAuthenticating,
   ]);
 
   // Reset auto-auth flag when authentication becomes successful
@@ -262,8 +267,8 @@ export const useWallet = (): UseWalletReturn => {
           );
         } catch (authError) {
           // Don't throw auth errors - wallet connection was successful
-          console.warn(
-            `⚠️ useWallet: Auto-authentication failed for ${type}:`,
+          console.log(
+            `ℹ️ useWallet: Auto-authentication failed for ${type} (manual auth still works):`,
             authError
           );
           // User can still manually authenticate later if needed

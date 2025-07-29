@@ -177,6 +177,12 @@ docker-compose logs backend | grep -i "ethereum\|infura"
 ### Development Commands
 
 ```bash
+# Remove all unused Docker objects
+docker system prune -f
+
+# Clean docker
+docker system prune -a --volumes -f
+
 # View logs from all services
 docker-compose logs -f
 

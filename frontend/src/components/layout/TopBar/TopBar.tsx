@@ -5,7 +5,6 @@
 
 import { FC } from "react";
 import { useWallet } from "../../../hooks/wallet/useWallet";
-import { useAuthStatus } from "../../../hooks/api/useAuth";
 import { WalletConnectButton } from "../../wallet/WalletConnectButton/WalletConnectButton";
 import { WalletInfo } from "../../wallet/WalletInfo/WalletInfo";
 import { APP_TEXT } from "../../../constants";
@@ -13,7 +12,6 @@ import "./TopBar.scss";
 
 export const TopBar: FC = () => {
   const { isConnected } = useWallet();
-  const { isAuthenticated } = useAuthStatus();
   
   // For TopBar, we consider connected when wallet is connected (regardless of backend auth)
   const isBackendConnected = true; // Backend is always connected for this demo

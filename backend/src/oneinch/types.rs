@@ -88,6 +88,25 @@ pub struct Protocol {
     pub to_token_address: String,
 }
 
+/// Quote response from 1inch Swap API (simplified format for price data)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SwapQuote {
+    #[serde(rename = "fromToken", skip_serializing_if = "Option::is_none")]
+    pub from_token: Option<Token>,
+    #[serde(rename = "toToken", skip_serializing_if = "Option::is_none")]
+    pub to_token: Option<Token>,
+    #[serde(rename = "fromTokenAmount", skip_serializing_if = "Option::is_none")]
+    pub from_amount: Option<String>,
+    #[serde(rename = "toTokenAmount", skip_serializing_if = "Option::is_none")]
+    pub to_amount: Option<String>,
+    #[serde(rename = "dstAmount")]
+    pub dst_amount: String, // This is what we actually get
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocols: Option<Vec<Protocol>>,
+    #[serde(rename = "estimatedGas", skip_serializing_if = "Option::is_none")]
+    pub estimated_gas: Option<String>,
+}
+
 /// Quote response from 1inch Fusion+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FusionQuote {

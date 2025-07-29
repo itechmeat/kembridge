@@ -6,7 +6,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback, useEffect } from "react";
 import { authService } from "../../services/api/authService";
-import { API_CONFIG } from "../../services/api/config";
 import { useAccount } from "wagmi";
 import { useSignMessage } from "wagmi";
 import { useNearWallet } from "../wallet/useNearWallet";
@@ -90,6 +89,7 @@ export const useEthereumAuth = () => {
   const verifyWallet = useVerifyWallet();
   const queryClient = useQueryClient();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const authenticate = useCallback(async () => {
     if (!address || !isConnected) {
@@ -97,6 +97,7 @@ export const useEthereumAuth = () => {
     }
 
     setIsAuthenticating(true);
+    setError(null);
 
     try {
       console.log("🔐 Ethereum Auth: Starting authentication for:", address);
@@ -160,9 +161,11 @@ export const useEthereumAuth = () => {
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
       return authResult;
-    } catch (error) {
-      console.error("❌ Ethereum Auth: Authentication failed:", error);
-      throw error;
+    } catch (err) {
+      console.error("❌ Ethereum Auth: Authentication failed:", err);
+      const authError = err instanceof Error ? err : new Error(String(err));
+      setError(authError);
+      throw authError;
     } finally {
       setIsAuthenticating(false);
     }
@@ -180,6 +183,12 @@ export const useEthereumAuth = () => {
     isAuthenticating,
     isReady: isConnected && !!address,
     walletAddress: address,
+    isPending: isAuthenticating,
+    error,
+    reset: () => {
+      setError(null);
+      setIsAuthenticating(false);
+    },
   };
 };
 
@@ -188,9 +197,11 @@ export const useEthereumAuth = () => {
  */
 export const useNearAuth = () => {
   const { accountId, isConnected } = useNearWallet();
-  const getNonce = useGetNonce();
-  const verifyWallet = useVerifyWallet();
+  // TODO: Implement NEAR authentication
+  // const getNonce = useGetNonce();
+  // const verifyWallet = useVerifyWallet();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const authenticate = useCallback(async () => {
     if (!accountId || !isConnected) {
@@ -198,51 +209,40 @@ export const useNearAuth = () => {
     }
 
     setIsAuthenticating(true);
+    setError(null);
 
     try {
       console.log("🔐 NEAR Auth: Starting authentication for:", accountId);
 
-      // 1. Get nonce
-      const nonceData = await getNonce.mutateAsync({
-        walletAddress: accountId,
-        chainType: "near",
-      });
-
-      // 2. Use message from backend nonce response
-      const message = nonceData.message;
       console.log(
         "📝 NEAR Auth: Using message from nonce response for signing"
       );
 
-      // TODO: Implement message signing through NEAR wallet
-      // For now use mock signature for testing
-      const signature = `near_signature_${Date.now()}`;
-      console.log("✍️ NEAR Auth: Message signed (mock implementation)");
-
-      // 3. Verify signature on backend
-      const authResult = await verifyWallet.mutateAsync({
-        walletAddress: accountId,
-        signature,
-        nonce: nonceData.nonce,
-        chainType: "near",
-        message,
-      });
-
-      console.log("🎉 NEAR Auth: Authentication completed successfully");
-      return authResult;
-    } catch (error) {
-      console.error("❌ NEAR Auth: Authentication failed:", error);
-      throw error;
+      // Real NEAR message signing required - no mock implementation
+      throw new Error(
+        "NEAR wallet message signing not implemented - real signature required"
+      );
+    } catch (err) {
+      console.error("❌ NEAR Auth: Authentication failed:", err);
+      const authError = err instanceof Error ? err : new Error(String(err));
+      setError(authError);
+      throw authError;
     } finally {
       setIsAuthenticating(false);
     }
-  }, [accountId, isConnected, getNonce, verifyWallet]);
+  }, [accountId, isConnected]);
 
   return {
     authenticate,
     isAuthenticating,
     isReady: isConnected && !!accountId,
     walletAddress: accountId,
+    isPending: isAuthenticating,
+    error,
+    reset: () => {
+      setError(null);
+      setIsAuthenticating(false);
+    },
   };
 };
 
@@ -266,6 +266,9 @@ export const useLogout = () => {
     },
   });
 };
+
+// Global state to prevent duplicate AuthStatus logs
+let lastLoggedAuthState: string | null = null;
 
 /**
  * Hook for checking authentication status
@@ -292,7 +295,7 @@ export const useAuthStatus = () => {
     };
 
     checkCustomWallet();
-    const interval = setInterval(checkCustomWallet, 2000);
+    const interval = setInterval(checkCustomWallet, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -306,35 +309,15 @@ export const useAuthStatus = () => {
       // User is authenticated only if they have BOTH token AND wallet connection
       const currentAuth = hasToken && hasWalletConnection;
 
-      // Only log when there's a state change to avoid spam
+      // Only log significant changes and avoid duplicate logs across all hook instances
       if (currentAuth !== isAuthenticated) {
-        console.log(`🔍 AuthStatus Debug: Auth state changing`, {
-          hasToken,
-          tokenExists: !!currentToken,
-          tokenPreview: currentToken
-            ? currentToken.substring(0, 20) + "..."
-            : "none",
-          isWagmiConnected,
-          isCustomWalletConnected,
-          hasWalletConnection,
-          from: isAuthenticated,
-          to: currentAuth,
-          localStorage: localStorage.getItem(API_CONFIG.TOKEN_STORAGE_KEY)
-            ? "exists"
-            : "missing",
-        });
-      }
-
-      if (currentAuth !== isAuthenticated) {
-        console.log(
-          `🔐 AuthStatus: Authentication state changed: ${currentAuth}`,
-          {
-            hasToken,
-            isWagmiConnected,
-            isCustomWalletConnected,
-            hasWalletConnection,
-          }
-        );
+        const logMessage = `${currentAuth}-${hasToken}-${hasWalletConnection}`;
+        if (logMessage !== lastLoggedAuthState) {
+          console.log(
+            `🔐 AuthStatus: Authentication changed to: ${currentAuth}`
+          );
+          lastLoggedAuthState = logMessage;
+        }
         setIsAuthenticated(currentAuth);
       }
 
@@ -346,8 +329,8 @@ export const useAuthStatus = () => {
     // Check immediately on mount
     checkAuth();
 
-    // Set interval for periodic checking
-    const interval = setInterval(checkAuth, 1000);
+    // Set interval for periodic checking (reduced frequency)
+    const interval = setInterval(checkAuth, 10000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated, token, isWagmiConnected, isCustomWalletConnected]);

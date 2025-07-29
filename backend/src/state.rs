@@ -1,18 +1,17 @@
 // src/state.rs - Application State with Dependency Injection (Phase 5.2.2)
-use std::sync::Arc;
 use redis::aio::ConnectionManager;
+use std::sync::Arc;
 
 use crate::config::AppConfig;
+use crate::dynamic_pricing::DynamicPricingService;
+use crate::monitoring::MonitoringService;
+use crate::oneinch::OneinchService;
+use crate::price_oracle::PriceOracleService;
 use crate::services::{
-    AuthService, UserService, BridgeService, QuantumService, AiClient,
-    RiskIntegrationService, ManualReviewService, BridgeIntegrationService,
-    RateLimitService,
+    AiClient, AuthService, BridgeIntegrationService, BridgeService, ManualReviewService,
+    QuantumService, RateLimitService, RiskIntegrationService, UserService,
 };
 use crate::websocket::WebSocketRegistry;
-use crate::monitoring::MonitoringService;
-use crate::price_oracle::PriceOracleService;
-use crate::oneinch::OneinchService;
-use crate::dynamic_pricing::DynamicPricingService;
 use kembridge_database::TransactionService;
 
 /// Application state with dependency injection for all services
@@ -49,48 +48,39 @@ impl AppState {
         config: AppConfig,
     ) -> anyhow::Result<Self> {
         // Initialize services with dependency injection
-        let auth_service = Arc::new(
-            AuthService::new(
-                db.clone(), 
-                redis.clone(), 
-                config.jwt_secret.clone()
-            ).await?
-        );
+        let auth_service =
+            Arc::new(AuthService::new(db.clone(), redis.clone(), config.jwt_secret.clone()).await?);
 
-        let quantum_service = Arc::new(
-            QuantumService::new(db.clone(), &config).await?
-        );
+        let quantum_service = Arc::new(QuantumService::new(db.clone(), &config).await?);
 
-        let ai_client = Arc::new(
-            AiClient::new(&config.ai_engine_url)?
-        );
+        let ai_client = Arc::new(AiClient::new(&config.ai_engine_url)?);
 
         // Initialize manual review service (Phase 5.2.4)
-        let manual_review_service = Arc::new(
-            ManualReviewService::new(db.clone())
-        );
+        let manual_review_service = Arc::new(ManualReviewService::new(db.clone()));
 
         // Initialize transaction service (Phase 5.2.5)
-        let transaction_service = Arc::new(
-            TransactionService::new(db.clone())
-        );
+        let transaction_service = Arc::new(TransactionService::new(db.clone()));
 
         // Initialize risk integration service with manual review integration (Phase 5.2)
         let risk_integration_service = Arc::new(
-            RiskIntegrationService::new_with_manual_review(&config, db.clone(), manual_review_service.clone())
-                .map_err(|e| anyhow::anyhow!("Failed to initialize risk integration service: {}", e))?
+            RiskIntegrationService::new_with_manual_review(
+                &config,
+                db.clone(),
+                manual_review_service.clone(),
+            )
+            .map_err(|e| anyhow::anyhow!("Failed to initialize risk integration service: {}", e))?,
         );
 
         // Initialize bridge service with risk integration (Phase 5.2.7)
         // TODO (MOCK WARNING): Temporary fallback while fixing Ethereum adapter configuration
-        let bridge_service = match BridgeService::new(
-            db.clone(),
-            quantum_service.clone(),
-            &config
-        ).await {
+        let bridge_service = match BridgeService::new(db.clone(), quantum_service.clone(), &config)
+            .await
+        {
             Ok(service) => {
                 tracing::info!("Successfully initialized BridgeService");
-                Some(Arc::new(service.with_risk_integration(risk_integration_service.clone())))
+                Some(Arc::new(
+                    service.with_risk_integration(risk_integration_service.clone()),
+                ))
             }
             Err(e) => {
                 tracing::warn!("Failed to initialize BridgeService: {}. Continuing without bridge service for dynamic pricing testing.", e);
@@ -99,9 +89,10 @@ impl AppState {
         };
 
         // Initialize user service with risk integration (Phase 5.2.7)
-        let user_service = Arc::new(
-            UserService::with_risk_integration(db.clone(), risk_integration_service.clone())
-        );
+        let user_service = Arc::new(UserService::with_risk_integration(
+            db.clone(),
+            risk_integration_service.clone(),
+        ));
 
         let metrics = metrics_exporter_prometheus::PrometheusBuilder::new()
             .build_recorder()
@@ -115,44 +106,44 @@ impl AppState {
         let monitoring_service = Arc::new(
             MonitoringService::new(websocket_registry.clone())
                 .with_redis(redis.clone())
-                .await
+                .await,
         );
 
-        // Initialize price oracle service (Phase 6.1)
-        let price_oracle_service = Arc::new(
-            PriceOracleService::new(redis.clone(), Arc::new(config.clone())).await?
-        );
-
-        // Initialize 1inch service with Fusion+ (Phase 6.2)
+        // Initialize 1inch service FIRST (Phase 6.2) - needed for price oracle
         let oneinch_service = Arc::new(
             OneinchService::new(
-                config.oneinch_api_key.clone().unwrap_or_else(|| "test_key".to_string()),
+                config.oneinch_api_key.clone().unwrap_or_else(|| {
+                    panic!("1inch API key is required! Set ONEINCH_API_KEY environment variable")
+                }),
                 config.ethereum_chain_id.unwrap_or(11155111), // Default to Sepolia testnet
             )
-            .with_price_oracle(price_oracle_service.clone())
-            .with_fusion_plus(config.oneinch_api_key.clone()) // Enable Fusion+ cross-chain functionality
+            .with_fusion_plus(config.oneinch_api_key.clone()), // Enable Fusion+ cross-chain functionality
+        );
+
+        // Initialize price oracle service with 1inch as primary (Phase 6.1)
+        let price_oracle_service = Arc::new(
+            PriceOracleService::new(
+                redis.clone(),
+                Arc::new(config.clone()),
+                oneinch_service.clone(),
+            )
+            .await?,
         );
 
         // Initialize dynamic pricing service (Phase 6.3)
-        let dynamic_pricing_service = Arc::new(
-            DynamicPricingService::new(
-                price_oracle_service.clone(),
-                oneinch_service.clone(),
-            )
-        );
+        let dynamic_pricing_service = Arc::new(DynamicPricingService::new(
+            price_oracle_service.clone(),
+            oneinch_service.clone(),
+        ));
 
         // Initialize bridge integration service (Phase 6.2.1)
-        let bridge_integration_service = Arc::new(
-            BridgeIntegrationService::new(
-                oneinch_service.clone(),
-                bridge_service.clone(),
-            )
-        );
+        let bridge_integration_service = Arc::new(BridgeIntegrationService::new(
+            oneinch_service.clone(),
+            bridge_service.clone(),
+        ));
 
         // Initialize rate limiting service (Phase 7 - H7)
-        let rate_limit_service = Arc::new(
-            RateLimitService::new(redis.clone(), db.clone())
-        );
+        let rate_limit_service = Arc::new(RateLimitService::new(redis.clone(), db.clone()));
 
         tracing::info!(
             "AppState initialized with {} services including risk integration, manual review, transaction service, WebSocket registry, monitoring service, price oracle service, 1inch Fusion+ service, dynamic pricing service, bridge integration service, and rate limiting service",

@@ -98,9 +98,17 @@ class BridgeService {
   async getSwapQuote(request: SwapQuoteRequest): Promise<SwapQuote> {
     console.log("💱 Bridge Service: Getting swap quote:", request);
 
-    const response = await apiClient.post<SwapQuote>(
-      API_ENDPOINTS.BRIDGE.QUOTE,
-      request
+    // Convert request to query parameters for GET request
+    const params = new URLSearchParams({
+      from_token: request.from_token,
+      to_token: request.to_token,
+      from_chain: request.from_chain,
+      to_chain: request.to_chain,
+      from_amount: request.amount,
+    });
+
+    const response = await apiClient.get<SwapQuote>(
+      `${API_ENDPOINTS.BRIDGE.QUOTE}?${params.toString()}`
     );
 
     console.log("✅ Bridge Service: Quote received:", {
@@ -185,17 +193,27 @@ class BridgeService {
   async getSupportedTokens(): Promise<SupportedToken[]> {
     console.log("🪙 Bridge Service: Getting supported tokens");
 
-    const response = await apiClient.get<SupportedToken[]>(
-      "/bridge/supported-tokens"
-    );
+    try {
+      const response = await apiClient.get<SupportedToken[]>(
+        API_ENDPOINTS.BRIDGE.SUPPORTED_TOKENS
+      );
 
-    console.log("✅ Bridge Service: Supported tokens received:", {
-      count: response.length,
-      ethereumTokens: response.filter((t) => t.chain === "ethereum").length,
-      nearTokens: response.filter((t) => t.chain === "near").length,
-    });
+      console.log("✅ Bridge Service: Supported tokens received:", {
+        count: response.length,
+        ethereumTokens: response.filter((t) => t.chain === "ethereum").length,
+        nearTokens: response.filter((t) => t.chain === "near").length,
+      });
 
-    return response;
+      return response;
+    } catch (error) {
+      console.error(
+        "❌ Bridge Service: Failed to load supported tokens:",
+        error
+      );
+      throw new Error(
+        "Failed to load supported tokens. Please try again later."
+      );
+    }
   }
 
   /**

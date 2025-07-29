@@ -7,7 +7,7 @@ import {
   apiClient,
   type VerifyWalletRequest,
   type UserProfile,
-} from "../api/client";
+} from "../api/apiClient";
 import { WalletType } from "../wallet/types";
 
 export interface AuthenticateWalletParams {

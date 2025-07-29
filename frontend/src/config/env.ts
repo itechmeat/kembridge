@@ -37,9 +37,8 @@ export interface AppConfig {
   };
 }
 
-// TODO: MOCK WARNING - Get real WalletConnect project ID from https://dashboard.reown.com
-// This FAKE project ID will cause connection errors!
-const DEFAULT_PROJECT_ID = "MOCK_PROJECT_ID_REPLACE_ME";
+// Real WalletConnect project ID is required for production
+// Set VITE_WALLETCONNECT_PROJECT_ID environment variable
 
 /**
  * Global application configuration
@@ -57,8 +56,7 @@ export const appConfig: AppConfig = {
   },
 
   wallet: {
-    walletConnectProjectId:
-      import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || DEFAULT_PROJECT_ID,
+    walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
   },
 
   api: {
@@ -84,9 +82,9 @@ export const validateConfig = (): void => {
   const issues: string[] = [];
 
   // Check critical configurations
-  if (appConfig.wallet.walletConnectProjectId === DEFAULT_PROJECT_ID) {
+  if (!appConfig.wallet.walletConnectProjectId) {
     issues.push(
-      "⚠️  WalletConnect Project ID is not configured! Get one from https://dashboard.reown.com"
+      "⚠️  WalletConnect Project ID is not configured! Set VITE_WALLETCONNECT_PROJECT_ID environment variable"
     );
   }
 

@@ -196,8 +196,11 @@ impl QuoteEngine {
             ));
         }
 
-        // Check if we have at least one protocol
-        if quote.protocols.is_empty() {
+        // TODO (check): Interesting
+        // NOTE: Empty protocols list doesn't mean insufficient liquidity
+        // 1inch Swap API may return valid quotes without detailed protocol info
+        // Only check for insufficient liquidity if we have zero to_amount
+        if quote.to_amount == BigDecimal::from(0) {
             return Err(OneinchError::InsufficientLiquidity);
         }
 
