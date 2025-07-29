@@ -1,0 +1,2 @@
+store-dir=/root/.local/share/pnpm/store
+package-import-method=copy

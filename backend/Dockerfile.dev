@@ -1,0 +1,50 @@
+# Fast Development Dockerfile for KEMBridge Backend
+# Optimized for quick compilation and hot reload
+
+FROM rust:1.88.0-slim
+
+# Install development tools
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install cargo tools for fast development
+RUN cargo install cargo-watch sccache --locked
+
+# Set up sccache for compilation caching
+ENV RUSTC_WRAPPER=sccache
+ENV SCCACHE_DIR=/root/.cache/sccache
+
+# Configure Rust for faster compilation
+ENV CARGO_INCREMENTAL=1
+ENV CARGO_TARGET_DIR=/tmp/target
+
+WORKDIR /app
+
+# Copy only Cargo files first for dependency caching
+COPY Cargo.toml ./
+COPY Cargo.lock ./
+COPY crates/ ./crates/
+
+# Pre-build dependencies (this layer will be cached)
+RUN mkdir -p src crates/kembridge-auth/src crates/kembridge-crypto/src \
+    crates/kembridge-bridge/src crates/kembridge-database/src \
+    crates/kembridge-blockchain/src && \
+    echo "fn main() {}" > src/main.rs && \
+    echo "pub fn dummy() {}" > crates/kembridge-auth/src/lib.rs && \
+    echo "pub fn dummy() {}" > crates/kembridge-crypto/src/lib.rs && \
+    echo "pub fn dummy() {}" > crates/kembridge-bridge/src/lib.rs && \
+    echo "pub fn dummy() {}" > crates/kembridge-database/src/lib.rs && \
+    echo "pub fn dummy() {}" > crates/kembridge-blockchain/src/lib.rs && \
+    cargo build && \
+    rm -rf src crates/*/src
+
+# Copy source code
+COPY . .
+
+EXPOSE 4000
+
+# Fast development command with cargo-watch and incremental compilation
+CMD ["cargo", "watch", "--no-vcs-ignores", "-x", "check", "-x", "run --bin kembridge-backend"]

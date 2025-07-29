@@ -1,0 +1,252 @@
+# KEMBridge Microservices Architecture
+# Каждый сервис собирается независимо для максимального ускорения разработки
+
+version: '3.8'
+
+services:
+  # Core infrastructure
+  postgres:
+    image: postgres:18beta1
+    environment:
+      POSTGRES_DB: kembridge_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8.0.3-alpine
+    command: redis-server --requirepass dev_redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "dev_redis_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # KEMBridge Microservices
+  
+  # 1inch/DEX Service (50-60% compilation speedup)
+  oneinch-service:
+    container_name: kembridge-oneinch-service-prod
+    build:
+      context: ./services
+      dockerfile: ./kembridge-1inch-service/Dockerfile.optimized
+    ports:
+      - "4001:4001"
+    environment:
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - ONEINCH_API_KEY=${ONEINCH_API_KEY:-}
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-}
+      - PORT=4001
+      - RUST_LOG=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Blockchain Adapters Service (30-40% compilation speedup)
+  blockchain-service:
+    container_name: kembridge-blockchain-service-prod
+    build:
+      context: ./services/kembridge-blockchain-service
+      dockerfile: Dockerfile
+    ports:
+      - "4002:4002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://eth-mainnet.alchemyapi.io/v2/demo}
+      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.mainnet.near.org}
+      - ETHEREUM_PRIVATE_KEY=${ETHEREUM_PRIVATE_KEY:-}
+      - NEAR_PRIVATE_KEY=${NEAR_PRIVATE_KEY:-}
+      - PORT=4002
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Crypto Service (15-20% compilation speedup)
+  crypto-service:
+    container_name: kembridge-crypto-service-prod
+    build:
+      context: ./services/kembridge-crypto-service
+      dockerfile: Dockerfile
+    ports:
+      - "4003:4003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - PORT=4003
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Auth Service (10-15% compilation speedup)
+  auth-service:
+    container_name: kembridge-auth-service-prod
+    build:
+      context: ./services/kembridge-auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "4004:4004"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - JWT_SECRET=${JWT_SECRET:-hackathon-super-secret-key-change-in-production}
+      - PORT=4004
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Core Gateway (minimal dependencies)
+  gateway:
+    container_name: kembridge-gateway-prod
+    build:
+      context: ./services/kembridge-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:4004
+      - CRYPTO_SERVICE_URL=http://crypto-service:4003
+      - BLOCKCHAIN_SERVICE_URL=http://blockchain-service:4002
+      - ONEINCH_SERVICE_URL=http://oneinch-service:4001
+      - JWT_SECRET=${JWT_SECRET:-hackathon-super-secret-key-change-in-production}
+      - PORT=4000
+      - RUST_LOG=info
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      crypto-service:
+        condition: service_healthy
+      blockchain-service:
+        condition: service_healthy
+      oneinch-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Frontend production
+  frontend:
+    container_name: kembridge-frontend-prod
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "4010:80"  # Production frontend
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - gateway
+
+  # AI Engine (unchanged)
+  ai-engine:
+    container_name: kembridge-ai-engine-prod
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+    ports:
+      - "4005:4003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "4024:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: kembridge_microservices

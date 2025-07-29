@@ -1,0 +1,45 @@
+# KEMBridge 1inch/DEX Aggregation Service - Minimal Version
+[package]
+name = "kembridge-1inch-service"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[[bin]]
+name = "kembridge-1inch-service"
+path = "src/main.rs"
+
+[dependencies]
+# Web framework (minimal)
+axum = { version = "0.8.4", features = ["macros"] }
+tokio = { version = "1.46.1", features = ["full"] }
+tower-http = { version = "0.6.6", features = ["cors"] }
+
+# Сериализация
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# UUID для генерации ID
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+
+# Время
+chrono = { version = "0.4", features = ["serde"] }
+
+# Конфигурация
+dotenvy = "0.15"
+
+# Логирование
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Ошибки
+thiserror = "2.0.12"
+anyhow = "1.0"
+
+# Общие типы
+kembridge-common = { path = "../kembridge-common" }
+
+# For future expansion (commented out for now)
+# bigdecimal = { version = "0.4", features = ["serde"] }
+# reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+# redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }

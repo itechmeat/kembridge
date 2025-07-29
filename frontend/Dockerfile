@@ -12,6 +12,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
+
 EXPOSE 4001
 CMD ["pnpm", "run", "dev"]
 

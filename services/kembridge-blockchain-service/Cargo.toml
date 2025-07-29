@@ -1,0 +1,89 @@
+# KEMBridge Blockchain Adapters Service
+# Отвечает за все взаимодействия с Ethereum и NEAR Protocol
+[package]
+name = "kembridge-blockchain-service"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[[bin]]
+name = "kembridge-blockchain-service"
+path = "src/main.rs"
+
+[dependencies]
+# Web framework (minimal)
+axum = { version = "0.8.4", features = ["macros", "tracing"] }
+tokio = { version = "1.46.1", features = ["full"] }
+tower = { version = "0.5.2", features = ["util"] }
+tower-http = { version = "0.6.6", features = ["cors", "trace"] }
+
+# Blockchain dependencies (ISOLATED HERE)
+ethers = { version = "2.0.14", features = ["rustls", "ws", "abigen", "ipc"] }
+
+# NEAR Protocol integration
+near-jsonrpc-client = "0.17"
+near-jsonrpc-primitives = "0.30"
+near-crypto = "0.31.0-rc.2"
+near-primitives = "0.31.0-rc.2"
+near-gas = "0.3"
+
+# Cryptography for blockchain operations
+secp256k1 = "0.31.1"
+ed25519-dalek = "2.2.0"
+sha2 = "0.10.9"
+sha3 = "0.11.0-rc.0"
+
+# HTTP клиент
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Сериализация
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Валидация
+validator = { version = "0.20.0", features = ["derive"] }
+
+# Математика для финансовых расчетов
+bigdecimal = { version = "0.4", features = ["serde"] }
+
+# Время
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+
+# База данных
+sqlx = { version = "0.8", features = [
+    "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "migrate", "bigdecimal"
+] }
+
+# Кэширование (Redis)
+redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
+deadpool-redis = "0.18.0"
+
+# Конфигурация
+config = "0.15.13"
+dotenvy = "0.15"
+
+# Логирование
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Ошибки
+thiserror = "2.0.12"
+anyhow = "1.0"
+
+# Async utilities
+async-trait = "0.1"
+futures = "0.3"
+
+# Hex кодирование
+hex = "0.4"
+
+# Общие типы
+kembridge-common = { path = "../kembridge-common" }
+
+# Мониторинг
+metrics = "0.24.2"
+metrics-exporter-prometheus = "0.17.2"
+
+[dev-dependencies]
+tokio-test = "0.4"

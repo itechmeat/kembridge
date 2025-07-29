@@ -1,232 +1,287 @@
-version: "3.8"
+# Development version with local cargo cache mounts
+# Использует локальные кэши Cargo для максимальной скорости
 
 services:
-  # ========== DATABASE LAYER ==========
+  # Infrastructure (same as microservices)
   postgres:
     image: postgres:18beta1
-    container_name: kembridge_postgres
+    container_name: kembridge_postgres_micro
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: kembridge_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dev_password
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=kembridge_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dev_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations:/docker-entrypoint-initdb.d
-    command: >
-      postgres
-      -c shared_preload_libraries=pg_stat_statements
-      -c track_activity_query_size=2048
-      -c pg_stat_statements.track=all
-      -c log_statement=all
-      -c log_min_duration_statement=0
-    networks:
-      - kembridge-network
+      - ./backend-scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:8.0.3-alpine
-    container_name: kembridge_redis
+    container_name: kembridge_redis_micro
     restart: unless-stopped
     ports:
       - "6379:6379"
+    command: redis-server --requirepass dev_redis_password
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass dev_redis_password
-    networks:
-      - kembridge-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "dev_redis_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 🔥 HOT RELOAD: 1inch/DEX Service
+  oneinch-service-dev:
+    container_name: kembridge-oneinch-service
+    image: kembridge-oneinch-service:dev
+    build:
+      context: ./services
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4001:4001"
+    environment:
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - ONEINCH_API_KEY=${ONEINCH_API_KEY:-}
+      - PORT=4001
+      - RUST_LOG=info
+      - CARGO_HOME=/cargo
+      - CARGO_TARGET_DIR=/app/target
+      - CARGO_INCREMENTAL=1
+    volumes:
+      # 🔥 Source code hot reload
+      - ./services:/app:cached
+      # 🚀 Shared cargo caches for speed
+      - micro_dev_cargo_cache:/cargo/registry:cached
+      - micro_dev_git_cache:/cargo/git:cached
+      - micro_dev_target_cache:/app/target:cached
+    working_dir: /app/kembridge-1inch-service
+    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
       interval: 30s
       timeout: 10s
+      start_period: 30s
       retries: 3
-
-  # ========== BACKEND SERVICES ==========
-  backend:
+      
+  # 🔥 HOT RELOAD: Blockchain Service  
+  blockchain-service-dev:
+    container_name: kembridge-blockchain-service
+    image: kembridge-blockchain-service:dev
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: development
-    container_name: kembridge_backend
-    restart: unless-stopped
+      context: ./services
+      dockerfile: Dockerfile.dev
     ports:
-      - "4000:4000"
+      - "4002:4002"
     environment:
-      - PORT=4000
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:dev_password@postgres:5432/kembridge_dev}
-      - REDIS_URL=${REDIS_URL:-redis://:dev_redis_password@redis:6379}
-      - JWT_SECRET=${JWT_SECRET:-hackathon-super-secret-key-change-in-production}
-      - AI_ENGINE_URL=${AI_ENGINE_URL:-http://ai-engine:4003}
-      
-      # Ethereum Configuration
-      # Configure in .env file - see .env.example
-      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://rpc.sepolia.org}
-      - ETHEREUM_CHAIN_ID=${ETHEREUM_CHAIN_ID:-11155111}
-      
-      # NEAR Protocol Configuration  
-      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.testnet.near.org}
-      - NEAR_NETWORK_ID=${NEAR_NETWORK_ID:-testnet}
-      
-      # 1inch API Configuration
-      # Configure in .env file - see .env.example
-      - ONEINCH_API_KEY=${ONEINCH_API_KEY}
-      
-      # Chainlink Price Feeds (for price oracle)
-      - CHAINLINK_ETH_USD_FEED=${CHAINLINK_ETH_USD_FEED:-0x694AA1769357215DE4FAC081bf1f309aDC325306}
-      - CHAINLINK_NEAR_USD_FEED=${CHAINLINK_NEAR_USD_FEED:-0x0000000000000000000000000000000000000000}
-      
-      # Bridge Contract Configuration (H4: Real Bridge Integration)
-      # These must be set in .env file after contract deployment
-      - BRIDGE_CONTRACT_ADDRESS=${BRIDGE_CONTRACT_ADDRESS}
-      - BRIDGE_CONTRACT_DEPLOYED_BLOCK=${BRIDGE_CONTRACT_DEPLOYED_BLOCK}
-      
-      - RUST_LOG=${RUST_LOG:-debug}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:4001}
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://mainnet.infura.io/v3/your-key}
+      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.mainnet.near.org}
+      - PORT=4002
+      - RUST_LOG=info
+      - CARGO_HOME=/cargo
+      - CARGO_TARGET_DIR=/app/target
+      - CARGO_INCREMENTAL=1
     volumes:
-      - ./backend:/app
-      - backend_target:/app/target # Cache Rust builds
+      - ./services:/app:cached
+      - micro_dev_cargo_cache:/cargo/registry:cached
+      - micro_dev_git_cache:/cargo/git:cached
+      - micro_dev_target_cache:/app/target:cached
+    working_dir: /app/kembridge-blockchain-service
+    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - kembridge-network
-    command: cargo run --bin kembridge-backend
-
-  # ========== AI SERVICES ==========
-  ai-engine:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+        
+  # 🔥 HOT RELOAD: Crypto Service
+  crypto-service-dev:
+    container_name: kembridge-crypto-service
+    image: kembridge-crypto-service:dev
     build:
-      context: ./ai-engine
-      dockerfile: Dockerfile
-    container_name: kembridge_ai_engine
-    restart: unless-stopped
+      context: ./services
+      dockerfile: Dockerfile.dev
     ports:
       - "4003:4003"
     environment:
       - PORT=4003
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:dev_password@postgres:5432/kembridge_dev}
-      - REDIS_URL=${REDIS_URL:-redis://:dev_redis_password@redis:6379}
-      - PYTHONPATH=/app
-      - MODEL_PATH=/app/models
+      - RUST_LOG=info
+      - CARGO_HOME=/cargo
+      - CARGO_TARGET_DIR=/app/target
+      - CARGO_INCREMENTAL=1
     volumes:
-      - ./ai-engine:/app
-      - ai_models:/app/models
+      - ./services:/app:cached
+      - micro_dev_cargo_cache:/cargo/registry:cached
+      - micro_dev_git_cache:/cargo/git:cached
+      - micro_dev_target_cache:/app/target:cached
+    working_dir: /app/kembridge-crypto-service
+    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+      
+  # 🔥 HOT RELOAD: Auth Service
+  auth-service-dev:
+    container_name: kembridge-auth-service
+    image: kembridge-auth-service:dev
+    build:
+      context: ./services
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4004:4004"
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - JWT_SECRET=dev_super_secret_jwt_key_for_development_only
+      - PORT=4004
+      - RUST_LOG=info
+      - CARGO_HOME=/cargo
+      - CARGO_TARGET_DIR=/app/target
+      - CARGO_INCREMENTAL=1
+    volumes:
+      - ./services:/app:cached
+      - micro_dev_cargo_cache:/cargo/registry:cached
+      - micro_dev_git_cache:/cargo/git:cached
+      - micro_dev_target_cache:/app/target:cached
+    working_dir: /app/kembridge-auth-service
+    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+        
+  # 🔥 HOT RELOAD: Gateway Service (with Circuit Breaker)
+  gateway-service-dev:
+    container_name: kembridge-gateway-service
+    image: kembridge-gateway-service:dev
+    build:
+      context: ./services
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - RUST_LOG=info
+      - CARGO_HOME=/cargo
+      - CARGO_TARGET_DIR=/app/target
+      - CARGO_INCREMENTAL=1
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - AUTH_SERVICE_URL=http://auth-service-dev:4004
+      - CRYPTO_SERVICE_URL=http://crypto-service-dev:4003
+      - BLOCKCHAIN_SERVICE_URL=http://blockchain-service-dev:4002
+      - ONEINCH_SERVICE_URL=http://oneinch-service-dev:4001
+      - JWT_SECRET=dev_super_secret_jwt_key_for_development_only
+    volumes:
+      - ./services:/app:cached
+      - micro_dev_cargo_cache:/cargo/registry:cached
+      - micro_dev_git_cache:/cargo/git:cached
+      - micro_dev_target_cache:/app/target:cached
+    working_dir: /app/kembridge-gateway-service
+    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    depends_on:
+      auth-service-dev:
+        condition: service_healthy
+      crypto-service-dev:
+        condition: service_healthy
+      blockchain-service-dev:
+        condition: service_healthy
+      oneinch-service-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # Frontend with hot reload (Docker dev mode - port 4010)
+  # NOTE: Port 4100 is reserved for local development without Docker
+  frontend:
+    container_name: kembridge-frontend
+    image: kembridge-frontend:dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "4010:4010"  # Frontend dev server in Docker
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:4000
+      - VITE_WALLET_CONNECT_PROJECT_ID=${VITE_WALLET_CONNECT_PROJECT_ID:-}
+    volumes:
+      - ./frontend:/app:cached
+      - frontend_node_modules:/app/node_modules
+    working_dir: /app
+    command: ["pnpm", "run", "dev", "--host", "0.0.0.0", "--port", "4010"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4010"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # AI Engine for risk analysis
+  ai-engine:
+    container_name: kembridge-ai-engine
+    image: kembridge-ai-engine:dev
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+    ports:
+      - "4005:4003"  # AI Engine on port 4005
+    environment:
+      - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
+      - REDIS_URL=redis://:dev_redis_password@redis:6379
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    volumes:
+      - ./ai-engine:/app:cached
+    working_dir: /app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4003", "--reload"]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - kembridge-network
-    command: uvicorn main:app --host 0.0.0.0 --port 4003 --reload
-
-  # ========== FRONTEND ==========
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development
-    container_name: kembridge_frontend
-    restart: unless-stopped
-    ports:
-      - "4001:4001" # Vite dev server
-    environment:
-      - PORT=4001
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:4000/api/v1}
-      - VITE_AI_ENGINE_URL=${VITE_AI_ENGINE_URL:-http://localhost:4003}
-      - VITE_WALLET_CONNECT_PROJECT_ID=${VITE_WALLET_CONNECT_PROJECT_ID}
-      - VITE_CHAIN_ID_ETHEREUM=${VITE_CHAIN_ID_ETHEREUM:-11155111}
-      - VITE_CHAIN_ID_NEAR=${VITE_CHAIN_ID_NEAR:-testnet}
-      - WS_NO_BUFFER_UTIL=1
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_pnpm_store:/root/.local/share/pnpm/store
-    depends_on:
-      - backend
-      - ai-engine
-    networks:
-      - kembridge-network
-    command: pnpm run dev -- --host 0.0.0.0
-
-  # ========== REVERSE PROXY ==========
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: kembridge_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on:
-      - frontend
-      - backend
-      - ai-engine
-    networks:
-      - kembridge-network
-
-  # ========== MONITORING ==========
-  prometheus:
-    image: prom/prometheus:v2.53.1
-    container_name: kembridge_prometheus
-    restart: unless-stopped
-    ports:
-      - "4004:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/etc/prometheus/console_libraries"
-      - "--web.console.templates=/etc/prometheus/consoles"
-      - "--storage.tsdb.retention.time=200h"
-      - "--web.enable-lifecycle"
-    networks:
-      - kembridge-network
-
-  grafana:
-    image: grafana/grafana:11.1.3
-    container_name: kembridge_grafana
-    restart: unless-stopped
-    ports:
-      - "4002:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    depends_on:
-      - prometheus
-    networks:
-      - kembridge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
 
 volumes:
   postgres_data:
   redis_data:
-  backend_target:
+  # Hot reload cargo caches (shared between all services)
+  micro_dev_cargo_cache:
+  micro_dev_git_cache:
+  micro_dev_target_cache:
+  # Frontend node_modules cache
   frontend_node_modules:
-  frontend_pnpm_store:
-  ai_models:
-  prometheus_data:
-  grafana_data:
 
 networks:
-  kembridge-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+  default:
+    name: kembridge-microservices-network

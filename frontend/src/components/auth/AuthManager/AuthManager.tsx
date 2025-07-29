@@ -4,12 +4,13 @@
  */
 
 import React, { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import {
   useEthereumAuth,
   useNearAuth,
   useAuthStatus,
 } from "../../../hooks/api/useAuth";
+import { useNearWallet } from "../../../hooks/wallet/useNearWallet";
 import { useUserProfile } from "../../../hooks/api/useUser";
 import { Spinner } from "../../ui/Spinner";
 import "./AuthManager.scss";
@@ -34,16 +35,37 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
 
   // Ethereum auth
   const { isConnected: isEthConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const ethereumAuth = useEthereumAuth();
 
   // NEAR auth
   const nearAuth = useNearAuth();
+  const nearWallet = useNearWallet();
 
   // Ethereum authentication handler
   const handleEthereumAuth = async () => {
     try {
       setError(null);
       setAuthMethod("ethereum");
+
+      // Check if wallet is connected, if not - connect first
+      if (!ethereumAuth.isReady) {
+        console.log("🔗 AuthManager: Ethereum wallet not connected, initiating connection...");
+        
+        // Find MetaMask connector
+        const metamaskConnector = connectors.find(connector => 
+          connector.name.toLowerCase().includes('metamask') || 
+          connector.id === 'metaMask'
+        );
+        
+        if (metamaskConnector) {
+          await connect({ connector: metamaskConnector });
+          // Wait for connection to establish
+          return;
+        } else {
+          throw new Error("MetaMask connector not found");
+        }
+      }
 
       const result = await ethereumAuth.authenticate();
       console.log(
@@ -70,6 +92,18 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
     try {
       setError(null);
       setAuthMethod("near");
+
+      // Check if wallet is connected, if not - connect first
+      if (!nearAuth.isReady) {
+        console.log("🔗 AuthManager: NEAR wallet not connected, initiating connection...");
+        
+        // Trigger wallet connection modal
+        nearWallet.signIn();
+        
+        // Wait for connection to establish
+        // Note: This might require user interaction and page redirect
+        return;
+      }
 
       const result = await nearAuth.authenticate();
       console.log("🎉 AuthManager: NEAR authentication successful:", result);
@@ -159,7 +193,7 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
         <button
           className="auth-manager__method auth-manager__method--ethereum"
           onClick={handleEthereumAuth}
-          disabled={!ethereumAuth.isReady || authMethod !== null}
+          disabled={authMethod !== null}
         >
           {authMethod === "ethereum" ? (
             <>
@@ -187,7 +221,7 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
         <button
           className="auth-manager__method auth-manager__method--near"
           onClick={handleNearAuth}
-          disabled={!nearAuth.isReady || authMethod !== null}
+          disabled={authMethod !== null}
         >
           {authMethod === "near" ? (
             <>
