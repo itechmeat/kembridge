@@ -3,8 +3,7 @@
  * Web3 wallet authentication with backend
  */
 
-import apiClient from "./apiClient";
-import { API_ENDPOINTS } from "./config";
+import apiClient, { VerifyWalletRequest, VerifyWalletResponse as ApiVerifyWalletResponse } from "./apiClient";
 
 // Type definitions for auth API
 export interface NonceRequest {
@@ -18,22 +17,9 @@ export interface NonceResponse {
   expires_at: string;
 }
 
-export interface VerifyWalletRequest {
-  wallet_address: string;
-  signature: string;
-  nonce: string;
-  chain_type: "ethereum" | "near";
-  message: string;
-}
 
-export interface VerifyWalletResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  user_id: string;
-  wallet_address: string;
-  chain_type: "ethereum" | "near";
-}
+// Re-export the correct interface from apiClient
+export type VerifyWalletResponse = ApiVerifyWalletResponse;
 
 export interface RefreshTokenResponse {
   token: string;
@@ -55,9 +41,7 @@ class AuthService {
       chainType
     );
 
-    const response = await apiClient.get<NonceResponse>(
-      `${API_ENDPOINTS.AUTH.NONCE}?wallet_address=${walletAddress}&chain_type=${chainType}`
-    );
+    const response = await apiClient.getNonce(walletAddress, chainType);
 
     console.log("✅ Auth Service: Nonce received:", response);
     return response;
@@ -99,41 +83,39 @@ class AuthService {
       message,
     };
 
-    const response = await apiClient.post<VerifyWalletResponse>(
-      API_ENDPOINTS.AUTH.VERIFY_WALLET,
-      request
-    );
+    const response = await apiClient.verifyWallet(request);
 
     // Debug: Log the entire response to see what we're getting
     console.log("🔍 Auth Service: Full response from backend:", {
       status: "success",
       responseKeys: Object.keys(response),
       responseData: response,
-      hasToken: "access_token" in response,
-      tokenValue: response.access_token,
+      verified: response.verified,
+      hasToken: !!response.session_token,
+      tokenValue: response.session_token,
     });
 
-    // Save token in API client
-    if (response.access_token) {
-      apiClient.setAuthToken(response.access_token);
-      console.log("✅ Auth Service: Authentication successful, token saved", {
-        tokenLength: response.access_token.length,
-        tokenPreview: response.access_token.substring(0, 20) + "...",
-        tokenType: response.token_type,
-        expiresIn: response.expires_in,
-        userId: response.user_id,
+    // Token is automatically saved by apiClient.verifyWallet call above
+    if (response.verified && response.session_token) {
+      console.log("✅ Auth Service: Authentication successful", {
+        tokenLength: response.session_token.length,
+        tokenPreview: response.session_token.substring(0, 20) + "...",
+        walletAddress: response.wallet_address,
+        chainType: response.chain_type,
       });
 
-      // Verify token was actually saved
+      // Verify token was actually saved by apiClient
       const savedToken = apiClient.getAuthToken();
       const isAuth = apiClient.isAuthenticated();
-      console.log("🔍 Auth Service: Token verification after save", {
+      console.log("🔍 Auth Service: Token verification after auth", {
         tokenSaved: !!savedToken,
         isAuthenticated: isAuth,
-        tokensMatch: savedToken === response.access_token,
+        tokensMatch: savedToken === response.session_token,
       });
     } else {
-      console.error("❌ Auth Service: No access_token in response!", {
+      console.error("❌ Auth Service: Authentication failed or no session_token!", {
+        verified: response.verified,
+        hasSessionToken: !!response.session_token,
         responseType: typeof response,
         responseKeys: Object.keys(response || {}),
         fullResponse: response,
@@ -149,17 +131,15 @@ class AuthService {
   async refreshToken(): Promise<RefreshTokenResponse> {
     console.log("🔄 Auth Service: Refreshing token");
 
-    const response = await apiClient.post<RefreshTokenResponse>(
-      API_ENDPOINTS.AUTH.REFRESH
-    );
+    await apiClient.refreshAccessToken();
+    console.log("✅ Auth Service: Token refreshed successfully");
 
-    // Update token in API client
-    if (response.token) {
-      apiClient.setAuthToken(response.token);
-      console.log("✅ Auth Service: Token refreshed successfully");
-    }
-
-    return response;
+    // Return current state
+    const token = apiClient.getAuthToken();
+    return {
+      token: token || "",
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
   }
 
   /**

@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   preview: {
-    port: 4001,
+    port: 4010,
     host: "0.0.0.0",
   },
   optimizeDeps: {

@@ -6,7 +6,7 @@
 // Use constants from global project settings
 export const API_CONFIG = {
   // Backend URL - from constants.rs DEFAULT_SERVER_URL
-  BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:4000",
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:4000",
 
   // Frontend URL - for CORS
   FRONTEND_URL: "http://localhost:4100",

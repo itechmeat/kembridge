@@ -1,0 +1,71 @@
+# KEMBridge Core API Gateway
+# Минимальный gateway для маршрутизации запросов между микросервисами
+[package]
+name = "kembridge-gateway"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[dependencies]
+# Web framework (lightweight)
+axum = { version = "0.8.4", features = ["macros", "tracing"] }
+tokio = { version = "1.46.1", features = ["full"] }
+tower = { version = "0.5.2", features = ["util", "load-shed", "timeout"] }
+tower-http = { version = "0.6.6", features = ["cors", "trace", "compression-gzip"] }
+
+# HTTP клиент для межсервисной коммуникации
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Сериализация
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Валидация
+validator = { version = "0.20.0", features = ["derive"] }
+
+# Время
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+
+# JWT для базовой проверки токенов
+jsonwebtoken = "9.3.1"
+
+# Кэширование (Redis) для session management
+redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
+deadpool-redis = "0.18.0"
+
+# Конфигурация
+config = "0.15.13"
+dotenvy = "0.15"
+
+# Логирование
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Ошибки
+thiserror = "2.0.12"
+anyhow = "1.0"
+
+# Async utilities
+async-trait = "0.1"
+futures = "0.3"
+
+# Rate limiting
+tower_governor = "0.4"
+
+# Load balancing and circuit breaker
+tower-balance = "0.3"
+
+# Общие типы
+kembridge-common = { path = "../kembridge-common" }
+
+# Мониторинг
+metrics = "0.24.2"
+metrics-exporter-prometheus = "0.17.2"
+
+# API Documentation
+utoipa = { version = "5.0.1", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
+
+[dev-dependencies]
+tokio-test = "0.4"

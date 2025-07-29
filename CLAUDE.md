@@ -99,20 +99,30 @@ sqlx migrate run
 
 ## Service Endpoints
 
-- Frontend: http://localhost:4001
+- Frontend (Docker): http://localhost:4010
 - Backend API: http://localhost:4000
-- AI Engine: http://localhost:4003
+- AI Engine: http://localhost:4005
 - Grafana: http://localhost:4002 (admin:admin)
 - Prometheus: http://localhost:4004
 
 ## Frontend Testing Guidelines
 
-**IMPORTANT**: For frontend testing with browsermcp, ALWAYS use http://localhost:4100/ unless explicitly asked to test the Docker version.
+**IMPORTANT**: Frontend port allocation strategy:
 
-- **Default Testing URL**: http://localhost:4100/ (development server)
-- **Docker Testing URL**: http://localhost:4001 (only when specifically requested)
+- **Docker Frontend URL**: http://localhost:4010 (both dev and prod Docker containers)
+- **Local Frontend URL**: http://localhost:4100 (reserved for local development without Docker)
+- **Testing**: Use http://localhost:4010 for Docker-based testing, http://localhost:4100 for local testing
 
-This ensures consistent testing environment and avoids confusion between different deployment modes.
+**Port Allocation:**
+- **4010**: Frontend in Docker (development and production containers)
+- **4100**: Reserved for local frontend development without Docker (pnpm run dev)
+
+This ensures clean separation between Docker and local development environments.
+
+**CRITICAL**: Claude Code MUST NEVER start the frontend development server automatically:
+- **FORBIDDEN**: Running `pnpm run dev`, `npm start`, or any frontend development commands
+- **REASON**: User manages frontend development process manually
+- **ALLOWED**: Only reading frontend files and making edits when requested
 
 ## Key Technologies
 

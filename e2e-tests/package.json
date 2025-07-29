@@ -1,0 +1,32 @@
+{
+  "name": "kembridge-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-End tests for KEMBridge using Playwright",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:auth": "playwright test tests/wallet-authentication.spec.js",
+    "test:api": "playwright test tests/api-integration.spec.js",
+    "test:bridge": "playwright test tests/bridge-integration.spec.js",
+    "test:security": "playwright test tests/security-penetration.spec.ts",
+    "test:refactored": "playwright test tests/transaction-flow-refactored.spec.js",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install"
+  },
+  "devDependencies": {
+    "@johanneskares/wallet-mock": "^1.4.1",
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "viem": "^2.33.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  }
+}

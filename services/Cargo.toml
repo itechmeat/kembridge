@@ -1,0 +1,105 @@
+# KEMBridge Microservices Workspace
+# Общие зависимости для всех микросервисов
+
+[workspace]
+members = [
+    "kembridge-common",
+    "kembridge-1inch-service", 
+    "kembridge-blockchain-service",
+    "kembridge-crypto-service",
+    "kembridge-auth-service",
+    "kembridge-gateway-service"
+]
+
+# Общие зависимости для всех сервисов (версии синхронизированы)
+[workspace.dependencies]
+# Web framework
+axum = { version = "0.8.4", features = ["macros"] }
+axum-macros = "0.5.0"
+tokio = { version = "1.47.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["cors", "trace"] }
+tower-layer = "0.3.3"
+tower-service = "0.3.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_derive = "1.0"
+
+# UUID и Time
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "2.0.12"
+anyhow = "1.0"
+
+# Async
+async-trait = "0.1"
+futures = "0.3"
+
+# HTTP Client (для blockchain и 1inch services)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+hyper = "1.6.0"
+
+# Database (для auth, blockchain, crypto services) 
+sqlx = { version = "0.8", features = [
+    "runtime-tokio-rustls",
+    "postgres", 
+    "chrono",
+    "uuid",
+    "json"
+] }
+
+# Redis (для всех сервисов)
+redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
+
+# Crypto (для crypto service)
+ring = "0.17"
+sha2 = "0.10"
+aes-gcm = "0.10"
+
+# JSON Web Tokens (для auth и gateway)
+jsonwebtoken = "9.3"
+
+# Blockchain specific (для blockchain service)
+ethers = "2.0"
+near-sdk = "5.5"
+
+# Math (для 1inch service)
+bigdecimal = { version = "0.4", features = ["serde"] }
+
+# Validation
+validator = { version = "0.20", features = ["derive"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_imports = "warn"
+dead_code = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+cargo = "warn"
+
+# Профили сборки для оптимизации
+[profile.dev]
+incremental = true
+debug = true
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev.package."*"]
+opt-level = 2  # Оптимизируем зависимости даже в dev режиме

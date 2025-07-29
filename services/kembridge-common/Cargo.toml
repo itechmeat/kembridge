@@ -1,0 +1,37 @@
+# Общие типы и утилиты для всех KEMBridge сервисов
+[package]
+name = "kembridge-common"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+name = "kembridge_common"
+path = "src/lib.rs"
+
+[dependencies]
+# Базовые зависимости для всех сервисов
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.17.0", features = ["v4", "v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+bigdecimal = { version = "0.4", features = ["serde"] }
+thiserror = "2.0.12"
+anyhow = "1.0"
+
+# HTTP клиент для межсервисной коммуникации
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Валидация
+validator = { version = "0.20.0", features = ["derive"] }
+
+# Async
+async-trait = "0.1"
+tokio = { version = "1.46.1", features = ["full"] }
+
+# Логирование
+tracing = "0.1"
+
+# Конфигурация
+config = "0.15.13"
+dotenvy = "0.15"

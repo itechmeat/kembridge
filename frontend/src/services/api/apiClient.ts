@@ -31,18 +31,15 @@ export interface VerifyWalletRequest {
   wallet_address: string;
   signature: string;
   nonce: string;
-  wallet_type: "ethereum" | "near";
+  chain_type: "ethereum" | "near";
+  message: string;
 }
 
 export interface VerifyWalletResponse {
-  access_token: string;
-  refresh_token?: string;
-  user: {
-    id: string;
-    wallet_address: string;
-    created_at: string;
-    updated_at: string;
-  };
+  verified: boolean;
+  wallet_address: string;
+  chain_type: string;
+  session_token: string | null;
 }
 
 export interface UserProfile {
@@ -426,8 +423,10 @@ class ApiClient {
       request
     );
 
-    // Store tokens
-    this.setAuthToken(response.access_token, response.refresh_token);
+    // Store token if authentication was successful
+    if (response.verified && response.session_token) {
+      this.setAuthToken(response.session_token);
+    }
 
     return response;
   }

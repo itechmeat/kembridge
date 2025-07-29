@@ -50,9 +50,9 @@ export const appConfig: AppConfig = {
     description:
       import.meta.env.VITE_APP_DESCRIPTION ||
       "Quantum-Secured Cross-Chain Bridge",
-    url: import.meta.env.VITE_APP_URL || "http://localhost:4001",
+    url: import.meta.env.VITE_APP_URL || "http://localhost:4010",
     iconUrl:
-      import.meta.env.VITE_APP_ICON_URL || "http://localhost:4001/icon.png",
+      import.meta.env.VITE_APP_ICON_URL || "http://localhost:4010/icon.png",
   },
 
   wallet: {
@@ -60,7 +60,7 @@ export const appConfig: AppConfig = {
   },
 
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:4001",
+    baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:4000",
   },
 
   blockchain: {
