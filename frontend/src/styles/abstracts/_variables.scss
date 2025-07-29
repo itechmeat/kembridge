@@ -34,6 +34,12 @@ $error: $warning-color;
 $warning: #fbbf24;
 $info: $primary-color;
 
+// Security status colors
+$security-secure: #00aa44; // Secure Green
+$security-warning: #ff6600; // Energy Orange
+$security-danger: #ff3366; // Alert Red
+$security-offline: #999999; // Gray for offline
+
 // Background colors
 $bg-primary: $white;
 $bg-secondary: $gray-50;

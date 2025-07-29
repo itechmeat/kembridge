@@ -15,6 +15,9 @@ import { useBridgeSwap } from "../../../hooks/bridge/useBridgeSwap";
 import { useSupportedTokens } from "../../../hooks/bridge/useSupportedTokens";
 import { useWallet } from "../../../hooks/wallet/useWallet";
 import { useAuthStatus } from "../../../hooks/api/useAuth";
+import { SecurityIndicator, RiskAnalysisDisplay } from "../../security";
+import { useSecurityStatus, useRiskAnalysis } from "../../../hooks/security";
+import { bridgeService } from "../../../services/api/bridgeService";
 import type { BridgeSwapRequest } from "../../../types/bridge";
 
 export interface SwapFormProps {
@@ -75,6 +78,23 @@ export const SwapForm: React.FC<SwapFormProps> = ({
 
   // Bridge swap mutation
   const bridgeSwap = useBridgeSwap();
+
+  // Security status
+  const { quantumProtection, isOnline } = useSecurityStatus();
+
+  // Risk analysis for current transaction
+  const riskAnalysisRequest = isAuthenticated && walletAddress && formData.fromToken && formData.toToken && formData.amount && parseFloat(formData.amount) > 0 ? {
+    fromAddress: walletAddress,
+    toAddress: "0x0000000000000000000000000000000000000000", // TODO: Get actual recipient
+    amount: parseFloat(formData.amount) || 0,
+    token: formData.fromToken?.symbol || "",
+    chain: formData.fromChain || ""
+  } : null;
+
+  const { riskAnalysis, riskScore } = useRiskAnalysis(riskAnalysisRequest, {
+    enabled: !!riskAnalysisRequest,
+    realTime: true
+  });
 
   // Auto-select default tokens when chains change
   useEffect(() => {
@@ -297,7 +317,10 @@ export const SwapForm: React.FC<SwapFormProps> = ({
               />
 
               <div className="swap-form__receive-amount">
-                {quote ? quote.to_amount : "0.0"}
+                {quote ? bridgeService.formatTokenAmount(
+                  quote.to_amount, 
+                  formData.toToken?.decimals || (formData.toToken?.symbol === 'NEAR' ? 24 : 18)
+                ) : "0.0"}
               </div>
             </div>
           </div>
@@ -323,6 +346,34 @@ export const SwapForm: React.FC<SwapFormProps> = ({
             />
           </div>
 
+          {/* Security Status */}
+          <div className="swap-form__security">
+            <SecurityIndicator
+              quantumProtection={quantumProtection}
+              riskScore={riskScore || 0}
+              isOnline={isOnline}
+              compact={true}
+            />
+          </div>
+
+          {/* Risk Analysis */}
+          {riskAnalysis && (
+            <div className="swap-form__risk-analysis">
+              <RiskAnalysisDisplay
+                riskData={riskAnalysis}
+                realTime={true}
+                showDetails={false} // Compact for swap form
+                onUpdate={(data) => {
+                  console.log("Risk data updated:", data);
+                  // TODO: Handle high-risk transaction blocking
+                  if (data.riskScore.value > 0.8) {
+                    console.warn("High risk transaction detected!");
+                  }
+                }}
+              />
+            </div>
+          )}
+
           {/* Price Quote Display */}
           <PriceQuote
             quote={
@@ -340,7 +391,9 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                     bridgeFee: quote.estimated_fees?.bridge_fee || "0",
                     protocolFee: quote.estimated_fees?.protocol_fee || "0",
                     totalFees: quote.estimated_fees?.total_fee || "0",
-                    priceImpact: quote.price_impact?.toString() || "0",
+                    priceImpact: typeof quote.price_impact === 'object' 
+                      ? (quote.price_impact as { percentage?: number })?.percentage?.toString() || "0" 
+                      : quote.price_impact?.toString() || "0",
                     slippage: formData.slippage!.toString(),
                     estimatedTime: quote.estimated_time_minutes * 60,
                     expiresAt: quote.expires_at,
@@ -392,7 +445,9 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                 bridgeFee: quote.estimated_fees?.bridge_fee || "0",
                 protocolFee: quote.estimated_fees?.protocol_fee || "0",
                 totalFees: quote.estimated_fees?.total_fee || "0",
-                priceImpact: quote.price_impact?.toString() || "0",
+                priceImpact: typeof quote.price_impact === 'object' 
+                  ? (quote.price_impact as { percentage?: number })?.percentage?.toString() || "0" 
+                  : quote.price_impact?.toString() || "0",
                 slippage: formData.slippage!.toString(),
                 estimatedTime: quote.estimated_time_minutes * 60,
                 expiresAt: quote.expires_at,

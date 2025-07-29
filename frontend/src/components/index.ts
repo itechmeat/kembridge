@@ -10,6 +10,9 @@ export * from "./auth";
 export { Spinner } from "./ui/Spinner";
 export { Modal } from "./ui/Modal/Modal";
 
+// Security components
+export * from "./security";
+
 // Layout components (if they exist)
 // export * from "./layout";
 
