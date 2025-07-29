@@ -5,11 +5,46 @@
 
 import { useCallback, useMemo } from "react";
 import { useWallet } from "./useWallet";
-import { NetworkInfo, NetworkType } from "../../services/wallet/types";
-import {
-  SUPPORTED_NETWORKS,
-  isSupportedNetwork,
-} from "../../services/wallet/utils";
+
+export enum NetworkType {
+  ETHEREUM = "ethereum",
+  NEAR = "near",
+}
+
+export interface NetworkInfo {
+  name: string;
+  type: NetworkType;
+  chainId: number | string;
+  rpcUrl?: string;
+  blockExplorer?: string;
+}
+
+const SUPPORTED_NETWORKS: Record<string, NetworkInfo> = {
+  "1": {
+    name: "Ethereum Mainnet",
+    type: NetworkType.ETHEREUM,
+    chainId: 1,
+  },
+  "11155111": {
+    name: "Sepolia Testnet", 
+    type: NetworkType.ETHEREUM,
+    chainId: 11155111,
+  },
+  "137": {
+    name: "Polygon",
+    type: NetworkType.ETHEREUM, 
+    chainId: 137,
+  },
+  "near": {
+    name: "NEAR Protocol",
+    type: NetworkType.NEAR,
+    chainId: "near",
+  },
+};
+
+const isSupportedNetwork = (chainId: string | number): boolean => {
+  return !!SUPPORTED_NETWORKS[chainId.toString()];
+};
 
 export interface UseNetworkReturn {
   currentNetwork: NetworkInfo | null;
@@ -23,10 +58,24 @@ export interface UseNetworkReturn {
 }
 
 export const useNetwork = (): UseNetworkReturn => {
-  const { account, switchNetwork: walletSwitchNetwork } = useWallet();
+  const { account, state } = useWallet();
 
-  // Current network from account
-  const currentNetwork = account?.network || null;
+  // Current network from account or state
+  const currentNetwork = useMemo(() => {
+    if (account?.network) {
+      return account.network as NetworkInfo;
+    }
+    
+    if (state.walletType === "near") {
+      return SUPPORTED_NETWORKS["near"];
+    }
+    
+    if (state.chainId) {
+      return SUPPORTED_NETWORKS[state.chainId.toString()] || null;
+    }
+    
+    return null;
+  }, [account, state]);
 
   // All supported networks
   const supportedNetworks = useMemo(() => {
@@ -51,9 +100,11 @@ export const useNetwork = (): UseNetworkReturn => {
   // Switch network
   const switchNetwork = useCallback(
     async (network: NetworkInfo): Promise<void> => {
-      await walletSwitchNetwork(network);
+      // TODO: Implement network switching
+      console.warn("Network switching not yet implemented in new useWallet");
+      throw new Error("Network switching not implemented");
     },
-    [walletSwitchNetwork]
+    []
   );
 
   // Get networks filtered by type

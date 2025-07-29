@@ -5,7 +5,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "./useWallet";
-import { TokenBalance } from "../../services/wallet/types";
+
+export interface TokenBalance {
+  symbol: string;
+  balance: string;
+  decimals: number;
+  usdValue?: string;
+}
 
 export interface UseBalanceReturn {
   balances: TokenBalance[];
@@ -17,7 +23,7 @@ export interface UseBalanceReturn {
 }
 
 export const useBalance = (): UseBalanceReturn => {
-  const { account, isConnected } = useWallet();
+  const { account, isConnected, state } = useWallet();
   const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,9 +34,22 @@ export const useBalance = (): UseBalanceReturn => {
       setBalances(account.balances);
       setError(null);
     } else {
-      setBalances([]);
+      // Mock balances for demonstration
+      if (isConnected && state.address) {
+        const mockBalances: TokenBalance[] = [
+          {
+            symbol: state.walletType === "near" ? "NEAR" : "ETH",
+            balance: "1.234567890123456789",
+            decimals: 18,
+            usdValue: state.walletType === "near" ? "3.45" : "2456.78",
+          },
+        ];
+        setBalances(mockBalances);
+      } else {
+        setBalances([]);
+      }
     }
-  }, [account]);
+  }, [account, isConnected, state]);
 
   // Refresh balances
   const refresh = useCallback(async (): Promise<void> => {
@@ -42,10 +61,22 @@ export const useBalance = (): UseBalanceReturn => {
     setError(null);
 
     try {
-      // Get wallet manager and refresh account data
-      const { getWalletManager } = await import("../../services/wallet");
-      const walletManager = getWalletManager();
-      await walletManager.refreshAccount();
+      // TODO: Implement proper balance refresh with new wallet system
+      console.log("🔄 Refreshing balances...");
+      
+      // Mock refresh for now
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update mock balances based on current wallet
+      const mockBalances: TokenBalance[] = [
+        {
+          symbol: account.type === "near" ? "NEAR" : "ETH",
+          balance: "1.234567890123456789",
+          decimals: 18,
+          usdValue: account.type === "near" ? "3.45" : "2456.78",
+        },
+      ];
+      setBalances(mockBalances);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to refresh balances";

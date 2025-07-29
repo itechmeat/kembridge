@@ -5,6 +5,7 @@ import { useNearWallet } from "./hooks/wallet/useNearWallet";
 import { setNearWalletContext } from "./services/wallet/providers/near";
 import { MobileLayout } from "./components/layout/MobileLayout/MobileLayout";
 import { WalletPage } from "./pages/WalletPage/WalletPage";
+import { AuthTestPage } from "./pages/AuthTestPage/AuthTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
 import { useEffect } from "react";
@@ -69,6 +70,7 @@ function AppContent() {
                 </div>
               }
             />
+            <Route path="/auth-test" element={<AuthTestPage />} />
           </Routes>
         </MobileLayout>
       </Router>

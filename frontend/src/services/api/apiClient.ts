@@ -50,7 +50,13 @@ class ApiClient {
       const token = localStorage.getItem(API_CONFIG.TOKEN_STORAGE_KEY);
       if (token) {
         this.authToken = token;
-        console.log("🔑 API Client: Auth token loaded from storage");
+        console.log("🔑 API Client: Auth token loaded from storage", {
+          tokenLength: token.length,
+          tokenPreview: token.substring(0, 20) + "...",
+          storageKey: API_CONFIG.TOKEN_STORAGE_KEY,
+        });
+      } else {
+        console.log("ℹ️ API Client: No stored token found");
       }
     } catch (error) {
       console.warn("⚠️ API Client: Failed to load token from storage:", error);
@@ -64,7 +70,19 @@ class ApiClient {
     try {
       localStorage.setItem(API_CONFIG.TOKEN_STORAGE_KEY, token);
       this.authToken = token;
-      console.log("✅ API Client: Auth token saved to storage");
+      console.log("✅ API Client: Auth token saved to storage", {
+        tokenLength: token.length,
+        storageKey: API_CONFIG.TOKEN_STORAGE_KEY,
+        tokenPreview: token.substring(0, 20) + "...",
+      });
+
+      // Verify it was actually saved
+      const storedToken = localStorage.getItem(API_CONFIG.TOKEN_STORAGE_KEY);
+      console.log("🔍 API Client: Token verification", {
+        storedSuccessfully: !!storedToken,
+        tokensMatch: storedToken === token,
+        memoryToken: !!this.authToken,
+      });
     } catch (error) {
       console.error("❌ API Client: Failed to save token:", error);
     }
