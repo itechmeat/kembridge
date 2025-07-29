@@ -9,6 +9,9 @@ use crate::state::AppState;
 /// These will be fully implemented in Phase 3.2 - Quantum Key Management
 pub fn create_routes() -> Router<AppState> {
     Router::new()
+        // System status endpoint (Phase 8.1.2)
+        .route("/status", get(crate::handlers::quantum::get_status))
+        
         // Generate ML-KEM-1024 keypair (Phase 3.2.4)
         .route("/generate-keys", post(crate::handlers::quantum::generate_keypair))
         

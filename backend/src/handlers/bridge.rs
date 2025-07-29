@@ -1,13 +1,14 @@
 // src/handlers/bridge.rs - Bridge operation handlers
-use axum::{extract::{State, Path, Query}, response::Json, http::StatusCode};
+use axum::{extract::{State, Path, Query, Json as ExtractJson}, response::Json, http::StatusCode};
 use serde_json::{json, Value};
-use serde::Deserialize;
-use bigdecimal::BigDecimal;
+use serde::{Deserialize, Serialize};
+use bigdecimal::{BigDecimal, ToPrimitive};
 use std::str::FromStr;
 use chrono::{Duration, Utc};
 use crate::state::AppState;
 use crate::dynamic_pricing::types::BridgeQuoteRequest;
 use crate::utils::token_mapping::symbol_to_token_address;
+use crate::extractors::auth::AuthUser;
 
 /// Query parameters for bridge quote request
 #[derive(Debug, Deserialize)]
@@ -19,6 +20,30 @@ pub struct QuoteQueryParams {
     pub from_amount: String,
     pub max_slippage: Option<f64>,
     pub user_id: Option<String>,
+}
+
+/// Request body for initiating a swap
+#[derive(Debug, Deserialize)]
+pub struct SwapInitRequest {
+    pub quote_id: String,
+    pub from_chain: String,
+    pub to_chain: String,   
+    pub from_token: String,
+    pub to_token: String,
+    pub from_amount: String,
+    pub to_amount: String,
+    pub recipient_address: String,
+    pub max_slippage: Option<f64>,
+}
+
+/// Response for successful swap initiation
+#[derive(Debug, Serialize)]
+pub struct SwapInitResponse {
+    pub transaction_id: String,
+    pub status: String,
+    pub estimated_time_minutes: i64,
+    pub expires_at: String,
+    pub next_steps: Vec<String>,
 }
 
 /// Get swap quote (Phase 6.3.5)
@@ -123,14 +148,102 @@ pub async fn get_quote(
     }
 }
 
-/// Initiate cross-chain swap (Phase 4.3.4)
-pub async fn initiate_swap(State(_state): State<AppState>) -> Result<Json<Value>, StatusCode> {
-    Ok(Json(json!({
-        "transaction_id": "placeholder-tx-id",
-        "status": "pending",
-        "message": "Cross-chain swap initiation will be implemented in Phase 4.3 - Basic Bridge Logic",
-        "implementation_phase": "4.3"
-    })))
+/// Initiate cross-chain swap (Phase 8.1.1)
+#[axum::debug_handler]
+pub async fn initiate_swap(
+    State(state): State<AppState>,
+    user: AuthUser,
+    ExtractJson(payload): ExtractJson<SwapInitRequest>
+) -> Result<Json<SwapInitResponse>, StatusCode> {
+    tracing::info!("User {} initiating swap: {} {} -> {} {}", 
+        user.user_id, payload.from_amount, payload.from_token, payload.to_amount, payload.to_token);
+    
+    // Validate request parameters
+    let from_amount = match BigDecimal::from_str(&payload.from_amount) {
+        Ok(amount) => amount,
+        Err(e) => {
+            tracing::error!("Invalid from_amount '{}': {}", payload.from_amount, e);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+    
+    if from_amount <= BigDecimal::from(0) {
+        tracing::error!("Amount must be positive, got: {}", from_amount);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    // Validate token symbols
+    if let Err(e) = symbol_to_token_address(&payload.from_token) {
+        tracing::error!("Invalid from_token '{}': {}", payload.from_token, e);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    if let Err(e) = symbol_to_token_address(&payload.to_token) {
+        tracing::error!("Invalid to_token '{}': {}", payload.to_token, e);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    // Check bridge service availability
+    let bridge_service = match &state.bridge_service {
+        Some(service) => service,
+        None => {
+            tracing::error!("Bridge service not available");
+            return Err(StatusCode::SERVICE_UNAVAILABLE);
+        }
+    };
+    
+    // Convert amount to wei for internal processing (simplified for hackathon)
+    let amount_wei = (from_amount.clone() * BigDecimal::from(1_000_000_000_000_000_000u64))
+        .to_u128()
+        .unwrap_or(0);
+    
+    if amount_wei == 0 {
+        tracing::error!("Amount conversion to wei failed for: {}", from_amount);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    
+    // Initialize swap through bridge service
+    match bridge_service.init_swap(
+        user.user_id,
+        &payload.from_chain,
+        &payload.to_chain,
+        amount_wei,
+        &payload.recipient_address,
+    ).await {
+        Ok(swap_init_response) => {
+            tracing::info!("Swap initialized successfully: {}", swap_init_response.swap_id);
+            
+            // TODO (feat): Start background execution of the swap
+            // For now, the swap is only initialized but not executed
+            let service_clone = bridge_service.clone();
+            let swap_id = swap_init_response.swap_id;
+            tokio::spawn(async move {
+                // TODO (fix): Add proper error handling and retry logic
+                if let Err(e) = service_clone.execute_swap(swap_id).await {
+                    tracing::error!("Swap execution failed for {}: {:?}", swap_id, e);
+                }
+            });
+            
+            let response = SwapInitResponse {
+                transaction_id: swap_init_response.swap_id.to_string(),
+                status: "initialized".to_string(),
+                estimated_time_minutes: swap_init_response.estimated_time.num_minutes(),
+                expires_at: (Utc::now() + swap_init_response.estimated_time).to_rfc3339(),
+                next_steps: vec![
+                    "Transaction has been initialized".to_string(),
+                    "Quantum encryption is being applied".to_string(),
+                    "Cross-chain transfer will begin shortly".to_string(),
+                    "You will receive status updates".to_string(),
+                ],
+            };
+            
+            Ok(Json(response))
+        }
+        Err(e) => {
+            tracing::error!("Failed to initialize swap: {:?}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
 /// Get swap transaction status (Phase 4.3.8)

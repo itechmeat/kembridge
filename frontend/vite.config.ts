@@ -8,6 +8,12 @@ export default defineConfig({
     global: "globalThis",
     "process.env": {},
   },
+  resolve: {
+    alias: {
+      buffer: "buffer",
+      process: "process/browser",
+    },
+  },
   server: {
     host: "0.0.0.0",
     port: 4100,

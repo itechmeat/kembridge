@@ -191,6 +191,13 @@ impl NearVerifier {
             .into_vec()
             .map_err(|_| AuthError::InvalidSignature)
     }
+
+    fn base64_decode(s: &str) -> Result<Vec<u8>, AuthError> {
+        use base64::{Engine, engine::general_purpose};
+        general_purpose::STANDARD
+            .decode(s)
+            .map_err(|_| AuthError::InvalidSignature)
+    }
 }
 
 #[async_trait]
@@ -205,7 +212,8 @@ impl ChainVerifier for NearVerifier {
         use sha2::{Digest, Sha256};
 
         // NEAR uses ed25519 signatures
-        let signature_bytes = Self::base58_decode(signature)?;
+        // Frontend sends signatures in base64 format, not base58
+        let signature_bytes = Self::base64_decode(signature)?;
         
         // TODO (feat): Implement full RPC integration for NEAR account key resolution (P2.2)
         // This requires integrating with kembridge-blockchain::NearAdapter to:

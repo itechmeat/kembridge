@@ -2,8 +2,12 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { Buffer } from 'buffer'
 import App from './App.tsx'
 import './styles/main.scss'
+
+// Polyfill Buffer for NEAR wallet
+window.Buffer = Buffer
 
 const queryClient = new QueryClient({
   defaultOptions: {

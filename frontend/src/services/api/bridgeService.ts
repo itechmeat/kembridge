@@ -145,6 +145,69 @@ class BridgeService {
   }
 
   /**
+   * Executes a swap from SwapFormData (Phase 8.1.1)
+   */
+  async executeSwap(formData: {
+    fromToken: { symbol: string; decimals?: number };
+    toToken: { symbol: string; decimals?: number };
+    fromChain: "ethereum" | "near";
+    toChain: "ethereum" | "near";
+    amount: string;
+    recipient?: string;
+    slippage?: number;
+  }): Promise<{
+    transaction_id: string;
+    status: string;
+    estimated_time_minutes: number;
+    expires_at: string;
+    next_steps: string[];
+  }> {
+    console.log("🔥 Bridge Service: Executing swap:", formData);
+
+    // First get a quote to obtain quote_id
+    const quote = await this.getSwapQuote({
+      from_chain: formData.fromChain,
+      to_chain: formData.toChain,
+      from_token: formData.fromToken.symbol,
+      to_token: formData.toToken.symbol,
+      amount: formData.amount,
+      slippage: formData.slippage,
+      quantum_protection: true,
+    });
+
+    // Prepare swap request matching backend interface
+    const swapRequest = {
+      quote_id: quote.quote_id,
+      from_chain: formData.fromChain,
+      to_chain: formData.toChain,
+      from_token: formData.fromToken.symbol,
+      to_token: formData.toToken.symbol,
+      from_amount: formData.amount,
+      to_amount: quote.to_amount,
+      recipient_address: formData.recipient || "default.recipient",
+      max_slippage: formData.slippage || 0.05,
+    };
+
+    console.log("📨 Bridge Service: Sending swap request:", swapRequest);
+
+    const response = await apiClient.post<{
+      transaction_id: string;
+      status: string;
+      estimated_time_minutes: number;
+      expires_at: string;
+      next_steps: string[];
+    }>(API_ENDPOINTS.BRIDGE.INIT_SWAP, swapRequest);
+
+    console.log("✅ Bridge Service: Swap executed successfully:", {
+      transactionId: response.transaction_id,
+      status: response.status,
+      estimatedTime: response.estimated_time_minutes,
+    });
+
+    return response;
+  }
+
+  /**
    * Gets transaction status
    */
   async getSwapStatus(transactionId: string): Promise<SwapTransaction> {

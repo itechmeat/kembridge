@@ -83,7 +83,7 @@ CREATE TABLE user_auth_methods (
     CONSTRAINT auth_methods_wallet_format CHECK (
         (auth_type != 'web3_wallet') OR
         (chain_type = 'ethereum' AND wallet_address ~ '^0x[a-fA-F0-9]{40}$') OR
-        (chain_type = 'near' AND wallet_address ~ '^[a-z0-9_-]+\.near$|^[a-f0-9]{64}$') OR
+        (chain_type = 'near' AND wallet_address ~ '^[a-z0-9_-]+\.(near|testnet)$|^[a-f0-9]{64}$') OR
         (chain_type IN ('polygon', 'bsc') AND wallet_address ~ '^0x[a-fA-F0-9]{40}$')
     ),
     

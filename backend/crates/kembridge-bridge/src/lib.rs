@@ -43,6 +43,8 @@ pub enum BridgeError {
     InvalidStateTransition { from: SwapStatus, to: SwapStatus },
     #[error("Swap operation not found")]
     SwapNotFound,
+    #[error("Adapter not available: {0}")]
+    AdapterNotAvailable(String),
     #[error("Operation timeout")]
     OperationTimeout,
     #[error("Validation error: {0}")]
@@ -55,4 +57,6 @@ pub enum BridgeError {
     DatabaseError(#[from] sqlx::Error),
     #[error("Authentication error: {0}")]
     AuthError(String),
+    #[error("Service unavailable: {0}")]
+    ServiceUnavailable(String),
 }

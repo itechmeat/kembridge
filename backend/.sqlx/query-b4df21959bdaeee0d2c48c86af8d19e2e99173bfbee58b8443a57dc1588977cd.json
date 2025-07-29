@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE transactions \n            SET risk_score = $1::numeric, \n                risk_factors = $2::jsonb, \n                ai_analysis_version = $3,\n                updated_at = NOW()\n            WHERE id = $4\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Numeric",
+        "Jsonb",
+        "Varchar",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b4df21959bdaeee0d2c48c86af8d19e2e99173bfbee58b8443a57dc1588977cd"
+}

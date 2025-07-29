@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE quantum_keys SET is_active = false, rotated_at = $1 WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4bf89ab6fcd94174e113cbdb9e2f05305a5d30795020a774d5f51220d0d59c55"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) FROM transactions WHERE DATE(created_at) = $1 AND risk_score > 0.9",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "eef990cfd1dc51e5c5747a6d44e9f2424e7add9caf6037c96b2d55cc1b6c4566"
+}

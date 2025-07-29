@@ -22,7 +22,8 @@ WORKDIR /app
 RUN cargo install cargo-watch
 COPY . .
 EXPOSE 3000
-CMD ["cargo", "run", "--bin", "kembridge-backend"]
+# Use a more stable approach with restart wrapper
+CMD ["sh", "-c", "while true; do cargo run --bin kembridge-backend || echo 'Backend crashed, restarting in 5 seconds...'; sleep 5; done"]
 
 # Production stage
 FROM debian:bookworm-slim AS production

@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                id, user_id, auth_type, chain_type, \n                wallet_address, is_primary, signature_params,\n                first_used_at, last_used_at, is_verified\n            FROM user_auth_methods \n            WHERE user_id = $1 AND auth_type = 'web3_wallet'\n            ORDER BY is_primary DESC, first_used_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "auth_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "chain_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "wallet_address",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_primary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "signature_params",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "first_used_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_used_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_verified",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "840ea8e22dcd4dcce176c3308ff08bcd56f7653a7fad8003afda9793a48c4deb"
+}

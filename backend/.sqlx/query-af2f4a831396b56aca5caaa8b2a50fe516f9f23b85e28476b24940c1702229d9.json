@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT create_bridge_transaction($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) as transaction_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "transaction_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Numeric",
+        "Numeric",
+        "Uuid",
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "af2f4a831396b56aca5caaa8b2a50fe516f9f23b85e28476b24940c1702229d9"
+}

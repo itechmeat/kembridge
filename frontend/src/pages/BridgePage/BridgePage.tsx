@@ -34,17 +34,43 @@ export const BridgePage: React.FC = () => {
   } = useBridgeHistory(1, 10);
 
   // Handle swap execution
-  const handleSwapExecute = useCallback((data: SwapFormData) => {
+  const handleSwapExecute = useCallback(async (data: SwapFormData) => {
     console.log("Bridge: Swap executed:", data);
 
-    // TODO: Get real transaction ID from actual swap execution
-    // Mock IDs are NOT allowed for financial transactions
-    console.error(
-      "❌ Cannot execute swap: Real transaction execution not implemented"
-    );
-    throw new Error(
-      "Real swap execution not implemented. Mock transaction IDs are forbidden."
-    );
+    try {
+      // Import bridge service
+      const { bridgeService } = await import("../../services/api/bridgeService");
+      
+      // Execute real swap through bridge service
+      const result = await bridgeService.executeSwap({
+        fromToken: { 
+          symbol: data.fromToken.symbol, 
+          decimals: data.fromToken.decimals 
+        },
+        toToken: { 
+          symbol: data.toToken.symbol, 
+          decimals: data.toToken.decimals 
+        },
+        fromChain: data.fromChain,
+        toChain: data.toChain,
+        amount: data.amount,
+        recipient: data.recipient,
+        slippage: data.slippage / 100, // Convert percentage to decimal
+      });
+
+      console.log("✅ Bridge: Swap executed successfully:", result);
+
+      // Set active transaction for monitoring
+      setActiveTransactionId(result.transaction_id);
+      
+      // Switch to history tab to show progress
+      // setActiveTab("history");
+      
+      return result;
+    } catch (error) {
+      console.error("❌ Bridge: Swap execution failed:", error);
+      throw error;
+    }
   }, []);
 
   // Connect WebSocket on component mount

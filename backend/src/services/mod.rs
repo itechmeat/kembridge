@@ -72,12 +72,11 @@ impl BridgeService {
         let near_adapter = match kembridge_blockchain::near::NearAdapter::new(config.near_config()).await {
             Ok(adapter) => {
                 tracing::info!("Successfully initialized NEAR adapter");
-                std::sync::Arc::new(adapter)
+                Some(std::sync::Arc::new(adapter))
             }
             Err(e) => {
-                tracing::warn!("Failed to initialize NEAR adapter: {}. Creating mock adapter for testing.", e);
-                // For testing, we'll create a minimal mock - in production this would be handled differently
-                return Err(anyhow::anyhow!("Bridge service requires valid NEAR configuration for production use"));
+                tracing::error!("Failed to initialize NEAR adapter: {}. NEAR operations will be unavailable but server will continue running.", e);
+                None
             }
         };
 
@@ -91,7 +90,7 @@ impl BridgeService {
                 quantum_manager,
                 db.clone(),
             ).await
-                .map_err(|e| anyhow::anyhow!("Failed to create bridge service: {}", e))?
+                .map_err(|e| anyhow::anyhow!("Failed to create bridge service: {}. Service will have limited functionality.", e))?
         );
 
         Ok(Self {
