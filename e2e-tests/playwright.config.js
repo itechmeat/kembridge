@@ -40,7 +40,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  // Test projects for different scenarios
+  // Test projects - ONLY Chromium (no cross-browser testing)
   projects: [
     {
       name: 'chromium',

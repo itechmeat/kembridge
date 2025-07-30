@@ -87,6 +87,56 @@ pub mod contexts {
     pub fn session_keys() -> Vec<u8> {
         KeyDerivation::create_context("session", 1)
     }
+
+    /// Context for wallet address encryption
+    pub fn wallet_addresses() -> Vec<u8> {
+        KeyDerivation::create_context("wallet-addr", 1)
+    }
+
+    /// Context for transaction amounts encryption
+    pub fn transaction_amounts() -> Vec<u8> {
+        KeyDerivation::create_context("tx-amounts", 1)
+    }
+
+    /// Context for cross-chain communication
+    pub fn cross_chain_messages() -> Vec<u8> {
+        KeyDerivation::create_context("x-chain-msg", 1)
+    }
+
+    /// Context for state synchronization
+    pub fn state_sync() -> Vec<u8> {
+        KeyDerivation::create_context("state-sync", 1)
+    }
+
+    /// Context for event data protection
+    pub fn event_data() -> Vec<u8> {
+        KeyDerivation::create_context("event-data", 1)
+    }
+
+    /// Context for user-specific operations
+    pub fn user_operation(user_id: &str) -> Vec<u8> {
+        format!("KEMBridge-v1-user-{}", user_id).into_bytes()
+    }
+
+    /// Context for transaction-specific operations
+    pub fn transaction_operation(tx_id: &str) -> Vec<u8> {
+        format!("KEMBridge-v1-tx-{}", tx_id).into_bytes()
+    }
+
+    /// Context for chain-specific operations
+    pub fn chain_operation(from_chain: &str, to_chain: &str) -> Vec<u8> {
+        format!("KEMBridge-v1-chain-{}-{}", from_chain, to_chain).into_bytes()
+    }
+
+    /// Context for time-based key derivation
+    pub fn time_based_operation(timestamp: i64) -> Vec<u8> {
+        format!("KEMBridge-v1-time-{}", timestamp).into_bytes()
+    }
+
+    /// Context for emergency operations
+    pub fn emergency_operation() -> Vec<u8> {
+        KeyDerivation::create_context("emergency", 1)
+    }
 }
 
 #[cfg(test)]

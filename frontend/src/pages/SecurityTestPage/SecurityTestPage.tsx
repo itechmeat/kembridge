@@ -3,7 +3,8 @@ import {
   SecurityIndicator, 
   RiskAnalysisDisplay, 
   RiskScoreVisualization,
-  SecurityAlerts
+  SecurityAlerts,
+  QuantumProtectionDisplay
 } from '../../components/security';
 import { AlertType, AlertPriority } from '../../types/security';
 import type { SecurityAlert, RiskAnalysisResult } from '../../types/security';
@@ -166,6 +167,25 @@ export const SecurityTestPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Quantum Protection Display */}
+      <div className="security-test-page__section">
+        <h2>Quantum Protection Display</h2>
+        <div className="component-demo">
+          <div className="demo-item full-width">
+            <QuantumProtectionDisplay
+              isActive={quantumProtection}
+              encryptionScheme="ML-KEM-1024"
+              keyId="12345678-1234-1234-1234-123456789abc"
+              keyStrength={1024}
+              lastRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
+              nextRotation={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
+              protectedTransactions={Math.floor(Math.random() * 10000)}
+              encryptionSpeed={15000}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Security Indicator */}
       <div className="security-test-page__section">
         <h2>Security Indicator</h2>
@@ -176,6 +196,10 @@ export const SecurityTestPage: React.FC = () => {
               quantumProtection={quantumProtection}
               riskScore={riskScore}
               isOnline={isOnline}
+              quantumKeyId="12345678-1234-1234-1234-123456789abc"
+              encryptionScheme="ML-KEM-1024"
+              lastKeyRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
+              transactionCount={Math.floor(Math.random() * 10000)}
             />
           </div>
           

@@ -7,6 +7,8 @@ import React, { useState, useCallback } from "react";
 import { SwapForm } from "../../components/bridge/SwapForm/SwapForm";
 import { TransactionProgress } from "../../components/bridge/TransactionProgress/TransactionProgress";
 import { TransactionHistory } from "../../components/bridge/TransactionHistory/TransactionHistory";
+import { QuantumProtectionDisplay } from "../../components/security/QuantumProtectionDisplay/QuantumProtectionDisplay";
+import { SecurityIndicator } from "../../components/security/SecurityIndicator/SecurityIndicator";
 import { useTransactionStatus } from "../../hooks/bridge/useTransactionStatus";
 import { useBridgeHistory } from "../../hooks/bridge/useBridgeHistory";
 import { websocketService } from "../../services/bridge/websocketService";
@@ -214,17 +216,33 @@ export const BridgePage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Security Features - Mobile Compact */}
-                  <div className="bridge-page__security-mobile">
-                    <div className="bridge-page__security-item-mobile">
-                      🔒 <span>Quantum Protected</span>
-                    </div>
-                    <div className="bridge-page__security-item-mobile">
-                      🧠 <span>AI Monitored</span>
-                    </div>
-                    <div className="bridge-page__security-item-mobile">
-                      ⛓️ <span>Atomic Swaps</span>
-                    </div>
+                  {/* Quantum Security Display */}
+                  <div className="bridge-page__quantum-security">
+                    <QuantumProtectionDisplay
+                      isActive={true}
+                      encryptionScheme="ML-KEM-1024"
+                      keyId="12345678-1234-1234-1234-123456789abc"
+                      keyStrength={1024}
+                      lastRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
+                      nextRotation={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
+                      protectedTransactions={1247}
+                      encryptionSpeed={15000}
+                      className="bridge-page__quantum-display"
+                    />
+                  </div>
+
+                  {/* Security Indicator */}
+                  <div className="bridge-page__security-indicator">
+                    <SecurityIndicator
+                      quantumProtection={true}
+                      riskScore={0.2}
+                      isOnline={true}
+                      quantumKeyId="12345678-1234-1234-1234-123456789abc"
+                      encryptionScheme="ML-KEM-1024"
+                      lastKeyRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
+                      transactionCount={1247}
+                      className="bridge-page__security"
+                    />
                   </div>
                 </div>
               )}

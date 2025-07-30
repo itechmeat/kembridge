@@ -86,6 +86,15 @@
     &.disabled {
       color: var(--danger);
     }
+    
+    &.key-id {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 4px;
+      border-radius: 3px;
+      color: var(--text-primary);
+    }
   }
   
   // Security level variants
@@ -196,6 +205,37 @@
   }
   100% {
     box-shadow: 0 0 0 0 rgba(255, 51, 102, 0);
+  }
+}
+
+@keyframes quantum-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 170, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(0, 170, 68, 0.1);
+  }
+}
+
+@keyframes quantum-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Quantum protection enhanced styles
+.security-indicator--secure {
+  &.quantum-protected {
+    animation: quantum-glow 3s infinite;
+    
+    .security-indicator__detail-value.enabled {
+      background: linear-gradient(90deg, transparent, rgba(0, 170, 68, 0.1), transparent);
+      background-size: 200% 100%;
+      animation: quantum-shimmer 2s infinite;
+    }
   }
 }
 

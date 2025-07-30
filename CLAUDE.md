@@ -191,6 +191,28 @@ The project uses environment variables defined in docker-compose.yml:
 - Integration: Docker-based test environment
 - Health checks: Automated endpoint verification
 
+### E2E Testing Guidelines
+
+**CRITICAL**: E2E тесты должны запускаться ТОЛЬКО в Chromium браузере:
+
+- **НИКОГДА не добавлять** кроссбраузерные тесты (Firefox, Safari, WebKit)
+- **НИКОГДА не добавлять** мобильные браузеры в конфигурацию
+- **ВСЕГДА использовать** только `chromium` проект в `playwright.config.js`
+- **ПРИЧИНА**: Экономия времени разработки и фокус на основном браузере
+
+```javascript
+// ПРАВИЛЬНО - только Chromium
+projects: [
+  {
+    name: 'chromium',
+    use: { ...devices['Desktop Chrome'] }
+  }
+],
+
+// НЕПРАВИЛЬНО - НЕ добавлять другие браузеры
+// firefox, webkit, mobile-chrome, mobile-safari и т.д.
+```
+
 ## Deployment Notes
 
 This is a hackathon version with simplified architecture. Production deployment will migrate to full microservices with event bus (NATS/Kafka) and domain separation.
