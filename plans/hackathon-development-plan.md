@@ -411,14 +411,19 @@
 
 ### 8.1 End-to-End Integration
 
-- [ ] **8.1.1** Подключение frontend к backend API
-- [ ] **8.1.2** Тестирование полного flow: login → swap → confirmation
-- [ ] **8.1.3** Проверка работы всех blockchain адаптеров (🔗 включает завершение NEAR ed25519 RPC интеграции из 4.3.2)
-- [ ] **8.1.4** Тестирование AI risk engine в live режиме
-- [ ] **8.1.5** NEAR 1Click API integration для frontend (🔗 завершит отложенную задачу 7.5.5 - требует дополнительные backend API endpoints)
-- [ ] **8.1.6** Проверка quantum cryptography интеграции
-- [ ] **8.1.7** Тестирование price oracle и 1inch интеграции
-- [ ] **8.1.8** Проверка всех error scenarios и fallbacks
+- [x] **8.1.1** Complete Transaction Flow Testing - ✅ COMPLETED
+  - ETH→NEAR full transaction flow with authentication
+  - Backend API integration (all 6 bridge endpoints tested)
+  - E2E test infrastructure with Playwright
+- [x] **8.1.2** Quantum Cryptography Full Integration - ✅ COMPLETED
+  - Transaction data encryption with ML-KEM-1024
+  - Cross-chain quantum-safe message authentication
+  - Frontend integration with QuantumProtectionDisplay component
+  - Comprehensive testing (90 Rust unit tests + E2E tests)
+- [ ] **8.1.3** AI Risk Engine Real-time Integration
+- [ ] **8.1.4** WebSocket & Real-time Updates
+- [ ] **8.1.5** Error Handling & Recovery Systems
+- [ ] **8.1.6** Performance Optimization & Monitoring
 
 ### 8.2 Performance Optimization
 

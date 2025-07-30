@@ -1,18 +1,20 @@
 # KEMBridge E2E Testing Suite
 
-## 📊 Test Coverage Summary (28.07.2025)
+## 📊 Test Coverage Summary
 
 ### ✅ Completed Test Coverage - **100% Phase 8.1.1 COMPLETE** 🎉
 
-#### **6 Test Suites / 20 Tests** 
+#### **6 Test Suites / 20 Tests**
+
 1. **API Integration** (`api-integration.spec.js`) - **4/4 PASSING** ✅
 2. **Authentication Flow** (`wallet-authentication.spec.js`) - **3/3 PASSING** ✅
-3. **Mock Wallet Integration** (`wallet-mock.spec.js`) - **2/2 PASSING** ✅  
+3. **Mock Wallet Integration** (`wallet-mock.spec.js`) - **2/2 PASSING** ✅
 4. **Bridge Integration** (`bridge-integration.spec.js`) - **4/4 PASSING** ✅
 5. **Transaction Flow** (`transaction-flow.spec.js`) - **3/3 PASSING** ✅
 6. **Security & Risk Testing** (`security-risk-testing.spec.js`) - **4/4 PASSING** ✅
 
 ### 🎯 Key Achievement: **BOTH ETH→NEAR & NEAR→ETH Flows WORKING**
+
 ```
 ✅ Authentication: 2 API calls (nonce + verify)
 ✅ Bridge Integration: 6 API calls (tokens + history + 4 quotes)
@@ -25,11 +27,13 @@
 ## Prerequisites
 
 1. **KEMBridge Services Running**:
+
    ```bash
    cd .. && make dev
    ```
 
 2. **Frontend Running**:
+
    ```bash
    # Frontend should be available at http://localhost:4100/
    cd ../frontend && pnpm run dev
@@ -88,6 +92,7 @@ tests/
 ## Test Coverage Status
 
 ### ✅ **COMPLETED & TESTED**:
+
 - **Backend API**: All endpoints healthy (Gateway, 1inch, Blockchain, Crypto, Auth)
 - **Authentication**: NEAR & Ethereum nonce generation + signature verification
 - **ETH→NEAR Flow**: Complete working integration (Auth: 2 calls, Bridge: 6 calls)
@@ -97,15 +102,18 @@ tests/
 - **Form Interaction**: Amount input, token selection, quote generation
 
 ### ✅ **COMPLETED**:
+
 - **NEAR→ETH Flow**: Direction switching and NEAR chain detection working ✅
 - **ETH→NEAR Flow**: Complete authentication and bridge integration working ✅
 
 ### ⏳ **PENDING** (Next Phases):
+
 - **Real-time Features**: WebSocket integration (Phase 8.1.4)
 - **Quantum Backend**: ML-KEM encryption integration (Phase 8.1.2)
 - **Real NEAR Wallet**: Full NEAR wallet signature testing (requires manual testing)
 
 ### 🎯 **SUCCESS METRICS ACHIEVED**:
+
 ```
 ✅ Transaction Success Rate: 100% (ETH→NEAR & NEAR→ETH UI working)
 ✅ API Response Time: < 500ms (measured ~2ms)
@@ -164,10 +172,10 @@ npm test
 ## Example Test
 
 ```javascript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('my test', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('h1')).toContainText('KEMBridge');
+test("my test", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("h1")).toContainText("KEMBridge");
 });
 ```

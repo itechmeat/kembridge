@@ -163,6 +163,10 @@ export interface SecurityIndicatorProps {
   isOnline: boolean;
   compact?: boolean;
   className?: string;
+  quantumKeyId?: string;
+  encryptionScheme?: string;
+  lastKeyRotation?: string;
+  transactionCount?: number;
 }
 
 export interface RiskAnalysisDisplayProps {

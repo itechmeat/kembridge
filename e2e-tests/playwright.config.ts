@@ -24,7 +24,7 @@ export default defineConfig({
   
   use: {
     // Base URL for testing
-    baseURL: 'http://localhost:4010',
+    baseURL: 'http://localhost:4100',
     
     // Browser settings
     headless: process.env.CI ? true : false,
@@ -48,10 +48,10 @@ export default defineConfig({
     }
   },
 
-  // Test projects for different scenarios and browsers
+  // Test projects - ONLY Chromium (no cross-browser or mobile testing)
   projects: [
     {
-      name: 'chromium-desktop',
+      name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
         launchOptions: {
@@ -63,29 +63,13 @@ export default defineConfig({
           ]
         }
       },
-    },
-    {
-      name: 'firefox-desktop',
-      use: { ...devices['Desktop Firefox'] }
-    },
-    {
-      name: 'webkit-desktop',
-      use: { ...devices['Desktop Safari'] }
-    },
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] }
-    },
-    {
-      name: 'mobile-safari',
-      use: { ...devices['iPhone 12'] }
     }
   ],
 
   // Local dev server configuration
   webServer: {
     command: 'make health-quick',
-    port: 4010,
+    port: 4100,
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
     env: {

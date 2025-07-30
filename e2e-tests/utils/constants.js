@@ -23,6 +23,8 @@ export const SERVICE_ENDPOINTS = {
   AI_ENGINE: 'http://localhost:4005'
 };
 
+export const FRONTEND_URL = 'http://localhost:4100';
+
 export const TIMEOUTS = {
   SHORT: 1000,
   MEDIUM: 3000,

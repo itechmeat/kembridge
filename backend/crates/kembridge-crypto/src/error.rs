@@ -18,16 +18,16 @@ pub enum QuantumCryptoError {
     DecapsulationFailed,
     
     /// Invalid key format or corrupted key data
-    #[error("Invalid key: {0}")]
-    InvalidKey(String),
+    #[error("Invalid key")]
+    InvalidKey,
     
     /// Invalid input data format
     #[error("Invalid input: {0}")]
     InvalidInput(String),
     
     /// Serialization or deserialization error
-    #[error("Serialization error: {0}")]
-    SerializationError(String),
+    #[error("Serialization error")]
+    SerializationError,
     
     /// Random number generation failed
     #[error("Random number generation failed: {0}")]
@@ -93,8 +93,8 @@ impl QuantumCryptoError {
     }
     
     /// Create a new invalid key error
-    pub fn invalid_key(msg: impl Into<String>) -> Self {
-        Self::InvalidKey(msg.into())
+    pub fn invalid_key(_msg: impl Into<String>) -> Self {
+        Self::InvalidKey
     }
     
     /// Create a new invalid input error
