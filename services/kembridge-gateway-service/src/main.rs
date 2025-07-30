@@ -20,6 +20,7 @@ use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tracing::{info, Level};
 use chrono;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -111,13 +112,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn health_check() -> Json<ServiceResponse<serde_json::Value>> {
-    // Health check returns ServiceResponse to match test expectations
+    // Get performance metrics
+    let uptime_seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    
+    // Get memory usage if available
+    let memory_info = get_memory_info();
+    
+    // Get process metrics
+    let process_info = get_process_info();
+    
+    // Health check returns ServiceResponse with performance metrics
     let health_data = serde_json::json!({
         "status": "healthy",
         "service": "kembridge-gateway-service", 
         "upstream_services": ["1inch-service", "blockchain-service", "crypto-service", "auth-service"],
-        "timestamp": chrono::Utc::now().to_rfc3339()
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "performance": {
+            "uptime_seconds": uptime_seconds,
+            "memory": memory_info,
+            "process": process_info,
+            "api_response_time_target": "< 500ms",
+            "websocket_connections": 0 // TODO: Get actual WebSocket connection count
+        }
     });
     
     Json(ServiceResponse::success(health_data))
+}
+
+fn get_memory_info() -> serde_json::Value {
+    // Basic memory info - in production would use proper system metrics
+    serde_json::json!({
+        "status": "monitoring_available",
+        "note": "Use Prometheus/Grafana for detailed metrics"
+    })
+}
+
+fn get_process_info() -> serde_json::Value {
+    // Basic process info
+    serde_json::json!({
+        "pid": std::process::id(),
+        "rust_version": "1.88.0",
+        "build_mode": if cfg!(debug_assertions) { "debug" } else { "release" }
+    })
 }

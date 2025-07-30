@@ -385,7 +385,7 @@ export const BridgePage: React.FC = () => {
             </div>
 
             {/* Developer Error Testing Panel */}
-            {process.env.NODE_ENV === "development" && (
+            {import.meta.env.DEV && (
               <div className="bridge-page__dev-panel">
                 <details className="bridge-page__dev-details">
                   <summary className="bridge-page__dev-summary">

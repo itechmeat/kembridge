@@ -11,7 +11,7 @@ import { SecurityTestPage } from "./pages/SecurityTestPage/SecurityTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
 import ErrorNotificationDisplay from "./components/notifications/ErrorNotificationDisplay";
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import "./styles/main.scss";
 import "./pages/BridgePage/BridgePage.scss";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -20,20 +20,37 @@ function AppContent() {
   console.log("🏗️ App: AppContent component rendering");
   const nearWallet = useNearWallet();
   const authInit = useAuthInit();
+  const previousNearWalletRef = useRef(nearWallet);
+
+  // Memoized callback to prevent unnecessary re-renders
+  const updateNearContext = useCallback(() => {
+    const current = nearWallet;
+    const previous = previousNearWalletRef.current;
+    
+    // Only update if something actually changed
+    if (
+      current.selector !== previous.selector ||
+      current.modal !== previous.modal ||
+      current.accountId !== previous.accountId ||
+      current.isConnected !== previous.isConnected
+    ) {
+      console.log("🔗 App: Connecting NEAR context to provider...");
+      console.log("📊 App: NEAR context data:", {
+        selector: !!current.selector,
+        modal: !!current.modal,
+        accountId: current.accountId,
+        isConnected: current.isConnected,
+      });
+
+      setNearWalletContext(current);
+      console.log("✅ App: NEAR context connected to provider");
+      previousNearWalletRef.current = current;
+    }
+  }, [nearWallet]);
 
   useEffect(() => {
-    console.log("🔗 App: Connecting NEAR context to provider...");
-    console.log("📊 App: NEAR context data:", {
-      selector: !!nearWallet.selector,
-      modal: !!nearWallet.modal,
-      accountId: nearWallet.accountId,
-      isConnected: nearWallet.isConnected,
-    });
-
-    // Connect NEAR context to provider
-    setNearWalletContext(nearWallet);
-    console.log("✅ App: NEAR context connected to provider");
-  }, [nearWallet]);
+    updateNearContext();
+  }, [updateNearContext]);
 
   // Log authentication initialization status
   useEffect(() => {
