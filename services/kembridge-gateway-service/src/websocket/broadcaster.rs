@@ -157,7 +157,7 @@ impl WebSocketBroadcaster {
     /// Broadcast crypto service event
     pub async fn broadcast_crypto_event(
         &self,
-        event_type: super::message::CryptoEventType,
+        crypto_event_type: super::message::CryptoEventType,
         service: &str,
         status: &str,
         message: &str,
@@ -165,7 +165,7 @@ impl WebSocketBroadcaster {
     ) -> Result<usize, String> {
         let event = RealTimeEvent::CryptoServiceEvent(super::message::CryptoServiceEvent {
             event_id: uuid::Uuid::new_v4().to_string(),
-            event_type,
+            crypto_event_type,
             service_name: service.to_string(),
             status: status.to_string(),
             message: message.to_string(),

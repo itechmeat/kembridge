@@ -372,14 +372,14 @@ mod integration_tests {
             RealTimeEvent::QuantumKeyEvent(QuantumKeyEvent {
                 key_id: "qkey_serial".to_string(),
                 user_id: "user_serial".to_string(),
-                event_type: QuantumKeyEventType::Generated,
+                key_event_type: QuantumKeyEventType::Generated,
                 algorithm: "ML-KEM-1024".to_string(),
                 timestamp: chrono::Utc::now(),
                 expires_at: Some(chrono::Utc::now() + chrono::Duration::days(90)),
             }),
             RealTimeEvent::CryptoServiceEvent(CryptoServiceEvent {
                 event_id: "crypto_serial".to_string(),
-                event_type: CryptoEventType::SystemHealthCheck,
+                crypto_event_type: CryptoEventType::SystemHealthCheck,
                 service_name: "crypto-service".to_string(),
                 status: "healthy".to_string(),
                 message: "All quantum cryptography systems operational".to_string(),

@@ -156,6 +156,7 @@ export const TokenSelector: React.FC<TokenSelectorProps> = ({
         }`}
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
+        data-testid={`token-selector-${chain.toLowerCase()}`}
       >
         {selectedToken ? (
           <div className="token-selector__selected">
@@ -221,6 +222,7 @@ export const TokenSelector: React.FC<TokenSelectorProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="token-selector__search"
+              data-testid="token-search-input"
               autoFocus
             />
             <div className="token-selector__search-icon">🔍</div>
@@ -238,6 +240,7 @@ export const TokenSelector: React.FC<TokenSelectorProps> = ({
                     type="button"
                     className="token-selector__popular-item"
                     onClick={() => handleTokenSelect(token)}
+                    data-testid={`popular-token-${token.symbol.toLowerCase()}`}
                   >
                     {token.logoUrl ? (
                       <img src={token.logoUrl} alt={token.symbol} />
@@ -269,6 +272,7 @@ export const TokenSelector: React.FC<TokenSelectorProps> = ({
                       : ""
                   }`}
                   onClick={() => handleTokenSelect(token)}
+                  data-testid={`token-option-${token.symbol.toLowerCase()}`}
                 >
                   <div className="token-selector__item-left">
                     {token.logoUrl ? (

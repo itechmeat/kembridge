@@ -2,8 +2,10 @@
  * Test constants and configuration
  */
 
+import { TEST_URLS } from './test-constants';
+
 export const API_ENDPOINTS = {
-  BASE: 'http://localhost:4000',
+  BASE: TEST_URLS.BACKEND.GATEWAY,
   HEALTH: '/health',
   AUTH_NONCE: '/api/v1/auth/nonce',
   AUTH_VERIFY: '/api/v1/auth/verify',
@@ -15,15 +17,15 @@ export const API_ENDPOINTS = {
 };
 
 export const SERVICE_ENDPOINTS = {
-  GATEWAY: 'http://localhost:4000',
-  ONEINCH: 'http://localhost:4001', 
-  BLOCKCHAIN: 'http://localhost:4002',
-  CRYPTO: 'http://localhost:4003',
-  AUTH: 'http://localhost:4004',
-  AI_ENGINE: 'http://localhost:4005'
+  GATEWAY: TEST_URLS.BACKEND.GATEWAY,
+  ONEINCH: TEST_URLS.BACKEND.ONEINCH, 
+  BLOCKCHAIN: TEST_URLS.BACKEND.BLOCKCHAIN,
+  CRYPTO: TEST_URLS.BACKEND.CRYPTO,
+  AUTH: TEST_URLS.BACKEND.AUTH,
+  AI_ENGINE: TEST_URLS.BACKEND.AI_ENGINE
 };
 
-export const FRONTEND_URL = 'http://localhost:4100';
+export const FRONTEND_URL = TEST_URLS.FRONTEND.LOCAL_DEV;
 
 export const TIMEOUTS = {
   SHORT: 1000,
@@ -116,8 +118,8 @@ export const EXPECTED_PATTERNS = {
 
 // AI Risk Engine constants
 export const SERVICE_URLS = {
-  AI_ENGINE: process.env.AI_ENGINE_URL || 'http://localhost:4005',
-  BACKEND_GATEWAY: process.env.BACKEND_URL || 'http://localhost:4000',
+  AI_ENGINE: process.env.AI_ENGINE_URL || TEST_URLS.BACKEND.AI_ENGINE,
+  BACKEND_GATEWAY: process.env.BACKEND_URL || TEST_URLS.BACKEND.GATEWAY,
 };
 
 export const RISK_ANALYSIS = {

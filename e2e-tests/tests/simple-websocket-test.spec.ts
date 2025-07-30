@@ -2,13 +2,13 @@
  * Simple WebSocket Connection Test
  * Basic test to verify WebSocket connectivity
  */
-
 import { test, expect } from '@playwright/test';
+import { WebSocket } from 'ws';
+import { TEST_URLS } from '../utils/test-constants';
 
-test.describe('Simple WebSocket Test', () => {
-  test('should verify backend health endpoint', async ({ page }) => {
-    const response = await page.request.get('http://localhost:4000/health');
-    expect(response.ok()).toBe(true);
+test.describe('Simple WebSocket Tests', () => {
+  test('should connect to backend health endpoint', async ({ page }) => {
+    const response = await page.request.get(`${TEST_URLS.BACKEND.GATEWAY}/health`);expect(response.ok()).toBe(true);
     console.log('✅ Backend health check passed');
   });
   
@@ -16,7 +16,7 @@ test.describe('Simple WebSocket Test', () => {
     // Test WebSocket connection without navigating to frontend
     const connectionResult = await page.evaluate(async () => {
       return new Promise<{ connected: boolean; error: string | null }>((resolve) => {
-        const ws = new WebSocket('ws://localhost:4000/ws');
+        const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
         const timeout = setTimeout(() => {
           ws.close();
           resolve({ connected: false, error: 'timeout' });

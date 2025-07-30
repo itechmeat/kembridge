@@ -505,27 +505,50 @@ impl WebSocketHandler {
                     connection.id()
                 );
 
-                // TODO: Implement proper JWT validation
-                // For now, we'll do basic validation
-                if !token.is_empty() && token.len() > 10 {
-                    // Extract user ID from token (simplified)
-                    let user_id = format!("user_{}", uuid::Uuid::new_v4());
-                    connection.set_user_id(user_id.clone()).await;
-
-                    connection
-                        .send_message(WebSocketMessage::auth_success(user_id))
-                        .await?;
-                    info!(
-                        "✅ Authentication successful for connection {}",
-                        connection.id()
-                    );
+                // Use proper JWT validation
+                let jwt_secret = std::env::var("JWT_SECRET")
+                    .unwrap_or_else(|_| "default_secret_key_for_development".to_string());
+                
+                let validation_result = crate::jwt_validation::validate_jwt_token(&token, &jwt_secret);
+                
+                if validation_result.valid {
+                    if let Some(user_id) = validation_result.user_id {
+                        connection.set_user_id(user_id.clone()).await;
+                        
+                        connection
+                            .send_message(WebSocketMessage::auth_success(user_id))
+                            .await?;
+                        info!(
+                            "✅ Authentication successful for connection {} with wallet: {:?}",
+                            connection.id(),
+                            validation_result.wallet_address
+                        );
+                    } else {
+                        connection
+                            .send_message(WebSocketMessage::auth_failed("Invalid user ID in token"))
+                            .await?;
+                        warn!(
+                            "❌ Authentication failed for connection {} - no user ID",
+                            connection.id()
+                        );
+                    }
                 } else {
+                    let error_message = if validation_result.expired {
+                        "Token has expired"
+                    } else if !validation_result.signature_valid {
+                        "Invalid token signature"
+                    } else {
+                        "Invalid token"
+                    };
+                    
                     connection
-                        .send_message(WebSocketMessage::auth_failed("Invalid token"))
+                        .send_message(WebSocketMessage::auth_failed(error_message))
                         .await?;
                     warn!(
-                        "❌ Authentication failed for connection {}",
-                        connection.id()
+                        "❌ Authentication failed for connection {}: {} - Errors: {:?}",
+                        connection.id(),
+                        error_message,
+                        validation_result.errors
                     );
                 }
                 Ok(())

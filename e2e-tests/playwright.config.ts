@@ -18,13 +18,13 @@ export default defineConfig({
   reporter: [
     ['html'],
     ['list'],
-    ['json', { outputFile: 'test-results.json' }],
-    ['junit', { outputFile: 'test-results.xml' }]
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['junit', { outputFile: 'test-results/results.xml' }]
   ],
   
   use: {
     // Base URL for testing
-    baseURL: 'http://localhost:4100',
+    baseURL: process.env.TEST_BASE_URL || 'http://localhost:4100',
     
     // Browser settings
     headless: process.env.CI ? true : false,

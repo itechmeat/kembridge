@@ -4,6 +4,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { TEST_URLS } from '../utils/test-constants';
 
 test.describe('Direct WebSocket Tests', () => {
   test('should connect to WebSocket server directly', async ({ page }) => {
@@ -11,7 +12,7 @@ test.describe('Direct WebSocket Tests', () => {
     const connectionResult = await page.evaluate(async () => {
       return new Promise<{ connected: boolean; error: string | null }>((resolve) => {
         try {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           const timeout = setTimeout(() => {
             ws.close();
@@ -48,7 +49,7 @@ test.describe('Direct WebSocket Tests', () => {
   });
   
   test('should verify backend health endpoint', async ({ page }) => {
-    const response = await page.request.get('http://localhost:4000/health');
+    const response = await page.request.get(`${TEST_URLS.BACKEND.GATEWAY}/health`);
     expect(response.ok()).toBe(true);
     
     const healthData = await response.json();

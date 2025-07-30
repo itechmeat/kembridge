@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use kembridge_common::ServiceResponse;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -50,8 +50,11 @@ pub enum GatewayServiceError {
     #[error("Configuration error: {message}")]
     ConfigError { message: String },
 
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
     #[error("Validation error in field '{field}': {message}")]
-    ValidationError { field: String, message: String },
+    FieldValidationError { field: String, message: String },
 
     #[error("Internal gateway error: {message}")]
     Internal { message: String },
@@ -73,7 +76,8 @@ impl GatewayServiceError {
             GatewayServiceError::InvalidRequestFormat { .. } => StatusCode::BAD_REQUEST,
             GatewayServiceError::ServiceDiscoveryFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
             GatewayServiceError::HealthCheckFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
-            GatewayServiceError::ValidationError { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+            GatewayServiceError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            GatewayServiceError::FieldValidationError { .. } => StatusCode::UNPROCESSABLE_ENTITY,
             GatewayServiceError::ConfigError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             GatewayServiceError::Internal { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -95,7 +99,8 @@ impl GatewayServiceError {
             GatewayServiceError::ServiceDiscoveryFailed { .. } => "SERVICE_DISCOVERY_FAILED",
             GatewayServiceError::HealthCheckFailed { .. } => "HEALTH_CHECK_FAILED",
             GatewayServiceError::ConfigError { .. } => "CONFIG_ERROR",
-            GatewayServiceError::ValidationError { .. } => "VALIDATION_ERROR",
+            GatewayServiceError::ValidationError(_) => "VALIDATION_ERROR",
+            GatewayServiceError::FieldValidationError { .. } => "FIELD_VALIDATION_ERROR",
             GatewayServiceError::Internal { .. } => "INTERNAL_ERROR",
         }
     }
@@ -104,9 +109,14 @@ impl GatewayServiceError {
 impl IntoResponse for GatewayServiceError {
     fn into_response(self) -> Response {
         let status_code = self.status_code();
-        
-        let error_response = ServiceResponse::<()>::error(format!("{}", self));
-        
+
+        // Create manual error response structure to ensure error is a string
+        let error_response = serde_json::json!({
+            "success": false,
+            "error": format!("{}", self),
+            "data": null
+        });
+
         tracing::error!(
             error_code = self.error_code(),
             status_code = status_code.as_u16(),
@@ -123,10 +133,7 @@ impl From<kembridge_common::ServiceError> for GatewayServiceError {
     fn from(err: kembridge_common::ServiceError) -> Self {
         match err {
             kembridge_common::ServiceError::InvalidRequest { message } => {
-                GatewayServiceError::ValidationError { 
-                    field: "request".to_string(), 
-                    message 
-                }
+                GatewayServiceError::ValidationError(message)
             }
             kembridge_common::ServiceError::AuthenticationFailed { reason } => {
                 GatewayServiceError::AuthorizationFailed { reason }
@@ -141,14 +148,16 @@ impl From<kembridge_common::ServiceError> for GatewayServiceError {
                 GatewayServiceError::ServiceTimeout { service: operation }
             }
             kembridge_common::ServiceError::RateLimitExceeded => {
-                GatewayServiceError::RateLimitExceeded { client_id: "unknown".to_string() }
+                GatewayServiceError::RateLimitExceeded {
+                    client_id: "unknown".to_string(),
+                }
             }
             kembridge_common::ServiceError::Validation { field, message } => {
-                GatewayServiceError::ValidationError { field, message }
+                GatewayServiceError::FieldValidationError { field, message }
             }
-            _ => GatewayServiceError::Internal { 
-                message: err.to_string() 
-            }
+            _ => GatewayServiceError::Internal {
+                message: err.to_string(),
+            },
         }
     }
 }

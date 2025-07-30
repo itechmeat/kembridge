@@ -4,6 +4,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { http } from 'viem';
 import { sepolia } from 'viem/chains';
 import { SERVICE_URLS, RISK_ANALYSIS, DEFAULT_USER_ID } from '../utils/constants.js';
+import { TEST_URLS } from '../utils/test-constants';
 
 test.describe('AI Risk Display Component E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -144,7 +145,7 @@ test.describe('AI Risk Display Component E2E Tests', () => {
     const aiRiskCalls = [];
     page.on('request', request => {
       const url = request.url();
-      if (url.includes('/api/risk/analyze') || url.includes('localhost:4005')) {
+      if (url.includes('/api/risk/analyze') || url.includes(TEST_URLS.BACKEND.AI_ENGINE)) {
         aiRiskCalls.push({
           url,
           method: request.method(),

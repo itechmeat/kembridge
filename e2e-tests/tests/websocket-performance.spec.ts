@@ -5,20 +5,23 @@
 
 import { test, expect } from '@playwright/test';
 import { WebSocketTestUtils } from '../utils/websocket-utils';
+import { TEST_URLS } from '../utils/test-constants';
 
 test.describe('WebSocket Performance Tests', () => {
   let wsUtils: WebSocketTestUtils;
 
   test.beforeEach(async ({ page }) => {
     wsUtils = new WebSocketTestUtils(page);
-    await page.goto('http://localhost:4100/bridge', { waitUntil: 'domcontentloaded' });
+    
+    // Navigate to bridge page
+    await page.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
   });
 
   test.describe('Connection Establishment Timing', () => {
     test('should establish connection within acceptable time limits', async ({ page }) => {
       const startTime = Date.now();
-      const connectionResult = await wsUtils.testConnection('ws://localhost:4000/ws');
+      const connectionResult = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY);
       const totalTime = Date.now() - startTime;
       
       expect(connectionResult.connected).toBe(true);
@@ -33,7 +36,7 @@ test.describe('WebSocket Performance Tests', () => {
       const startTime = Date.now();
       
       const connectionPromises = Array.from({ length: concurrentConnections }, () => 
-        wsUtils.testConnection('ws://localhost:4000/ws')
+        wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY)
       );
       
       const results = await Promise.all(connectionPromises);
@@ -57,7 +60,7 @@ test.describe('WebSocket Performance Tests', () => {
       const connectionTimes: number[] = [];
       
       for (let i = 0; i < iterations; i++) {
-        const result = await wsUtils.testConnection('ws://localhost:4000/ws');
+        const result = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY);
         expect(result.connected).toBe(true);
         connectionTimes.push(result.connectionTime);
         
@@ -93,7 +96,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           await new Promise<void>((resolve) => {
             const testDuration = 5000; // 5 seconds
@@ -159,7 +162,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           await new Promise<void>((resolve) => {
             const phaseDuration = 3000; // 3 seconds per phase
@@ -281,7 +284,7 @@ test.describe('WebSocket Performance Tests', () => {
             result.initialMemory = (performance as any).memory.usedJSHeapSize;
           }
           
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           await new Promise<void>((resolve) => {
             const testDuration = 8000; // 8 seconds
@@ -373,7 +376,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           await new Promise<void>((resolve) => {
             const startTime = Date.now();
@@ -470,7 +473,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          let ws = new WebSocket('ws://localhost:4000/ws');
+          let ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -485,7 +488,7 @@ test.describe('WebSocket Performance Tests', () => {
               // Attempt immediate reconnection
               const reconnectStart = Date.now();
               
-              ws = new WebSocket('ws://localhost:4000/ws');
+              ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
               
               ws.onopen = () => {
                 result.reconnectionTime = Date.now();

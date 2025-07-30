@@ -5,6 +5,7 @@ pub mod config;
 pub mod errors;
 pub mod event_api;
 pub mod event_listener;
+pub mod jwt_validation;
 pub mod middleware;
 pub mod websocket;
 
@@ -45,6 +46,7 @@ pub mod handlers {
     use kembridge_common::ServiceResponse;
     use serde::{Deserialize, Serialize};
     use std::sync::Arc;
+    use chrono;
 
     #[derive(Debug, Deserialize)]
     pub struct NonceRequest {
@@ -186,6 +188,47 @@ pub mod handlers {
     pub async fn get_nonce(
         Query(params): Query<NonceRequest>,
     ) -> Result<Json<ServiceResponse<NonceResponse>>, crate::errors::GatewayServiceError> {
+        // Validate required parameters
+        if params.wallet_address.is_empty() {
+            tracing::warn!("❌ Missing wallet_address parameter");
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: wallet_address".to_string()
+            ));
+        }
+        
+        if params.chain_type.is_empty() {
+            tracing::warn!("❌ Missing chain_type parameter");
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: chain_type".to_string()
+            ));
+        }
+        
+        // Validate chain type
+        let supported_chains = ["ethereum", "near"];
+        if !supported_chains.contains(&params.chain_type.as_str()) {
+            tracing::warn!("❌ Invalid chain_type: {}", params.chain_type);
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                format!("Invalid chain_type '{}'. Supported: {:?}", params.chain_type, supported_chains)
+            ));
+        }
+        
+        // Validate wallet address format
+        if params.chain_type == "ethereum" {
+            if !params.wallet_address.starts_with("0x") || params.wallet_address.len() != 42 {
+                tracing::warn!("❌ Invalid Ethereum wallet address: {}", params.wallet_address);
+                return Err(crate::errors::GatewayServiceError::ValidationError(
+                    "Invalid Ethereum wallet address format".to_string()
+                ));
+            }
+        } else if params.chain_type == "near" {
+            if params.wallet_address.len() < 2 || params.wallet_address.len() > 64 {
+                tracing::warn!("❌ Invalid NEAR wallet address: {}", params.wallet_address);
+                return Err(crate::errors::GatewayServiceError::ValidationError(
+                    "Invalid NEAR wallet address format".to_string()
+                ));
+            }
+        }
+        
         tracing::info!(
             "🔑 Getting nonce for wallet: {} chain: {}",
             params.wallet_address,
@@ -324,6 +367,127 @@ pub mod handlers {
         ];
 
         Ok(Json(ServiceResponse::success(tokens)))
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct BridgeQuoteRequest {
+        pub from_chain: Option<String>,
+        pub to_chain: Option<String>,
+        pub from_token: Option<String>,
+        pub to_token: Option<String>,
+        pub from_amount: Option<String>,
+    }
+
+    /// Bridge quote endpoint with validation
+    pub async fn get_bridge_quote(
+        Query(params): Query<BridgeQuoteRequest>,
+    ) -> Result<Json<ServiceResponse<serde_json::Value>>, crate::errors::GatewayServiceError> {
+        tracing::info!("💱 Getting bridge quote with params: {:?}", params);
+
+        // Validate required parameters
+        let from_chain = params.from_chain.as_ref()
+            .ok_or_else(|| crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: from_chain".to_string()
+            ))?;
+        
+        let to_chain = params.to_chain.as_ref()
+            .ok_or_else(|| crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: to_chain".to_string()
+            ))?;
+            
+        let from_token = params.from_token.as_ref()
+            .ok_or_else(|| crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: from_token".to_string()
+            ))?;
+            
+        let to_token = params.to_token.as_ref()
+            .ok_or_else(|| crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: to_token".to_string()
+            ))?;
+            
+        let from_amount = params.from_amount.as_ref()
+            .ok_or_else(|| crate::errors::GatewayServiceError::ValidationError(
+                "Missing required parameter: from_amount".to_string()
+            ))?;
+
+        // Validate chains
+        let supported_chains = ["ethereum", "near"];
+        if !supported_chains.contains(&from_chain.as_str()) {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                format!("Invalid from_chain '{}'. Supported: {:?}", from_chain, supported_chains)
+            ));
+        }
+        if !supported_chains.contains(&to_chain.as_str()) {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                format!("Invalid to_chain '{}'. Supported: {:?}", to_chain, supported_chains)
+            ));
+        }
+
+        // Validate and parse amount
+        let amount: f64 = from_amount.parse()
+            .map_err(|_| crate::errors::GatewayServiceError::ValidationError(
+                format!("Invalid from_amount '{}'. Must be a valid number", from_amount)
+            ))?;
+
+        if amount <= 0.0 {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "from_amount must be greater than 0".to_string()
+            ));
+        }
+        
+        // Validate extreme amounts
+        if amount > 1_000_000.0 {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "from_amount exceeds maximum allowed value of 1,000,000".to_string()
+            ));
+        }
+        
+        if amount < 0.000001 {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "from_amount is below minimum allowed value of 0.000001".to_string()
+            ));
+        }
+
+        // Validate token pairs
+        let supported_tokens = ["ETH", "NEAR", "USDC", "USDT"];
+        if !supported_tokens.contains(&from_token.as_str()) {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                format!("Unsupported from_token '{}'. Supported: {:?}", from_token, supported_tokens)
+            ));
+        }
+        if !supported_tokens.contains(&to_token.as_str()) {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                format!("Unsupported to_token '{}'. Supported: {:?}", to_token, supported_tokens)
+            ));
+        }
+
+        // Mock quote response
+        let quote = serde_json::json!({
+            "quote_id": format!("quote_{}", chrono::Utc::now().timestamp()),
+            "from_chain": from_chain,
+            "to_chain": to_chain,
+            "from_token": from_token,
+            "to_token": to_token,
+            "from_amount": from_amount,
+            "to_amount": (amount * 1164.39).to_string(),
+            "exchange_rate": 1164.39,
+            "estimated_fees": {
+                "gas_fee": "0.005",
+                "bridge_fee": "0.001",
+                "protocol_fee": "0.004",
+                "total_fee": "0.01"
+            },
+            "price_impact": 0.01,
+            "estimated_time_minutes": 12,
+            "expires_at": (chrono::Utc::now() + chrono::Duration::minutes(10)).to_rfc3339(),
+            "quantum_protection_enabled": true,
+            "route_info": {
+                "risk_score": 0.15
+            }
+        });
+
+        tracing::info!("✅ Bridge quote generated successfully");
+        Ok(Json(ServiceResponse::success(quote)))
     }
 
     /// Mock endpoint for bridge history
@@ -822,6 +986,33 @@ pub mod handlers {
             Ok(Json(ServiceResponse::error(
                 "Failed to generate new key for rotation".to_string(),
             )))
+        }
+    }
+
+    /// Test endpoint for error handling system
+    pub async fn test_error_handling(
+        Query(params): Query<std::collections::HashMap<String, String>>,
+    ) -> Result<Json<ServiceResponse<serde_json::Value>>, crate::errors::GatewayServiceError> {
+        let error_type = params.get("type").unwrap_or(&"validation".to_string()).clone();
+        
+        tracing::info!("🧪 Testing error handling system with type: {}", error_type);
+        
+        match error_type.as_str() {
+            "validation" => Err(crate::errors::GatewayServiceError::ValidationError(
+                "Test validation error: Invalid parameters provided".to_string()
+            )),
+            "auth" => Err(crate::errors::GatewayServiceError::AuthenticationRequired),
+            "network" => Err(crate::errors::GatewayServiceError::ServiceTimeout {
+                service: "test_service".to_string()
+            }),
+            "service" => Err(crate::errors::GatewayServiceError::ServiceUnavailable {
+                service: "test_service".to_string()
+            }),
+            _ => Ok(Json(ServiceResponse::success(serde_json::json!({
+                "message": "Error handling test completed successfully",
+                "tested_type": error_type,
+                "recovery_available": true
+            }))))
         }
     }
 }

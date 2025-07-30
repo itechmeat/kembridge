@@ -108,7 +108,7 @@ pub fn create_crypto_status_event(
 ) -> RealTimeEvent {
     RealTimeEvent::CryptoServiceEvent(CryptoServiceEvent {
         event_id: Uuid::new_v4().to_string(),
-        event_type: CryptoEventType::ServiceStatusChange,
+        crypto_event_type: CryptoEventType::ServiceStatusChange,
         service_name: service.to_string(),
         status: status.to_string(),
         message: message.to_string(),
@@ -120,14 +120,14 @@ pub fn create_crypto_status_event(
 /// Helper function to broadcast crypto service events
 pub async fn broadcast_crypto_service_event(
     broadcaster: &WebSocketBroadcaster,
-    event_type: CryptoEventType,
+    crypto_event_type: CryptoEventType,
     service: &str,
     status: &str,
     message: &str,
     metadata: Option<serde_json::Value>
 ) -> Result<usize, String> {
     broadcaster.broadcast_crypto_event(
-        event_type,
+        crypto_event_type,
         service,
         status,
         message,
@@ -151,6 +151,9 @@ pub async fn handle_socket(
     // Handle the connection
     handler.handle_connection(socket).await;
 }
+
+#[cfg(test)]
+mod tests_auth_messages;
 
 #[cfg(test)]
 mod tests {
@@ -458,7 +461,7 @@ mod tests {
         assert_eq!(status_event.service_name, "crypto-service");
         assert_eq!(status_event.status, "healthy");
         assert_eq!(status_event.message, "Service is operational");
-        assert!(matches!(status_event.event_type, CryptoEventType::ServiceStatusChange));
+        assert!(matches!(status_event.crypto_event_type, CryptoEventType::ServiceStatusChange));
         
         // Test key generated event
         let key_event = CryptoServiceEvent::key_generated("key_123", "ML-KEM-1024");
@@ -466,7 +469,7 @@ mod tests {
         assert_eq!(key_event.service_name, "crypto-service");
         assert_eq!(key_event.status, "success");
         assert!(key_event.message.contains("ML-KEM-1024"));
-        assert!(matches!(key_event.event_type, CryptoEventType::KeyGenerated));
+        assert!(matches!(key_event.crypto_event_type, CryptoEventType::KeyGenerated));
         assert!(key_event.metadata.is_some());
         
         if let Some(metadata) = key_event.metadata {

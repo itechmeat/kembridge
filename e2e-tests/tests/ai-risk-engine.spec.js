@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { SERVICE_URLS, RISK_ANALYSIS, DEFAULT_USER_ID } from '../utils/constants.js';
+import { TEST_URLS } from '../utils/test-constants.js';
 
 test.describe('AI Risk Engine Integration Tests', () => {
-  const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://localhost:4005';
+  const AI_ENGINE_URL = process.env.AI_ENGINE_URL || TEST_URLS.BACKEND.AI_ENGINE;
   
   test.beforeEach(async ({ page }) => {
     console.log('🤖 Setting up AI Risk Engine tests...');

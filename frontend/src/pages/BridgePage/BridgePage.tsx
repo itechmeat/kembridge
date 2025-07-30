@@ -10,9 +10,14 @@ import { TransactionHistory } from "../../components/bridge/TransactionHistory/T
 import { QuantumProtectionDisplay } from "../../components/security/QuantumProtectionDisplay/QuantumProtectionDisplay";
 import { SecurityIndicator } from "../../components/security/SecurityIndicator/SecurityIndicator";
 import { AIRiskDisplay } from "../../components/features/security/AIRiskDisplay";
-import { WebSocketStatus, RealTimeNotifications } from "../../components/websocket";
+import {
+  WebSocketStatus,
+  RealTimeNotifications,
+} from "../../components/websocket";
 import { useTransactionStatus } from "../../hooks/bridge/useTransactionStatus";
 import { useBridgeHistory } from "../../hooks/bridge/useBridgeHistory";
+import { useErrorHandling } from "../../hooks/useErrorHandling";
+import { ErrorContext } from "../../services/errorHandlingService";
 import { websocketService } from "../../services/bridge/websocketService";
 import { DEFAULT_USER_ID, RISK_ANALYSIS } from "../../constants/services";
 import type { AIRiskAnalysisResponse } from "../../services/ai/aiRiskService";
@@ -25,9 +30,14 @@ import type {
 export const BridgePage: React.FC = () => {
   const [activeTransactionId, setActiveTransactionId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"swap" | "history">("swap");
-  const [currentSwapData, setCurrentSwapData] = useState<SwapFormData | null>(null);
+  const [currentSwapData, setCurrentSwapData] = useState<SwapFormData | null>(
+    null
+  );
   const [isRiskBlocked, setIsRiskBlocked] = useState<boolean>(false);
   const [riskBlockReason, setRiskBlockReason] = useState<string>("");
+
+  // Error handling hook
+  const { handleError, testErrorHandling, showSuccess } = useErrorHandling();
 
   // Get active transaction status
   const { data: activeTransaction, isLoading: transactionLoading } =
@@ -47,7 +57,9 @@ export const BridgePage: React.FC = () => {
     console.log("Bridge: Risk analysis updated:", risk);
     if (!risk.approved || risk.risk_score > RISK_ANALYSIS.THRESHOLDS.HIGH) {
       setIsRiskBlocked(true);
-      setRiskBlockReason(`High risk transaction (${risk.risk_level}): ${risk.reasons.join(', ')}`);
+      setRiskBlockReason(
+        `High risk transaction (${risk.risk_level}): ${risk.reasons.join(", ")}`
+      );
     } else {
       setIsRiskBlocked(false);
       setRiskBlockReason("");
@@ -61,52 +73,62 @@ export const BridgePage: React.FC = () => {
   }, []);
 
   // Handle swap execution
-  const handleSwapExecute = useCallback(async (data: SwapFormData) => {
-    console.log("Bridge: Swap executed:", data);
-    
-    // Check if transaction is blocked by risk analysis
-    if (isRiskBlocked) {
-      throw new Error(`Transaction blocked: ${riskBlockReason}`);
-    }
+  const handleSwapExecute = useCallback(
+    async (data: SwapFormData) => {
+      console.log("Bridge: Swap executed:", data);
 
-    // Store current swap data for risk analysis
-    setCurrentSwapData(data);
+      // Check if transaction is blocked by risk analysis
+      if (isRiskBlocked) {
+        throw new Error(`Transaction blocked: ${riskBlockReason}`);
+      }
 
-    try {
-      // Import bridge service
-      const { bridgeService } = await import("../../services/api/bridgeService");
-      
-      // Execute real swap through bridge service
-      const result = await bridgeService.executeSwap({
-        fromToken: { 
-          symbol: data.fromToken.symbol, 
-          decimals: data.fromToken.decimals 
-        },
-        toToken: { 
-          symbol: data.toToken.symbol, 
-          decimals: data.toToken.decimals 
-        },
-        fromChain: data.fromChain,
-        toChain: data.toChain,
-        amount: data.amount,
-        recipient: data.recipient,
-        slippage: data.slippage / 100, // Convert percentage to decimal
-      });
+      // Store current swap data for risk analysis
+      setCurrentSwapData(data);
 
-      console.log("✅ Bridge: Swap executed successfully:", result);
+      try {
+        // Import bridge service
+        const { bridgeService } = await import(
+          "../../services/api/bridgeService"
+        );
 
-      // Set active transaction for monitoring
-      setActiveTransactionId(result.transaction_id);
-      
-      // Switch to history tab to show progress
-      // setActiveTab("history");
-      
-      return result;
-    } catch (error) {
-      console.error("❌ Bridge: Swap execution failed:", error);
-      throw error;
-    }
-  }, [isRiskBlocked, riskBlockReason]);
+        // Execute real swap through bridge service
+        const result = await bridgeService.executeSwap({
+          fromToken: {
+            symbol: data.fromToken.symbol,
+            decimals: data.fromToken.decimals,
+          },
+          toToken: {
+            symbol: data.toToken.symbol,
+            decimals: data.toToken.decimals,
+          },
+          fromChain: data.fromChain,
+          toChain: data.toChain,
+          amount: data.amount,
+          recipient: data.recipient,
+          slippage: data.slippage / 100, // Convert percentage to decimal
+        });
+
+        console.log("✅ Bridge: Swap executed successfully:", result);
+
+        // Set active transaction for monitoring
+        setActiveTransactionId(result.transaction_id);
+
+        // Switch to history tab to show progress
+        // setActiveTab("history");
+
+        showSuccess("Transaction initiated successfully!");
+        return result;
+      } catch (error) {
+        console.error("❌ Bridge: Swap execution failed:", error);
+        handleError(error, {
+          operation: "bridge_swap",
+          transactionData: data as unknown as Record<string, unknown>,
+        } as ErrorContext);
+        throw error;
+      }
+    },
+    [isRiskBlocked, riskBlockReason, handleError, showSuccess]
+  );
 
   // Connect WebSocket on component mount
   React.useEffect(() => {
@@ -136,7 +158,7 @@ export const BridgePage: React.FC = () => {
               <span className="bridge-page__feature">💰 Low Fees</span>
             </div>
           </div>
-          
+
           {/* WebSocket Status */}
           <div className="bridge-page__websocket-status">
             <WebSocketStatus showDetails={false} />
@@ -209,14 +231,21 @@ export const BridgePage: React.FC = () => {
                   <div className="bridge-page__swap-form">
                     <SwapForm
                       onSwapExecute={handleSwapExecute}
-                      onDataChange={(data) => setCurrentSwapData(data as SwapFormData)}
+                      onDataChange={(data) =>
+                        setCurrentSwapData(data as SwapFormData)
+                      }
                       disabled={isRiskBlocked}
                       className="bridge-page__form"
                     />
                     {isRiskBlocked && (
-                      <div className="bridge-page__risk-warning" data-testid="risk-warning">
+                      <div
+                        className="bridge-page__risk-warning"
+                        data-testid="risk-warning"
+                      >
                         <span className="bridge-page__risk-icon">⚠️</span>
-                        <span className="bridge-page__risk-message">{riskBlockReason}</span>
+                        <span className="bridge-page__risk-message">
+                          {riskBlockReason}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -225,15 +254,19 @@ export const BridgePage: React.FC = () => {
                   <div className="bridge-page__ai-risk">
                     <AIRiskDisplay
                       userId={DEFAULT_USER_ID} // Using default user ID from constants
-                      transaction={currentSwapData ? {
-                        transactionId: activeTransactionId || undefined,
-                        amount: parseFloat(currentSwapData.amount) || 0,
-                        sourceChain: currentSwapData.fromChain,
-                        destinationChain: currentSwapData.toChain,
-                        sourceToken: currentSwapData.fromToken.symbol,
-                        destinationToken: currentSwapData.toToken.symbol,
-                        userAddress: currentSwapData.recipient,
-                      } : undefined}
+                      transaction={
+                        currentSwapData
+                          ? {
+                              transactionId: activeTransactionId || undefined,
+                              amount: parseFloat(currentSwapData.amount) || 0,
+                              sourceChain: currentSwapData.fromChain,
+                              destinationChain: currentSwapData.toChain,
+                              sourceToken: currentSwapData.fromToken.symbol,
+                              destinationToken: currentSwapData.toToken.symbol,
+                              userAddress: currentSwapData.recipient,
+                            }
+                          : undefined
+                      }
                       autoAnalyze={!!currentSwapData}
                       onRiskChange={handleRiskChange}
                       onBlock={handleRiskBlock}
@@ -289,8 +322,12 @@ export const BridgePage: React.FC = () => {
                       encryptionScheme="ML-KEM-1024"
                       keyId="12345678-1234-1234-1234-123456789abc"
                       keyStrength={1024}
-                      lastRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
-                      nextRotation={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
+                      lastRotation={new Date(
+                        Date.now() - 24 * 60 * 60 * 1000
+                      ).toISOString()}
+                      nextRotation={new Date(
+                        Date.now() + 7 * 24 * 60 * 60 * 1000
+                      ).toISOString()}
                       protectedTransactions={1247}
                       encryptionSpeed={15000}
                       className="bridge-page__quantum-display"
@@ -305,7 +342,9 @@ export const BridgePage: React.FC = () => {
                       isOnline={true}
                       quantumKeyId="12345678-1234-1234-1234-123456789abc"
                       encryptionScheme="ML-KEM-1024"
-                      lastKeyRotation={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}
+                      lastKeyRotation={new Date(
+                        Date.now() - 24 * 60 * 60 * 1000
+                      ).toISOString()}
                       transactionCount={1247}
                       className="bridge-page__security"
                     />
@@ -344,12 +383,62 @@ export const BridgePage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Developer Error Testing Panel */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="bridge-page__dev-panel">
+                <details className="bridge-page__dev-details">
+                  <summary className="bridge-page__dev-summary">
+                    🧪 Error Handling Tests
+                  </summary>
+                  <div className="bridge-page__dev-content">
+                    <p className="bridge-page__dev-description">
+                      Test the error handling system with different error types:
+                    </p>
+                    <div className="bridge-page__dev-buttons">
+                      <button
+                        className="bridge-page__dev-button"
+                        onClick={() => testErrorHandling("validation")}
+                      >
+                        Validation Error
+                      </button>
+                      <button
+                        className="bridge-page__dev-button"
+                        onClick={() => testErrorHandling("auth")}
+                      >
+                        Auth Error
+                      </button>
+                      <button
+                        className="bridge-page__dev-button"
+                        onClick={() => testErrorHandling("network")}
+                      >
+                        Network Error
+                      </button>
+                      <button
+                        className="bridge-page__dev-button"
+                        onClick={() => testErrorHandling("service")}
+                      >
+                        Service Error
+                      </button>
+                      <button
+                        className="bridge-page__dev-button"
+                        onClick={() =>
+                          showSuccess("Test success notification!")
+                        }
+                      >
+                        Success Test
+                      </button>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
         </div>
       </div>
-      
+
       {/* Real-time Notifications */}
-      <RealTimeNotifications 
+      <RealTimeNotifications
         maxNotifications={3}
         autoHide={true}
         autoHideDelay={8000}
