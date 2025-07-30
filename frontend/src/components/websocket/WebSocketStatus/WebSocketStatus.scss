@@ -1,0 +1,179 @@
+// WebSocket Status Component Styles
+
+.websocket-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-secondary, #f9fafb);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &__indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__icon {
+    font-size: 1rem;
+    animation: pulse 2s infinite;
+  }
+
+  &__text {
+    color: var(--text-primary, #111827);
+    font-weight: 500;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: var(--error-bg, #fef2f2);
+    border: 1px solid var(--error-border, #fecaca);
+  }
+
+  &__error-icon {
+    color: var(--error-color, #dc2626);
+  }
+
+  &__error-text {
+    color: var(--error-color, #dc2626);
+    font-size: 0.8125rem;
+    flex: 1;
+  }
+
+  &__retry {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--error-color, #dc2626);
+    background: transparent;
+    color: var(--error-color, #dc2626);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--error-color, #dc2626);
+      color: white;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  &__detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__detail-label {
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.75rem;
+  }
+
+  &__detail-value {
+    color: var(--text-primary, #111827);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  // Status-specific styles
+  &--connected {
+    border-color: var(--success-border, #10b981);
+    background: var(--success-bg, #ecfdf5);
+
+    .websocket-status__text {
+      color: var(--success-color, #059669);
+    }
+  }
+
+  &--connecting {
+    border-color: var(--warning-border, #f59e0b);
+    background: var(--warning-bg, #fffbeb);
+
+    .websocket-status__text {
+      color: var(--warning-color, #d97706);
+    }
+
+    .websocket-status__icon {
+      animation: pulse 1s infinite;
+    }
+  }
+
+  &--disconnected,
+  &--closed {
+    border-color: var(--error-border, #dc2626);
+    background: var(--error-bg, #fef2f2);
+
+    .websocket-status__text {
+      color: var(--error-color, #dc2626);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .websocket-status {
+    font-size: 0.8125rem;
+    padding: 0.5rem;
+
+    &__details {
+      display: none; // Hide details on mobile
+    }
+  }
+}
+
+// Compact variant
+.websocket-status--compact {
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+
+  .websocket-status__details {
+    display: none;
+  }
+
+  .websocket-status__error {
+    padding: 0.25rem;
+  }
+}
+
+// Inline variant
+.websocket-status--inline {
+  flex-direction: row;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: transparent;
+
+  .websocket-status__error {
+    margin-left: 0.5rem;
+  }
+
+  .websocket-status__details {
+    display: none;
+  }
+}

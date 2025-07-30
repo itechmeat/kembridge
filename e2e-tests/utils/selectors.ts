@@ -154,8 +154,14 @@ export class TestSelectors {
   async waitForWalletConnected(timeout = 10000): Promise<void> {
     await this.page.waitForFunction(
       () => {
-        const button = document.querySelector('button[aria-label*="wallet"], button:has-text("Connected")');
-        return button && !button.textContent?.toLowerCase().includes('connect');
+        const buttons = document.querySelectorAll('button[aria-label*="wallet"], button');
+        for (const button of buttons) {
+          if (button.textContent?.toLowerCase().includes('connected') && 
+              !button.textContent?.toLowerCase().includes('connect')) {
+            return true;
+          }
+        }
+        return false;
       },
       undefined,
       { timeout }
@@ -187,12 +193,12 @@ export class TestSelectors {
  * @deprecated Use TestSelectors class instead
  */
 export const LEGACY_SELECTORS = {
-  ETH_WALLET_BUTTON: 'button:has-text("Ethereum Wallet")',
-  NEAR_WALLET_BUTTON: 'button:has-text("NEAR Wallet")',
-  SWAP_NAV_BUTTON: '.bottom-nav__item:has-text("Swap"), .quick-action-btn:has-text("Swap")',
+  ETH_WALLET_BUTTON: 'button[aria-label*="ethereum"], button[title*="ethereum"]',
+  NEAR_WALLET_BUTTON: 'button[aria-label*="near"], button[title*="near"]',
+  SWAP_NAV_BUTTON: '.bottom-nav__item, .quick-action-btn',
   AMOUNT_INPUT: 'input[type="number"], input[placeholder*="amount"]',
   TOKEN_SELECTOR: '.token-selector, .swap-form__token-selector',
-  SUBMIT_BUTTON: 'button[type="submit"], button:has-text("Review Swap")',
+  SUBMIT_BUTTON: 'button[type="submit"], button[aria-label*="review"]',
   AUTH_REQUIRED: '.swap-form__auth-required',
   ERROR_ELEMENTS: '.error, [role="alert"], .notification--error'
 } as const;

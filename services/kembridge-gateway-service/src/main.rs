@@ -2,11 +2,17 @@ use axum::{
     routing::{get, post},
     Router,
     Json,
+    middleware,
 };
 use kembridge_gateway_service::{
     config::ServiceConfig, 
     handlers,
-    circuit_breaker::{CircuitBreaker, CircuitBreakerConfig}
+    circuit_breaker::{CircuitBreaker, CircuitBreakerConfig},
+    websocket::{ws_handler, create_websocket_services, start_maintenance_tasks, broadcast_system_startup, ConnectionManager},
+    event_listener::create_event_listener,
+    event_api::{EventApiState, trigger_crypto_event, trigger_risk_analysis, trigger_system_notification, 
+                get_websocket_stats, cleanup_connections, send_heartbeat, disconnect_user, test_user_broadcast},
+    middleware::security_headers
 };
 use kembridge_common::ServiceResponse;
 use std::sync::Arc;
@@ -32,6 +38,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let circuit_breaker = Arc::new(CircuitBreaker::new(circuit_breaker_config));
     info!("🛡️ Circuit breaker initialized with 5 failure threshold and 30s timeout");
 
+    // Initialize enhanced WebSocket services
+    let (registry, broadcaster) = create_websocket_services();
+    let connections: ConnectionManager = registry.clone();
+    
+    // Start WebSocket maintenance tasks (heartbeat, cleanup)
+    start_maintenance_tasks(broadcaster.clone()).await;
+    info!("🌐 WebSocket services initialized with maintenance tasks");
+    
+    // Broadcast system startup notification
+    if let Ok(notified_count) = broadcast_system_startup(&broadcaster).await {
+        info!("📢 System startup notification sent to {} connections", notified_count);
+    }
+
+    // Initialize and start EventListener for microservices integration
+    let event_listener = create_event_listener(broadcaster.clone());
+    let event_listener_clone = event_listener.clone();
+    
+    tokio::spawn(async move {
+        event_listener_clone.start().await;
+    });
+    info!("🎧 EventListener started for microservices integration");
+
+    // Prepare state for event API
+    let event_api_state: EventApiState = (broadcaster.clone(), Arc::new(event_listener));
+
     // Create router with gateway routes
     let app = Router::new()
         .route("/health", get(health_check))
@@ -44,7 +75,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Bridge routes
         .route("/api/v1/bridge/tokens", get(handlers::get_bridge_tokens))
         .route("/api/v1/bridge/history", get(handlers::get_bridge_history))
-        .with_state(circuit_breaker)
+        // Crypto routes (matching old backend)
+        .route("/api/v1/crypto/status", get(handlers::get_crypto_status))  
+        .route("/api/v1/crypto/keys/check-rotation", get(handlers::check_key_rotation))
+        .route("/api/v1/crypto/keys/rotate", post(handlers::trigger_key_rotation))
+        // WebSocket route
+        .route("/ws", get(ws_handler))
+        .with_state((circuit_breaker, connections))
+        // Event API routes need separate state
+        .nest("/api/v1/events", Router::new()
+            .route("/crypto/trigger", post(trigger_crypto_event))
+            .route("/risk/trigger", post(trigger_risk_analysis))
+            .route("/system/notification/{level}", post(trigger_system_notification))
+            .route("/websocket/stats", get(get_websocket_stats))
+            .route("/websocket/cleanup", post(cleanup_connections))
+            .route("/websocket/heartbeat", post(send_heartbeat))
+            .route("/websocket/disconnect/{user_id}", post(disconnect_user))
+            .route("/websocket/test/{user_id}", post(test_user_broadcast))
+            .with_state(event_api_state)
+        )
+        .layer(middleware::from_fn(security_headers))
         .layer(CorsLayer::permissive());
 
     // Start server

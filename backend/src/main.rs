@@ -295,11 +295,22 @@ async fn create_application(state: AppState) -> anyhow::Result<Router> {
         // OpenAPI documentation (enabled conditionally)
         .merge(create_docs_routes(&state.config))
 
-        // Global middleware stack
+        // Global middleware stack (order matters - applied in reverse)
         .layer(middleware::cors::create_cors_layer(&state.config))
         .layer(RequestBodyLimitLayer::new(REQUEST_BODY_LIMIT_BYTES))
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())
+        // Security middleware
+        .layer(axum::middleware::from_fn(middleware::security_headers::security_headers))
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            middleware::csrf::csrf_protection
+        ))
+        .layer(axum::middleware::from_fn(middleware::input_validation::input_validation))
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            middleware::rate_limit::rate_limit_middleware
+        ))
 
         // Attach application state
         .with_state(state);
@@ -311,6 +322,14 @@ fn create_public_v1_routes() -> Router<AppState> {
     Router::new()
         // Authentication routes (public for login/register)
         .nest("/auth", routes::auth::create_routes())
+        
+        // CSRF token endpoint (public)
+        .route("/csrf-token", axum::routing::get(crate::handlers::csrf::get_csrf_token))
+        .route("/csrf-validate", axum::routing::post(crate::handlers::csrf::validate_csrf_token))
+        
+        // JWT validation endpoints (public)
+        .route("/jwt-validate", axum::routing::post(crate::handlers::jwt_validation::validate_jwt_token))
+        .route("/jwt-validate-header", axum::routing::get(crate::handlers::jwt_validation::validate_auth_header))
         
         // Public bridge information routes
         .route("/bridge/tokens", axum::routing::get(crate::handlers::bridge::get_supported_tokens))

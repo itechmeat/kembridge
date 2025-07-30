@@ -156,6 +156,7 @@ thiserror.workspace = true
 
 # Validation
 validator.workspace = true
+regex.workspace = true
 
 # Time & UUID
 chrono.workspace = true

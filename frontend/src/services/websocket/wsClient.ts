@@ -3,7 +3,7 @@
  * Real-time connection for monitoring transactions and events
  */
 
-import { API_CONFIG } from "../api/config";
+import { WEBSOCKET_CONFIG } from "../../constants/services";
 
 export interface WSMessage {
   type: string;
@@ -29,19 +29,32 @@ export interface RiskAlert {
 }
 
 export type WSEventType =
-  | "transaction_update"
+  | "transaction_update" 
   | "risk_alert"
-  | "system_status"
-  | "user_notification";
+  | "price_update"
+  | "system_notification"
+  | "bridge_operation"
+  | "quantum_key_event"
+  | "user_profile_update";
 
 class WebSocketClient {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectInterval = 1000; // 1 second
+  private maxReconnectAttempts = WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS;
+  private reconnectInterval = WEBSOCKET_CONFIG.RECONNECT_INTERVAL_MS;
   private listeners: Map<WSEventType, Set<(data: unknown) => void>> = new Map();
   private isConnecting = false;
   private authToken: string | null = null;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private lastConnectAttempt = 0;
+  private connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown' = 'unknown';
+  private connectionMetrics = {
+    connected: 0,
+    disconnected: 0,
+    errors: 0,
+    lastPongTime: 0,
+    averageLatency: 0,
+  };
 
   constructor() {
     console.log("🔌 WebSocket Client: Initializing");
@@ -63,11 +76,20 @@ class WebSocketClient {
         return;
       }
 
+      // Prevent too frequent reconnection attempts
+      const now = Date.now();
+      if (now - this.lastConnectAttempt < 1000) {
+        console.log("⚠️ WebSocket: Rate limiting connection attempts");
+        setTimeout(() => this.connect(authToken).catch(console.error), 1000);
+        return;
+      }
+      this.lastConnectAttempt = now;
+
       this.isConnecting = true;
       this.authToken = authToken || this.authToken;
 
       try {
-        const wsUrl = `${API_CONFIG.WS_URL}${
+        const wsUrl = `${WEBSOCKET_CONFIG.URL}${
           this.authToken ? `?token=${this.authToken}` : ""
         }`;
         console.log("🔌 WebSocket: Connecting to:", wsUrl);
@@ -78,6 +100,9 @@ class WebSocketClient {
           console.log("✅ WebSocket: Connected successfully");
           this.isConnecting = false;
           this.reconnectAttempts = 0;
+          this.connectionMetrics.connected++;
+          this.updateConnectionQuality('excellent');
+          this.startHeartbeat();
           resolve();
         };
 
@@ -102,6 +127,8 @@ class WebSocketClient {
             event.reason
           );
           this.isConnecting = false;
+          this.connectionMetrics.disconnected++;
+          this.updateConnectionQuality('poor');
 
           if (
             !event.wasClean &&
@@ -114,6 +141,8 @@ class WebSocketClient {
         this.ws.onerror = (error) => {
           console.error("❌ WebSocket: Connection error:", error);
           this.isConnecting = false;
+          this.connectionMetrics.errors++;
+          this.updateConnectionQuality('poor');
           reject(error);
         };
       } catch (error) {
@@ -129,6 +158,8 @@ class WebSocketClient {
    */
   disconnect(): void {
     console.log("🔌 WebSocket: Disconnecting");
+
+    this.stopHeartbeat();
 
     if (this.ws) {
       this.ws.close(1000, "User disconnected");
@@ -240,8 +271,10 @@ class WebSocketClient {
    */
   private scheduleReconnect(): void {
     this.reconnectAttempts++;
-    const delay =
-      this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
+    const delay = Math.min(
+      this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1), // Exponential backoff
+      30000 // Max 30 seconds
+    );
 
     console.log(
       `🔄 WebSocket: Scheduling reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`
@@ -258,9 +291,83 @@ class WebSocketClient {
   }
 
   /**
+   * Starts heartbeat ping
+   */
+  private startHeartbeat(): void {
+    this.stopHeartbeat(); // Clear any existing heartbeat
+    
+    this.pingInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.send("ping", {});
+      }
+    }, WEBSOCKET_CONFIG.PING_INTERVAL_MS);
+    
+    console.log("💓 WebSocket: Heartbeat started");
+  }
+
+  /**
+   * Stops heartbeat ping
+   */
+  private stopHeartbeat(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+      console.log("💓 WebSocket: Heartbeat stopped");
+    }
+  }
+
+  /**
+   * Updates connection quality based on metrics
+   */
+  private updateConnectionQuality(quality: 'excellent' | 'good' | 'poor' | 'unknown'): void {
+    if (this.connectionQuality !== quality) {
+      this.connectionQuality = quality;
+      console.log(`📊 WebSocket: Connection quality updated to ${quality}`);
+    }
+  }
+
+  /**
+   * Gets connection metrics for monitoring
+   */
+  getConnectionMetrics() {
+    return {
+      ...this.connectionMetrics,
+      quality: this.connectionQuality,
+      reconnectAttempts: this.reconnectAttempts,
+      maxReconnectAttempts: this.maxReconnectAttempts,
+    };
+  }
+
+  /**
+   * Force reconnection (useful for testing)
+   */
+  forceReconnect(): void {
+    console.log("🔄 WebSocket: Force reconnecting...");
+    this.disconnect();
+    this.reconnectAttempts = 0;
+    setTimeout(() => this.connect(), 1000);
+  }
+
+  /**
+   * Subscribes to event type
+   */
+  subscribeToEventType(eventType: WSEventType): void {
+    this.send("subscribe", { event_type: eventType });
+  }
+
+  /**
+   * Unsubscribes from event type
+   */
+  unsubscribeFromEventType(eventType: WSEventType): void {
+    this.send("unsubscribe", { event_type: eventType });
+  }
+
+  /**
    * Subscribes to transaction updates
    */
   subscribeToTransaction(transactionId: string): void {
+    this.subscribeToEventType("transaction_update");
+    // Store transaction ID for filtering
     this.send("subscribe_transaction", { transaction_id: transactionId });
   }
 
@@ -275,14 +382,21 @@ class WebSocketClient {
    * Subscribes to system notifications
    */
   subscribeToSystemNotifications(): void {
-    this.send("subscribe_system", {});
+    this.subscribeToEventType("system_notification");
   }
 
   /**
    * Unsubscribes from system notifications
    */
   unsubscribeFromSystemNotifications(): void {
-    this.send("unsubscribe_system", {});
+    this.unsubscribeFromEventType("system_notification");
+  }
+
+  /**
+   * Authenticates with JWT token
+   */
+  authenticate(token: string): void {
+    this.send("auth", { token });
   }
 }
 

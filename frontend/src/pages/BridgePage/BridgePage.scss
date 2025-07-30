@@ -18,6 +18,50 @@
     text-align: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
+    position: relative;
+  }
+
+  &__websocket-status {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+
+    .websocket-status {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+
+      .websocket-status__text {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      &.websocket-status--connected {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.3);
+
+        .websocket-status__text {
+          color: #10b981;
+        }
+      }
+
+      &.websocket-status--connecting {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.3);
+
+        .websocket-status__text {
+          color: #f59e0b;
+        }
+      }
+
+      &.websocket-status--disconnected {
+        background: rgba(220, 38, 38, 0.1);
+        border-color: rgba(220, 38, 38, 0.3);
+
+        .websocket-status__text {
+          color: #dc2626;
+        }
+      }
+    }
   }
 
   &__title {

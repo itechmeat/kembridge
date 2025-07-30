@@ -1,7 +1,7 @@
 /**
  * Comprehensive error handling utilities for E2E tests
  */
-import { Page, test, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { TestSelectors } from './selectors.js';
 import { MonitoringData, ApiCall, NetworkError } from '../types/test-types.js';
 
@@ -277,7 +277,7 @@ export class ErrorHandler {
    */
   assertNoJavaScriptErrors(): void {
     if (this.errors.length > 0) {
-      test.fail(`JavaScript errors detected: ${this.errors.join(', ')}`);
+      throw new Error(`JavaScript errors detected: ${this.errors.join(', ')}`);
     }
   }
 
@@ -292,7 +292,7 @@ export class ErrorHandler {
     );
     
     if (criticalErrors.length > 0) {
-      test.fail(`Network errors detected: ${JSON.stringify(criticalErrors, null, 2)}`);
+      throw new Error(`Network errors detected: ${JSON.stringify(criticalErrors, null, 2)}`);
     }
   }
 
@@ -351,9 +351,9 @@ export class ErrorHandler {
   ): Promise<void> {
     return this.withErrorHandling(async () => {
       await this.page.waitForFunction(
-        ({ txId, status }) => {
-          const statusElement = document.querySelector(`[data-transaction-id="${txId}"] [data-testid="status"]`);
-          return statusElement?.textContent?.toLowerCase().includes(status.toLowerCase());
+        ({ transactionId, expectedStatus }) => {
+          const statusElement = document.querySelector(`[data-transaction-id="${transactionId}"] [data-testid="status"]`);
+          return statusElement?.textContent?.toLowerCase().includes(expectedStatus.toLowerCase());
         },
         { transactionId, expectedStatus },
         { timeout }
