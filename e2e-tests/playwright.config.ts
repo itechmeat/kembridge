@@ -59,7 +59,10 @@ export default defineConfig({
             '--disable-web-security',
             '--disable-features=VizDisplayCompositor',
             '--disable-background-timer-throttling',
-            '--disable-renderer-backgrounding'
+            '--disable-renderer-backgrounding',
+            // Открывать браузер в верхнем левом углу дополнительного экрана
+            // Для левого экрана используйте отрицательные координаты, например: '--window-position=-1920,0'
+            '--window-position=0,0'
           ]
         }
       },

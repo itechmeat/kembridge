@@ -27,8 +27,10 @@ export const useWebSocketConnection = () => {
       console.log("🔌 useWebSocket: Connecting with auth token");
 
       wsClient
-        .connect(token)
+        .connect()
         .then(() => {
+          // Authenticate after connection
+          wsClient.authenticate(token);
           setIsConnected(true);
           setConnectionState("connected");
           setError(null);
@@ -283,15 +285,15 @@ export const useSystemNotifications = () => {
       setSystemStatus((status as { status?: string })?.status || "unknown");
     };
 
-    wsClient.on("user_notification", handleNotification);
-    wsClient.on("system_status", handleSystemStatus);
+    wsClient.on("system_notification", handleNotification);
+    wsClient.on("system_notification", handleSystemStatus);
 
     // Subscribe to system notifications
     wsClient.subscribeToSystemNotifications();
 
     return () => {
-      wsClient.off("user_notification", handleNotification);
-      wsClient.off("system_status", handleSystemStatus);
+      wsClient.off("system_notification", handleNotification);
+      wsClient.off("system_notification", handleSystemStatus);
       wsClient.unsubscribeFromSystemNotifications();
       console.log(
         "🔕 useSystemNotifications: Unsubscribed from system notifications"

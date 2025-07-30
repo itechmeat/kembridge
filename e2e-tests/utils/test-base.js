@@ -14,14 +14,17 @@ import { TIMEOUTS, SELECTORS } from './constants.js';
 export async function setupFullTestEnvironment(page) {
   console.log('🚀 Setting up full test environment...');
   
-  // Setup mock wallet
+  // Navigate to app first
+  await page.goto('/');
+  await page.waitForTimeout(TIMEOUTS.SHORT);
+  
+  // Setup mock wallet after page load
   await setupMockWallet(page);
   
   // Setup API monitoring
   const monitoring = setupApiMonitoring(page);
   
-  // Navigate to app
-  await page.goto('/');
+  // Wait for everything to be ready
   await page.waitForTimeout(TIMEOUTS.MEDIUM);
   
   console.log('✅ Test environment setup complete');
@@ -33,6 +36,7 @@ export async function setupFullTestEnvironment(page) {
     authenticate: () => authenticateEthereumWallet(page),
     navigateToBridge: () => navigateToBridge(page),
     waitForBridgeAccessible: (timeout) => waitForBridgeFormAccessible(page, timeout),
+    setupMockWallet: () => setupMockWallet(page),
     
     // Monitoring shortcuts
     getApiCalls: monitoring.getApiCalls,

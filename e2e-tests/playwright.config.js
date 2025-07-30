@@ -50,7 +50,10 @@ export default defineConfig({
         launchOptions: {
           args: [
             '--disable-web-security',
-            '--disable-features=VizDisplayCompositor'
+            '--disable-features=VizDisplayCompositor',
+            // Открывать браузер в верхнем левом углу дополнительного экрана
+            // Для левого экрана используйте отрицательные координаты, например: '--window-position=-1920,0'
+            '--window-position=0,0' // Open browser in top-left corner of primary screen
           ]
         }
       },

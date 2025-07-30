@@ -191,6 +191,7 @@ services:
       - CRYPTO_SERVICE_URL=http://crypto-service-dev:4003
       - BLOCKCHAIN_SERVICE_URL=http://blockchain-service-dev:4002
       - ONEINCH_SERVICE_URL=http://oneinch-service-dev:4001
+      - AI_ENGINE_URL=http://ai-engine:4003
       - JWT_SECRET=dev_super_secret_jwt_key_for_development_only
     volumes:
       - ./services:/app:cached

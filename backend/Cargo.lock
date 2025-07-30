@@ -3215,6 +3215,7 @@ dependencies = [
  "metrics-exporter-prometheus",
  "rand 0.8.5",
  "redis 0.32.4",
+ "regex",
  "reqwest 0.12.22",
  "serde",
  "serde_json",

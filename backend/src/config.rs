@@ -23,6 +23,7 @@ pub struct AppConfig {
 
     // Security configuration
     pub jwt_secret: String,
+    pub jwt_issuer: Option<String>,
     pub jwt_expiration_hours: u64,
     pub cors_origins: Vec<String>,
 
@@ -82,6 +83,7 @@ impl Default for AppConfig {
             redis_pool_size: DEFAULT_REDIS_POOL_SIZE,
 
             jwt_secret: JWT_SECRET_KEY.to_string(),
+            jwt_issuer: Some("kembridge-api".to_string()),
             jwt_expiration_hours: JWT_EXPIRATION_HOURS,
             cors_origins: vec![
                 CORS_ORIGIN_FRONTEND_DEV.to_string(),

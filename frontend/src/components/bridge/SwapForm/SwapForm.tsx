@@ -20,6 +20,8 @@ import { useSecurityStatus, useRiskAnalysis } from "../../../hooks/security";
 import { bridgeService } from "../../../services/api/bridgeService";
 import { ZERO_ADDRESS } from "../../../constants/services";
 import type { BridgeSwapRequest } from "../../../types/bridge";
+import { useBridgeWebSocket } from "../../../hooks/bridge/useBridgeWebSocket";
+import { WebSocketStatus } from "../../websocket/WebSocketStatus/WebSocketStatus";
 
 export interface SwapFormProps {
   onSwapExecute?: (data: SwapFormData) => Promise<unknown> | void;
@@ -45,6 +47,15 @@ export const SwapForm: React.FC<SwapFormProps> = ({
   const { account } = useWallet();
   const walletAddress = account?.address;
   const { isAuthenticated } = useAuthStatus();
+
+  // WebSocket integration for real-time updates
+  const {
+    isConnected: wsConnected,
+    latestBridgeUpdate,
+    latestTransactionUpdate,
+    subscribeToPriceUpdates,
+    unsubscribeFromPriceUpdates,
+  } = useBridgeWebSocket();
 
   // Fetch supported tokens - only when authenticated
   const { data: supportedTokens = [], isLoading: tokensLoading } =
@@ -144,6 +155,36 @@ export const SwapForm: React.FC<SwapFormProps> = ({
     formData.fromToken,
     formData.toToken,
   ]);
+
+  // Subscribe to price updates when tokens change
+  useEffect(() => {
+    if (formData.fromToken && formData.toToken && wsConnected) {
+      subscribeToPriceUpdates(formData.fromToken.symbol, formData.toToken.symbol);
+      console.log(`💱 Subscribed to ${formData.fromToken.symbol}-${formData.toToken.symbol} price updates`);
+      
+      return () => {
+        unsubscribeFromPriceUpdates();
+      };
+    }
+  }, [formData.fromToken, formData.toToken, wsConnected, subscribeToPriceUpdates, unsubscribeFromPriceUpdates]);
+
+  // Handle bridge operation updates
+  useEffect(() => {
+    if (latestBridgeUpdate) {
+      console.log('🌉 Bridge operation update received:', latestBridgeUpdate);
+      // Update UI based on bridge operation status
+      // This could trigger notifications, update progress bars, etc.
+    }
+  }, [latestBridgeUpdate]);
+
+  // Handle transaction updates
+  useEffect(() => {
+    if (latestTransactionUpdate) {
+      console.log('💰 Transaction update received:', latestTransactionUpdate);
+      // Update UI based on transaction status
+      // This could update progress indicators, show confirmations, etc.
+    }
+  }, [latestTransactionUpdate]);
 
   const handleFromTokenSelect = useCallback((token: BridgeToken) => {
     setFormData((prev) => ({ ...prev, fromToken: token }));
@@ -275,7 +316,13 @@ export const SwapForm: React.FC<SwapFormProps> = ({
         <div className="swap-form__content">
           <div className="swap-form__header">
             <h2 className="swap-form__title">Cross-Chain Bridge</h2>
-            <div className="swap-form__quantum-badge">🔒 Quantum Protected</div>
+            <div className="swap-form__header-badges">
+              <div className="swap-form__quantum-badge">🔒 Quantum Protected</div>
+              <WebSocketStatus 
+                className="swap-form__websocket-status" 
+                showDetails={false}
+              />
+            </div>
           </div>
 
           {/* From Section */}

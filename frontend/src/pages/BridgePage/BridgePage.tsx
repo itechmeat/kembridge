@@ -10,6 +10,7 @@ import { TransactionHistory } from "../../components/bridge/TransactionHistory/T
 import { QuantumProtectionDisplay } from "../../components/security/QuantumProtectionDisplay/QuantumProtectionDisplay";
 import { SecurityIndicator } from "../../components/security/SecurityIndicator/SecurityIndicator";
 import { AIRiskDisplay } from "../../components/features/security/AIRiskDisplay";
+import { WebSocketStatus, RealTimeNotifications } from "../../components/websocket";
 import { useTransactionStatus } from "../../hooks/bridge/useTransactionStatus";
 import { useBridgeHistory } from "../../hooks/bridge/useBridgeHistory";
 import { websocketService } from "../../services/bridge/websocketService";
@@ -134,6 +135,11 @@ export const BridgePage: React.FC = () => {
               <span className="bridge-page__feature">⚡ Fast & Secure</span>
               <span className="bridge-page__feature">💰 Low Fees</span>
             </div>
+          </div>
+          
+          {/* WebSocket Status */}
+          <div className="bridge-page__websocket-status">
+            <WebSocketStatus showDetails={false} />
           </div>
         </header>
 
@@ -341,6 +347,13 @@ export const BridgePage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Real-time Notifications */}
+      <RealTimeNotifications 
+        maxNotifications={3}
+        autoHide={true}
+        autoHideDelay={8000}
+      />
     </div>
   );
 };

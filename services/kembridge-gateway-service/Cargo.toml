@@ -1,5 +1,5 @@
 # KEMBridge API Gateway Service
-# Central entry point for all requests, routing between microservices
+  # Central entry point for all requests, routing between microservices
 [package]
 name = "kembridge-gateway-service"
 version = "0.1.0"
@@ -12,10 +12,14 @@ path = "src/main.rs"
 
 [dependencies]
 # Web framework (minimal)
-axum = { version = "0.8.4", features = ["macros", "tracing"] }
+axum = { version = "0.8.4", features = ["macros", "tracing", "ws"] }
 tokio = { version = "1.46.1", features = ["full"] }
 tower = { version = "0.5.2", features = ["util"] }
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
+
+# WebSocket support
+tokio-tungstenite = "0.27.0"
+futures-util = "0.3"
 
 # HTTP client for service communication
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
@@ -63,3 +67,4 @@ parking_lot = "0.12"
 
 [dev-dependencies]
 tokio-test = "0.4"
+futures = "0.3"
