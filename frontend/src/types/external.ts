@@ -33,7 +33,9 @@ export interface WindowEthereum extends EthereumProvider {
 // Global Window Extensions
 declare global {
   interface Window {
-    Buffer: typeof Buffer;
+    Buffer: {
+      from(data: unknown, encoding?: string): unknown;
+    };
   }
 }
 

@@ -1,9 +1,9 @@
+use bigdecimal::BigDecimal;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use bigdecimal::BigDecimal;
 
-// Базовые типы для всех сервисов
+// Basic types for all services
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceResponse<T> {
     pub success: bool,
@@ -32,7 +32,7 @@ impl<T> ServiceResponse<T> {
     }
 }
 
-// Основные типы для bridge
+// Main types for bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenInfo {
     pub address: String,
@@ -72,7 +72,7 @@ pub enum TransactionStatus {
     Cancelled,
 }
 
-// Типы для аутентификации
+// Types for authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
@@ -89,7 +89,7 @@ pub struct AuthToken {
     pub expires_at: DateTime<Utc>,
 }
 
-// Типы для crypto сервиса
+// Types for crypto service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuantumKeyPair {
     pub id: Uuid,
@@ -110,7 +110,7 @@ pub struct EncryptionResponse {
     pub nonce: String,
 }
 
-// Типы для 1inch сервиса
+// Types for 1inch service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwapQuote {
     pub from_token: TokenInfo,
@@ -129,7 +129,7 @@ pub struct SwapRequest {
     pub slippage: BigDecimal,
 }
 
-// Health check типы
+// Health check types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
     pub service: String,

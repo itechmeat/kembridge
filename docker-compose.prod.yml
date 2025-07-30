@@ -1,5 +1,5 @@
 # KEMBridge Microservices Architecture
-# Каждый сервис собирается независимо для максимального ускорения разработки
+# Each service is built independently for maximum development acceleration
 
 version: '3.8'
 

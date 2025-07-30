@@ -1,5 +1,5 @@
 # KEMBridge API Gateway Service
-# Центральная точка входа для всех запросов, роутинг между микросервисами
+# Central entry point for all requests, routing between microservices
 [package]
 name = "kembridge-gateway-service"
 version = "0.1.0"

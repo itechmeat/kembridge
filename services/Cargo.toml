@@ -1,5 +1,5 @@
 # KEMBridge Microservices Workspace
-# Общие зависимости для всех микросервисов
+# Common dependencies for all microservices
 
 [workspace]
 members = [
@@ -11,7 +11,7 @@ members = [
     "kembridge-gateway-service"
 ]
 
-# Общие зависимости для всех сервисов (версии синхронизированы)
+# Common dependencies for all services (versions synchronized)
 [workspace.dependencies]
 # Web framework
 axum = { version = "0.8.4", features = ["macros"] }
@@ -27,7 +27,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0"
 
-# UUID и Time
+# UUID and Time
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
@@ -46,11 +46,11 @@ anyhow = "1.0"
 async-trait = "0.1"
 futures = "0.3"
 
-# HTTP Client (для blockchain и 1inch services)
+# HTTP Client (for blockchain and 1inch services)
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 hyper = "1.6.0"
 
-# Database (для auth, blockchain, crypto services) 
+# Database (for auth, blockchain, crypto services) 
 sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "postgres", 
@@ -59,22 +59,22 @@ sqlx = { version = "0.8", features = [
     "json"
 ] }
 
-# Redis (для всех сервисов)
+# Redis (for all services)
 redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
 
-# Crypto (для crypto service)
+# Crypto (for crypto service)
 ring = "0.17"
 sha2 = "0.10"
 aes-gcm = "0.10"
 
-# JSON Web Tokens (для auth и gateway)
+# JSON Web Tokens (for auth and gateway)
 jsonwebtoken = "9.3"
 
-# Blockchain specific (для blockchain service)
+# Blockchain specific (for blockchain service)
 ethers = "2.0"
 near-sdk = "5.5"
 
-# Math (для 1inch service)
+# Math (for 1inch service)
 bigdecimal = { version = "0.4", features = ["serde"] }
 
 # Validation
@@ -90,7 +90,7 @@ all = "warn"
 pedantic = "warn"
 cargo = "warn"
 
-# Профили сборки для оптимизации
+# Build profiles for optimization
 [profile.dev]
 incremental = true
 debug = true
@@ -102,4 +102,4 @@ panic = "abort"
 strip = true
 
 [profile.dev.package."*"]
-opt-level = 2  # Оптимизируем зависимости даже в dev режиме
+opt-level = 2  # Optimize dependencies even in dev mode

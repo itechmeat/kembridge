@@ -1,5 +1,5 @@
 # KEMBridge Post-Quantum Cryptography Service
-# Отвечает за все операции шифрования, дешифрования и управления ключами
+# Responsible for all encryption, decryption and key management operations
 [package]
 name = "kembridge-crypto-service"
 version = "0.1.0"
@@ -21,38 +21,38 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 base64 = "0.22"
 rand = "0.8"
 
-# HTTP клиент
+# HTTP client
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
-# Сериализация
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Валидация
+# Validation
 validator = { version = "0.20.0", features = ["derive"] }
 
-# Время
+# Time
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
-# База данных
+# Database
 sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls", "postgres", "chrono", "uuid", "json", "bigdecimal"
 ] }
 
-# Кэширование (Redis)
+# Caching (Redis)
 redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
 deadpool-redis = "0.18.0"
 
-# Конфигурация
+# Configuration
 config = "0.15.13"
 dotenvy = "0.15"
 
-# Логирование
+# Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
-# Ошибки
+# Errors
 thiserror = "2.0.12"
 anyhow = "1.0"
 
@@ -62,10 +62,10 @@ async-trait = "0.1"
 # Secure memory
 zeroize = "1.7"
 
-# Общие типы
+# Common types
 kembridge-common = { path = "../kembridge-common" }
 
-# Мониторинг
+# Monitoring
 metrics = "0.24.2"
 metrics-exporter-prometheus = "0.17.2"
 

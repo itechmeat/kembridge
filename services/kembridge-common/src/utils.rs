@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{error, info};
 
-// Утилиты для всех сервисов
+// Utilities for all services
 
 pub fn current_timestamp() -> u64 {
     SystemTime::now()
@@ -19,7 +19,7 @@ pub fn current_timestamp_ms() -> u64 {
         .as_millis() as u64
 }
 
-// Валидация адресов
+// Address validation
 pub fn validate_ethereum_address(address: &str) -> ServiceResult<()> {
     if !address.starts_with("0x") {
         return Err(ServiceError::Validation {
@@ -35,7 +35,7 @@ pub fn validate_ethereum_address(address: &str) -> ServiceResult<()> {
         });
     }
 
-    // Простая проверка hex символов
+    // Simple hex character validation
     for c in address.chars().skip(2) {
         if !c.is_ascii_hexdigit() {
             return Err(ServiceError::Validation {
@@ -83,7 +83,7 @@ pub fn validate_near_address(address: &str) -> ServiceResult<()> {
     Ok(())
 }
 
-// Форматирование ошибок для логов
+// Error formatting for logs
 pub fn log_error<'a, T>(result: &'a ServiceResult<T>, context: &str) -> &'a ServiceResult<T> {
     if let Err(e) = result {
         error!("Error in {}: {}", context, e);

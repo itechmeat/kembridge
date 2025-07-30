@@ -113,3 +113,25 @@ export const EXPECTED_PATTERNS = {
     'near'
   ]
 };
+
+// AI Risk Engine constants
+export const SERVICE_URLS = {
+  AI_ENGINE: process.env.AI_ENGINE_URL || 'http://localhost:4005',
+  BACKEND_GATEWAY: process.env.BACKEND_URL || 'http://localhost:4000',
+};
+
+export const RISK_ANALYSIS = {
+  THRESHOLDS: {
+    LOW: 0.3,
+    MEDIUM: 0.6,
+    HIGH: 0.8,
+    AUTO_BLOCK: 0.9,
+  },
+  LEVELS: {
+    LOW: 'low',
+    MEDIUM: 'medium', 
+    HIGH: 'high',
+  }
+};
+
+export const DEFAULT_USER_ID = "test_user_e2e";

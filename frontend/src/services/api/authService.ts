@@ -20,6 +20,7 @@ export interface NonceResponse {
 
 // Re-export the correct interface from apiClient
 export type VerifyWalletResponse = ApiVerifyWalletResponse;
+export type { VerifyWalletRequest } from "./apiClient";
 
 export interface RefreshTokenResponse {
   token: string;

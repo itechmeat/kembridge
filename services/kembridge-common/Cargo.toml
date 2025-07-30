@@ -1,4 +1,4 @@
-# Общие типы и утилиты для всех KEMBridge сервисов
+# Common types and utilities for all KEMBridge services
 [package]
 name = "kembridge-common"
 version = "0.1.0"
@@ -10,7 +10,7 @@ name = "kembridge_common"
 path = "src/lib.rs"
 
 [dependencies]
-# Базовые зависимости для всех сервисов
+# Basic dependencies for all services
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.17.0", features = ["v4", "v7", "serde"] }
@@ -19,19 +19,19 @@ bigdecimal = { version = "0.4", features = ["serde"] }
 thiserror = "2.0.12"
 anyhow = "1.0"
 
-# HTTP клиент для межсервисной коммуникации
+# HTTP client for inter-service communication
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
-# Валидация
+# Validation
 validator = { version = "0.20.0", features = ["derive"] }
 
 # Async
 async-trait = "0.1"
 tokio = { version = "1.46.1", features = ["full"] }
 
-# Логирование
+# Logging
 tracing = "0.1"
 
-# Конфигурация
+# Configuration
 config = "0.15.13"
 dotenvy = "0.15"

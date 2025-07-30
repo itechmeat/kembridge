@@ -18,16 +18,19 @@ import { useAuthStatus } from "../../../hooks/api/useAuth";
 import { SecurityIndicator, RiskAnalysisDisplay } from "../../security";
 import { useSecurityStatus, useRiskAnalysis } from "../../../hooks/security";
 import { bridgeService } from "../../../services/api/bridgeService";
+import { ZERO_ADDRESS } from "../../../constants/services";
 import type { BridgeSwapRequest } from "../../../types/bridge";
 
 export interface SwapFormProps {
   onSwapExecute?: (data: SwapFormData) => Promise<unknown> | void;
+  onDataChange?: (data: Partial<SwapFormData>) => void;
   className?: string;
   disabled?: boolean;
 }
 
 export const SwapForm: React.FC<SwapFormProps> = ({
   onSwapExecute,
+  onDataChange,
   className = "",
   disabled = false,
 }) => {
@@ -85,7 +88,7 @@ export const SwapForm: React.FC<SwapFormProps> = ({
   // Risk analysis for current transaction
   const riskAnalysisRequest = isAuthenticated && walletAddress && formData.fromToken && formData.toToken && formData.amount && parseFloat(formData.amount) > 0 ? {
     fromAddress: walletAddress,
-    toAddress: "0x0000000000000000000000000000000000000000", // TODO: Get actual recipient
+    toAddress: ZERO_ADDRESS, // Using constant instead of hardcoded
     amount: parseFloat(formData.amount) || 0,
     token: formData.fromToken?.symbol || "",
     chain: formData.fromChain || ""
@@ -95,6 +98,17 @@ export const SwapForm: React.FC<SwapFormProps> = ({
     enabled: !!riskAnalysisRequest,
     realTime: true
   });
+
+  // Notify parent component about form data changes
+  useEffect(() => {
+    if (onDataChange && formData.fromToken && formData.toToken && formData.amount && parseFloat(formData.amount) > 0) {
+      const completeData = {
+        ...formData,
+        recipient: walletAddress || ZERO_ADDRESS, // Using constant instead of hardcoded
+      } as SwapFormData;
+      onDataChange(completeData);
+    }
+  }, [formData, walletAddress, onDataChange]);
 
   // Auto-select default tokens when chains change
   useEffect(() => {
