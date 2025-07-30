@@ -3,14 +3,14 @@
  * Main page for wallet connection and management
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useWallet } from "../../hooks/wallet/useWallet";
 import { useAuthStatus, useLogout } from "../../hooks/api/useAuth";
 import { useUserInfo } from "../../hooks/api/useUser";
 import { AuthManager } from "../../components/auth/AuthManager/AuthManager";
 import "./WalletPage.scss";
 
-export const WalletPage: React.FC = () => {
+export const WalletPage: React.FC = React.memo(() => {
   console.log("🏗️ WalletPage: Component rendering");
 
   // Wallet connection status (MetaMask/NEAR)
@@ -30,15 +30,25 @@ export const WalletPage: React.FC = () => {
     walletAddress: state.address,
   });
 
-  // Logout handler
-  const handleLogout = async () => {
+  // Memoized logout handler to prevent re-renders
+  const handleLogout = useCallback(async () => {
     try {
       await logout.mutateAsync();
       console.log("✅ WalletPage: Logout successful");
     } catch (error) {
       console.error("❌ WalletPage: Logout failed:", error);
     }
-  };
+  }, [logout]);
+
+  // Memoized auth success handler
+  const handleAuthSuccess = useCallback(() => {
+    console.log("🎉 WalletPage: Authentication successful");
+  }, []);
+
+  // Memoized auth error handler
+  const handleAuthError = useCallback((error: Error) => {
+    console.error("❌ WalletPage: Authentication failed:", error);
+  }, []);
 
   // If wallet is not connected or not authenticated
   if (!isWalletConnected || !isAuthenticated) {
@@ -55,12 +65,8 @@ export const WalletPage: React.FC = () => {
             {/* Authentication Section */}
             <div className="onboarding__auth">
               <AuthManager
-                onAuthSuccess={() => {
-                  console.log("🎉 WalletPage: Authentication successful");
-                }}
-                onAuthError={(error) => {
-                  console.error("❌ WalletPage: Authentication failed:", error);
-                }}
+                onAuthSuccess={handleAuthSuccess}
+                onAuthError={handleAuthError}
               />
             </div>
 
@@ -239,4 +245,4 @@ export const WalletPage: React.FC = () => {
       </div>
     </div>
   );
-};
+});

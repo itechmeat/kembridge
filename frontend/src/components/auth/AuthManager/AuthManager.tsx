@@ -3,7 +3,7 @@
  * Manages authentication process through Web3 wallets
  */
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useAccount, useConnect } from "wagmi";
 import {
   useEthereumAuth,
@@ -20,7 +20,7 @@ interface AuthManagerProps {
   onAuthError?: (error: Error) => void;
 }
 
-export const AuthManager: React.FC<AuthManagerProps> = ({
+export const AuthManager: React.FC<AuthManagerProps> = React.memo(({
   onAuthSuccess,
   onAuthError,
 }) => {
@@ -42,8 +42,8 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
   const nearAuth = useNearAuth();
   const nearWallet = useNearWallet();
 
-  // Ethereum authentication handler
-  const handleEthereumAuth = async () => {
+  // Memoized Ethereum authentication handler
+  const handleEthereumAuth = useCallback(async () => {
     try {
       setError(null);
       setAuthMethod("ethereum");
@@ -85,10 +85,10 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
     } finally {
       setAuthMethod(null);
     }
-  };
+  }, [ethereumAuth, connect, connectors, onAuthSuccess, onAuthError]);
 
-  // NEAR authentication handler
-  const handleNearAuth = async () => {
+  // Memoized NEAR authentication handler
+  const handleNearAuth = useCallback(async () => {
     try {
       setError(null);
       setAuthMethod("near");
@@ -118,7 +118,7 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
     } finally {
       setAuthMethod(null);
     }
-  };
+  }, [nearAuth, nearWallet, onAuthSuccess, onAuthError]);
 
   // If user is already authenticated, show profile
   if (isAuthenticated && userProfile) {
@@ -254,4 +254,4 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
       </div>
     </div>
   );
-};
+});

@@ -68,9 +68,9 @@ export const API_VERSION = "/api/v1";
 // WebSocket Configuration
 export const WEBSOCKET_CONFIG = {
   URL: import.meta.env.VITE_WS_URL || "ws://localhost:4000/ws",
-  RECONNECT_INTERVAL_MS: 5000,
-  MAX_RECONNECT_ATTEMPTS: 10,
-  PING_INTERVAL_MS: 30000,
+  RECONNECT_INTERVAL_MS: 3000, // Faster reconnect for hackathon demo
+  MAX_RECONNECT_ATTEMPTS: 15,  // More attempts for reliability
+  PING_INTERVAL_MS: 20000,     // More frequent ping for stability
 } as const;
 
 // Bridge Configuration
