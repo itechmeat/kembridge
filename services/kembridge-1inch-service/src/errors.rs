@@ -114,9 +114,9 @@ impl OneinchServiceError {
 impl IntoResponse for OneinchServiceError {
     fn into_response(self) -> Response {
         let status_code = self.status_code();
-        
+
         let error_response = ServiceResponse::<()>::error(format!("{}", self));
-        
+
         tracing::error!(
             error_code = self.error_code(),
             status_code = status_code.as_u16(),
@@ -133,15 +133,13 @@ impl From<kembridge_common::ServiceError> for OneinchServiceError {
     fn from(err: kembridge_common::ServiceError) -> Self {
         match err {
             kembridge_common::ServiceError::InvalidRequest { message } => {
-                OneinchServiceError::ValidationError { 
-                    field: "request".to_string(), 
-                    message 
+                OneinchServiceError::ValidationError {
+                    field: "request".to_string(),
+                    message,
                 }
             }
             kembridge_common::ServiceError::Network { message } => {
-                OneinchServiceError::NetworkTimeout { 
-                    operation: message 
-                }
+                OneinchServiceError::NetworkTimeout { operation: message }
             }
             kembridge_common::ServiceError::ExternalService { service, message } => {
                 if service.contains("1inch") {
@@ -159,40 +157,51 @@ impl From<kembridge_common::ServiceError> for OneinchServiceError {
             kembridge_common::ServiceError::Validation { field, message } => {
                 OneinchServiceError::ValidationError { field, message }
             }
-            _ => OneinchServiceError::Internal { 
-                message: err.to_string() 
-            }
+            _ => OneinchServiceError::Internal {
+                message: err.to_string(),
+            },
         }
     }
 }
 
-// Helper для создания ошибок
+// Helper for creating errors
 impl OneinchServiceError {
     pub fn oneinch_api<S: Into<String>>(message: S) -> Self {
-        Self::OneinchApi { message: message.into() }
+        Self::OneinchApi {
+            message: message.into(),
+        }
     }
 
     pub fn invalid_quote<S: Into<String>>(reason: S) -> Self {
-        Self::InvalidQuote { reason: reason.into() }
+        Self::InvalidQuote {
+            reason: reason.into(),
+        }
     }
 
     pub fn quote_expired<S: Into<String>>(quote_id: S) -> Self {
-        Self::QuoteExpired { quote_id: quote_id.into() }
+        Self::QuoteExpired {
+            quote_id: quote_id.into(),
+        }
     }
 
     pub fn token_not_supported<S: Into<String>>(token: S, chain_id: u64) -> Self {
-        Self::TokenNotSupported { token: token.into(), chain_id }
+        Self::TokenNotSupported {
+            token: token.into(),
+            chain_id,
+        }
     }
 
     pub fn validation_error<S: Into<String>>(field: S, message: S) -> Self {
-        Self::ValidationError { 
-            field: field.into(), 
-            message: message.into() 
+        Self::ValidationError {
+            field: field.into(),
+            message: message.into(),
         }
     }
 
     pub fn internal<S: Into<String>>(message: S) -> Self {
-        Self::Internal { message: message.into() }
+        Self::Internal {
+            message: message.into(),
+        }
     }
 }
 

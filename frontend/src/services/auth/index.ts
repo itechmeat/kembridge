@@ -49,7 +49,8 @@ export class AuthService {
         wallet_address: walletAddress,
         signature,
         nonce: nonceResponse.nonce,
-        wallet_type: this.mapWalletType(walletType),
+        chain_type: this.mapWalletType(walletType),
+        message: nonceResponse.message,
       };
 
       console.log("Verifying wallet signature with backend...");

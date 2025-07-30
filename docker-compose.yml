@@ -1,5 +1,5 @@
 # Development version with local cargo cache mounts
-# Использует локальные кэши Cargo для максимальной скорости
+# Uses local Cargo caches for maximum speed
 
 services:
   # Infrastructure (same as microservices)

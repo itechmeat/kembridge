@@ -1,6 +1,0 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="3.8960340000000007">
-<testsuite name="quantum-components-unit.spec.js" timestamp="2025-07-28T15:49:12.446Z" hostname="chromium" tests="1" failures="0" skipped="0" time="2.319" errors="0">
-<testcase name="QuantumProtectionDisplay Component Tests › should render quantum protection display component" classname="quantum-components-unit.spec.js" time="2.319">
-</testcase>
-</testsuite>
-</testsuites>

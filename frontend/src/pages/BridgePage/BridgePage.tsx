@@ -9,9 +9,12 @@ import { TransactionProgress } from "../../components/bridge/TransactionProgress
 import { TransactionHistory } from "../../components/bridge/TransactionHistory/TransactionHistory";
 import { QuantumProtectionDisplay } from "../../components/security/QuantumProtectionDisplay/QuantumProtectionDisplay";
 import { SecurityIndicator } from "../../components/security/SecurityIndicator/SecurityIndicator";
+import { AIRiskDisplay } from "../../components/features/security/AIRiskDisplay";
 import { useTransactionStatus } from "../../hooks/bridge/useTransactionStatus";
 import { useBridgeHistory } from "../../hooks/bridge/useBridgeHistory";
 import { websocketService } from "../../services/bridge/websocketService";
+import { DEFAULT_USER_ID, RISK_ANALYSIS } from "../../constants/services";
+import type { AIRiskAnalysisResponse } from "../../services/ai/aiRiskService";
 import type {
   SwapFormData,
   TransactionProgress as TransactionProgressType,
@@ -21,6 +24,9 @@ import type {
 export const BridgePage: React.FC = () => {
   const [activeTransactionId, setActiveTransactionId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"swap" | "history">("swap");
+  const [currentSwapData, setCurrentSwapData] = useState<SwapFormData | null>(null);
+  const [isRiskBlocked, setIsRiskBlocked] = useState<boolean>(false);
+  const [riskBlockReason, setRiskBlockReason] = useState<string>("");
 
   // Get active transaction status
   const { data: activeTransaction, isLoading: transactionLoading } =
@@ -35,9 +41,35 @@ export const BridgePage: React.FC = () => {
     error: historyError,
   } = useBridgeHistory(1, 10);
 
+  // Handle risk analysis results
+  const handleRiskChange = useCallback((risk: AIRiskAnalysisResponse) => {
+    console.log("Bridge: Risk analysis updated:", risk);
+    if (!risk.approved || risk.risk_score > RISK_ANALYSIS.THRESHOLDS.HIGH) {
+      setIsRiskBlocked(true);
+      setRiskBlockReason(`High risk transaction (${risk.risk_level}): ${risk.reasons.join(', ')}`);
+    } else {
+      setIsRiskBlocked(false);
+      setRiskBlockReason("");
+    }
+  }, []);
+
+  const handleRiskBlock = useCallback((reason: string) => {
+    setIsRiskBlocked(true);
+    setRiskBlockReason(reason);
+    console.warn("Bridge: Transaction blocked by AI risk analysis:", reason);
+  }, []);
+
   // Handle swap execution
   const handleSwapExecute = useCallback(async (data: SwapFormData) => {
     console.log("Bridge: Swap executed:", data);
+    
+    // Check if transaction is blocked by risk analysis
+    if (isRiskBlocked) {
+      throw new Error(`Transaction blocked: ${riskBlockReason}`);
+    }
+
+    // Store current swap data for risk analysis
+    setCurrentSwapData(data);
 
     try {
       // Import bridge service
@@ -73,7 +105,7 @@ export const BridgePage: React.FC = () => {
       console.error("❌ Bridge: Swap execution failed:", error);
       throw error;
     }
-  }, []);
+  }, [isRiskBlocked, riskBlockReason]);
 
   // Connect WebSocket on component mount
   React.useEffect(() => {
@@ -171,7 +203,35 @@ export const BridgePage: React.FC = () => {
                   <div className="bridge-page__swap-form">
                     <SwapForm
                       onSwapExecute={handleSwapExecute}
+                      onDataChange={(data) => setCurrentSwapData(data as SwapFormData)}
+                      disabled={isRiskBlocked}
                       className="bridge-page__form"
+                    />
+                    {isRiskBlocked && (
+                      <div className="bridge-page__risk-warning" data-testid="risk-warning">
+                        <span className="bridge-page__risk-icon">⚠️</span>
+                        <span className="bridge-page__risk-message">{riskBlockReason}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Risk Analysis Display */}
+                  <div className="bridge-page__ai-risk">
+                    <AIRiskDisplay
+                      userId={DEFAULT_USER_ID} // Using default user ID from constants
+                      transaction={currentSwapData ? {
+                        transactionId: activeTransactionId || undefined,
+                        amount: parseFloat(currentSwapData.amount) || 0,
+                        sourceChain: currentSwapData.fromChain,
+                        destinationChain: currentSwapData.toChain,
+                        sourceToken: currentSwapData.fromToken.symbol,
+                        destinationToken: currentSwapData.toToken.symbol,
+                        userAddress: currentSwapData.recipient,
+                      } : undefined}
+                      autoAnalyze={!!currentSwapData}
+                      onRiskChange={handleRiskChange}
+                      onBlock={handleRiskBlock}
+                      className="bridge-page__ai-risk-display"
                     />
                   </div>
 

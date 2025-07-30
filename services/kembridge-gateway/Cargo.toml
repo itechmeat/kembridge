@@ -1,5 +1,5 @@
 # KEMBridge Core API Gateway
-# Минимальный gateway для маршрутизации запросов между микросервисами
+# Minimal gateway for routing requests between microservices
 [package]
 name = "kembridge-gateway"
 version = "0.1.0"
@@ -13,36 +13,36 @@ tokio = { version = "1.46.1", features = ["full"] }
 tower = { version = "0.5.2", features = ["util", "load-shed", "timeout"] }
 tower-http = { version = "0.6.6", features = ["cors", "trace", "compression-gzip"] }
 
-# HTTP клиент для межсервисной коммуникации
+# HTTP client for inter-service communication
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
-# Сериализация
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Валидация
+# Validation
 validator = { version = "0.20.0", features = ["derive"] }
 
-# Время
+# Time
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
-# JWT для базовой проверки токенов
+# JWT for basic token validation
 jsonwebtoken = "9.3.1"
 
-# Кэширование (Redis) для session management
+# Caching (Redis) for session management
 redis = { version = "0.32.4", features = ["tokio-comp", "connection-manager"] }
 deadpool-redis = "0.18.0"
 
-# Конфигурация
+# Configuration
 config = "0.15.13"
 dotenvy = "0.15"
 
-# Логирование
+# Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
-# Ошибки
+# Errors
 thiserror = "2.0.12"
 anyhow = "1.0"
 
@@ -56,10 +56,10 @@ tower_governor = "0.4"
 # Load balancing and circuit breaker
 tower-balance = "0.3"
 
-# Общие типы
+# Common types
 kembridge-common = { path = "../kembridge-common" }
 
-# Мониторинг
+# Monitoring
 metrics = "0.24.2"
 metrics-exporter-prometheus = "0.17.2"
 

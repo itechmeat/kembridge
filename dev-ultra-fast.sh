@@ -1,41 +1,41 @@
 #!/bin/bash
-# СВЕРХБЫСТРЫЙ режим разработки KEMBridge
-# Запускает только PostgreSQL/Redis в Docker, backend/frontend нативно
+# ULTRA-FAST KEMBridge development mode
+# Runs only PostgreSQL/Redis in Docker, backend/frontend natively
 
 set -e
 
-echo "🚀 СВЕРХБЫСТРЫЙ режим разработки KEMBridge"
+echo "🚀 ULTRA-FAST KEMBridge development mode"
 echo "=========================================="
 
-# Остановить все Docker контейнеры
-echo "🛑 Останавливаем Docker контейнеры..."
+# Stop all Docker containers
+echo "🛑 Stopping Docker containers..."
 docker-compose down 2>/dev/null || true
 
-# Запустить только БД сервисы
-echo "🗄️ Запускаем только PostgreSQL и Redis..."
+# Start only DB services
+echo "🗄️ Starting only PostgreSQL and Redis..."
 docker-compose up -d postgres redis
 
-# Ждем готовности БД
-echo "⏳ Ждем готовности базы данных..."
+# Wait for DB readiness
+echo "⏳ Waiting for database readiness..."
 sleep 5
 
-# Проверяем установку bacon (для instant feedback)
+# Check bacon installation (for instant feedback)
 if ! command -v bacon &> /dev/null; then
-    echo "📦 Устанавливаем bacon для instant feedback..."
+    echo "📦 Installing bacon for instant feedback..."
     cargo install bacon
 fi
 
-# Проверяем установку cargo-watch
+# Check cargo-watch installation
 if ! command -v cargo-watch &> /dev/null; then
-    echo "📦 Устанавливаем cargo-watch..."
+    echo "📦 Installing cargo-watch..."
     cargo install cargo-watch
 fi
 
-# Запускаем backend нативно с cargo-watch
-echo "⚡ Запускаем backend нативно с hot reload..."
+# Run backend natively with cargo-watch
+echo "⚡ Starting backend natively with hot reload..."
 cd backend
 
-# Устанавливаем переменные окружения
+# Set environment variables
 export DATABASE_URL="postgresql://postgres:dev_password@localhost:5432/kembridge_dev"
 export REDIS_URL="redis://:dev_redis_password@localhost:6379"
 export JWT_SECRET="hackathon-super-secret-key-change-in-production"
@@ -43,15 +43,15 @@ export AI_ENGINE_URL="http://localhost:4003"
 export RUST_LOG="debug"
 export RUST_BACKTRACE="1"
 
-# Запускаем миграции
-echo "🔧 Применяем миграции базы данных..."
-sqlx migrate run || echo "⚠️ Миграции не удались, но продолжаем..."
+# Run migrations
+echo "🔧 Applying database migrations..."
+sqlx migrate run || echo "⚠️ Migrations failed, but continuing..."
 
 echo ""
-echo "🎯 КОМАНДЫ ДЛЯ СВЕРХБЫСТРОЙ РАЗРАБОТКИ:"
+echo "🎯 ULTRA-FAST DEVELOPMENT COMMANDS:"
 echo "======================================"
 echo ""
-echo "В отдельных терминалах запустите:"
+echo "Run in separate terminals:"
 echo ""
 echo "1. 🦀 Backend (instant check):"
 echo "   cd backend && bacon check"
@@ -65,14 +65,14 @@ echo ""
 echo "4. 🤖 AI Engine:"
 echo "   cd ai-engine && python main.py"
 echo ""
-echo "💡 ПРЕИМУЩЕСТВА:"
-echo "- Компиляция: секунды вместо минут"
-echo "- cargo check: мгновенная проверка ошибок"
-echo "- bacon: live feedback при изменениях"
-echo "- Нативная скорость без Docker overhead"
+echo "💡 ADVANTAGES:"
+echo "- Compilation: seconds instead of minutes"
+echo "- cargo check: instant error checking"
+echo "- bacon: live feedback on changes"
+echo "- Native speed without Docker overhead"
 echo ""
-echo "📊 СТАТУС СЕРВИСОВ:"
+echo "📊 SERVICES STATUS:"
 docker-compose ps
 
 echo ""
-echo "✅ Готово! Теперь разработка будет молниеносной ⚡"
+echo "✅ Done! Now development will be lightning fast ⚡"

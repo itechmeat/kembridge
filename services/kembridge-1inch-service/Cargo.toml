@@ -15,28 +15,28 @@ axum = { version = "0.8.4", features = ["macros"] }
 tokio = { version = "1.46.1", features = ["full"] }
 tower-http = { version = "0.6.6", features = ["cors"] }
 
-# Сериализация
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# UUID для генерации ID
+# UUID for ID generation
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
-# Время
+# Time
 chrono = { version = "0.4", features = ["serde"] }
 
-# Конфигурация
+# Configuration
 dotenvy = "0.15"
 
-# Логирование
+# Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# Ошибки
+# Errors
 thiserror = "2.0.12"
 anyhow = "1.0"
 
-# Общие типы
+# Common types
 kembridge-common = { path = "../kembridge-common" }
 
 # For future expansion (commented out for now)
