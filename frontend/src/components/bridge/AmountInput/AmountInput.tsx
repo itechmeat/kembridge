@@ -193,6 +193,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           onChange={handleInputChange}
           disabled={disabled}
           className="amount-input__field"
+          data-testid="amount-input"
         />
 
         {balance && (

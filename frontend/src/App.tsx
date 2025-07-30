@@ -10,6 +10,7 @@ import { AuthTestPage } from "./pages/AuthTestPage/AuthTestPage";
 import { SecurityTestPage } from "./pages/SecurityTestPage/SecurityTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
+import ErrorNotificationDisplay from "./components/notifications/ErrorNotificationDisplay";
 import { useEffect } from "react";
 import "./styles/main.scss";
 import "./pages/BridgePage/BridgePage.scss";
@@ -71,6 +72,9 @@ function AppContent() {
             <Route path="/security-test" element={<SecurityTestPage />} />
           </Routes>
         </MobileLayout>
+
+        {/* Global Error Notification Display */}
+        <ErrorNotificationDisplay maxVisible={5} position="top-right" />
       </Router>
     </WalletProviders>
   );

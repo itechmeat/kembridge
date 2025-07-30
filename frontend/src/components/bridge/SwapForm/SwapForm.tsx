@@ -364,6 +364,7 @@ export const SwapForm: React.FC<SwapFormProps> = ({
               onClick={handleChainSwap}
               disabled={disabled}
               className="swap-form__swap-button"
+              data-testid="swap-direction-button"
             >
               ⇅
             </button>
@@ -414,6 +415,7 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                 }))
               }
               className="swap-form__slippage-slider"
+              data-testid="slippage-slider"
             />
           </div>
 
@@ -484,6 +486,7 @@ export const SwapForm: React.FC<SwapFormProps> = ({
             type="submit"
             className="swap-form__submit"
             disabled={disabled || !isFormValid || quoteLoading || !quote}
+            data-testid="swap-button"
           >
             {!walletAddress
               ? "Connect Wallet"

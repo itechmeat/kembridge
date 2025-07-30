@@ -194,6 +194,7 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
           className="auth-manager__method auth-manager__method--ethereum"
           onClick={handleEthereumAuth}
           disabled={authMethod !== null}
+          data-testid="ethereum-wallet-button"
         >
           {authMethod === "ethereum" ? (
             <>
@@ -222,6 +223,7 @@ export const AuthManager: React.FC<AuthManagerProps> = ({
           className="auth-manager__method auth-manager__method--near"
           onClick={handleNearAuth}
           disabled={authMethod !== null}
+          data-testid="near-wallet-button"
         >
           {authMethod === "near" ? (
             <>

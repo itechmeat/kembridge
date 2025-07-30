@@ -5,6 +5,7 @@
 
 import { test, expect } from '@playwright/test';
 import { WebSocketTestUtils } from '../utils/websocket-utils';
+import { TEST_URLS } from '../utils/test-constants';
 
 test.describe('WebSocket Security Tests', () => {
   let wsUtils: WebSocketTestUtils;
@@ -28,7 +29,7 @@ test.describe('WebSocket Security Tests', () => {
         };
         
         try {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -91,7 +92,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Use an obviously expired token
           const expiredToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNTE2MjM5MDIyfQ.invalid';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${expiredToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${expiredToken}`);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -165,7 +166,7 @@ test.describe('WebSocket Security Tests', () => {
           result.tokensTestedCount++;
           
           try {
-            const ws = new WebSocket(`ws://localhost:4000/ws?token=${encodeURIComponent(token)}`);
+            const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${encodeURIComponent(token)}`);
             
             await new Promise<void>((resolve) => {
               let rejected = false;
@@ -236,7 +237,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Token with invalid signature but valid structure
           const invalidSignatureToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.invalid_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${invalidSignatureToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${invalidSignatureToken}`);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -305,7 +306,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Create a basic token without admin permissions
           const basicToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwicGVybWlzc2lvbnMiOlsicmVhZDpiYXNpYyJdLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6OTk5OTk5OTk5OX0.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${basicToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${basicToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -374,7 +375,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Use a token with specific user context
           const userToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwidXNlcl9pZCI6InVzZXIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6OTk5OTk5OTk5OX0.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${userToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${userToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -459,7 +460,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -544,7 +545,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -640,7 +641,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Test current connection protocol
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           result.connectionTested = true;
           
           await new Promise<void>((resolve) => {
@@ -702,7 +703,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Test connection with current origin (should be valid)
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           result.connectionTested = true;
           
           await new Promise<void>((resolve) => {
@@ -764,7 +765,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -855,7 +856,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -940,7 +941,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`ws://localhost:4000/ws?token=${validToken}`);
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {

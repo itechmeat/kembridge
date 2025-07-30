@@ -4,6 +4,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { TEST_URLS } from '../utils/test-constants';
 
 test.describe('WebSocket Backend Direct Test', () => {
   test('should connect to WebSocket server and receive messages', async ({ page }) => {
@@ -15,7 +16,7 @@ test.describe('WebSocket Backend Direct Test', () => {
     await page.addInitScript(() => {
       window.testWebSocket = () => {
         return new Promise((resolve, reject) => {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           const messages = [];
           const errors = [];
           let connected = false;
@@ -56,7 +57,7 @@ test.describe('WebSocket Backend Direct Test', () => {
     });
     
     // Navigate to any page (we just need a browser context)
-    await page.goto('http://localhost:4100/');
+    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
     
     // Run WebSocket test
     const result = await page.evaluate(() => window.testWebSocket());
@@ -85,7 +86,7 @@ test.describe('WebSocket Backend Direct Test', () => {
     await page.addInitScript(() => {
       window.testAuthWebSocket = () => {
         return new Promise((resolve, reject) => {
-          const ws = new WebSocket('ws://localhost:4000/ws?token=test-token-123');
+          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=test-token-123`);
           const messages = [];
           let connected = false;
           
@@ -122,7 +123,7 @@ test.describe('WebSocket Backend Direct Test', () => {
       };
     });
     
-    await page.goto('http://localhost:4100/');
+    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
     
     const result = await page.evaluate(() => window.testAuthWebSocket());
     
@@ -139,7 +140,7 @@ test.describe('WebSocket Backend Direct Test', () => {
     await page.addInitScript(() => {
       window.testSubscription = () => {
         return new Promise((resolve) => {
-          const ws = new WebSocket('ws://localhost:4000/ws');
+          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
           const subscriptionMessages = [];
           let connected = false;
           
@@ -170,7 +171,7 @@ test.describe('WebSocket Backend Direct Test', () => {
       };
     });
     
-    await page.goto('http://localhost:4100/');
+    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
     
     const result = await page.evaluate(() => window.testSubscription());
     

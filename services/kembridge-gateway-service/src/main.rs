@@ -12,13 +12,14 @@ use kembridge_gateway_service::{
     event_listener::create_event_listener,
     event_api::{EventApiState, trigger_crypto_event, trigger_risk_analysis, trigger_system_notification, 
                 get_websocket_stats, cleanup_connections, send_heartbeat, disconnect_user, test_user_broadcast},
-    middleware::security_headers
+    middleware::{security_headers, error_handling_middleware}
 };
 use kembridge_common::ServiceResponse;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tracing::{info, Level};
+use chrono;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -74,11 +75,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/auth/verify-wallet", post(handlers::verify_wallet))
         // Bridge routes
         .route("/api/v1/bridge/tokens", get(handlers::get_bridge_tokens))
+        .route("/api/v1/bridge/quote", get(handlers::get_bridge_quote))
         .route("/api/v1/bridge/history", get(handlers::get_bridge_history))
         // Crypto routes (matching old backend)
         .route("/api/v1/crypto/status", get(handlers::get_crypto_status))  
         .route("/api/v1/crypto/keys/check-rotation", get(handlers::check_key_rotation))
         .route("/api/v1/crypto/keys/rotate", post(handlers::trigger_key_rotation))
+        // Error handling test endpoint
+        .route("/api/v1/test/error-handling", get(handlers::test_error_handling))
         // WebSocket route
         .route("/ws", get(ws_handler))
         .with_state((circuit_breaker, connections))
@@ -94,6 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .route("/websocket/test/{user_id}", post(test_user_broadcast))
             .with_state(event_api_state)
         )
+        .layer(middleware::from_fn(error_handling_middleware))
         .layer(middleware::from_fn(security_headers))
         .layer(CorsLayer::permissive());
 
@@ -106,9 +111,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn health_check() -> Json<ServiceResponse<serde_json::Value>> {
-    Json(ServiceResponse::success(serde_json::json!({
-        "service": "kembridge-gateway-service",
+    // Health check returns ServiceResponse to match test expectations
+    let health_data = serde_json::json!({
         "status": "healthy",
-        "upstream_services": ["1inch-service", "blockchain-service", "crypto-service", "auth-service"]
-    })))
+        "service": "kembridge-gateway-service", 
+        "upstream_services": ["1inch-service", "blockchain-service", "crypto-service", "auth-service"],
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    });
+    
+    Json(ServiceResponse::success(health_data))
 }

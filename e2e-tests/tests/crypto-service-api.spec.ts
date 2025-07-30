@@ -6,8 +6,9 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { TEST_URLS } from '../utils/test-constants';
 
-const CRYPTO_SERVICE_URL = "http://localhost:4003";
+const CRYPTO_SERVICE_URL = TEST_URLS.BACKEND.CRYPTO;
 
 test.describe("Crypto Service HTTP API Tests", () => {
   test.describe("Health and Status Endpoints", () => {

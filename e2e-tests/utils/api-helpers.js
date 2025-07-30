@@ -2,6 +2,7 @@
  * API monitoring and testing helpers
  */
 import { API_ENDPOINTS, TIMEOUTS } from './constants.js';
+import { TEST_URLS } from './test-constants';
 
 /**
  * Set up API monitoring for a page
@@ -16,7 +17,7 @@ export function setupApiMonitoring(page) {
   // Monitor API requests
   page.on('request', request => {
     const url = request.url();
-    if (url.includes('/api/v1/') || url.includes('localhost:400')) {
+    if (url.includes('/api/v1/') || Object.values(TEST_URLS.BACKEND).some(backendUrl => url.includes(backendUrl))) {
       apiCalls.push({
         url,
         method: request.method(),
@@ -97,10 +98,10 @@ export function setupApiMonitoring(page) {
 export async function checkServicesHealth(request) {
   const services = [
     { name: 'Gateway', url: `${API_ENDPOINTS.BASE}/health` },
-    { name: '1inch', url: 'http://localhost:4001/health' },
-    { name: 'Blockchain', url: 'http://localhost:4002/health' },
-    { name: 'Crypto', url: 'http://localhost:4003/health' },
-    { name: 'Auth', url: 'http://localhost:4004/health' }
+    { name: '1inch', url: `${TEST_URLS.BACKEND.ONEINCH}/health` },
+    { name: 'Blockchain', url: `${TEST_URLS.BACKEND.BLOCKCHAIN}/health` },
+    { name: 'Crypto', url: `${TEST_URLS.BACKEND.CRYPTO}/health` },
+    { name: 'Auth', url: `${TEST_URLS.BACKEND.AUTH}/health` }
   ];
   
   const results = {};

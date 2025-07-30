@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// WebSocket message types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", content = "data")]
+#[serde(tag = "type")]
 pub enum WebSocketMessage {
     /// Authentication request
     Auth { token: String },
@@ -22,9 +22,11 @@ pub enum WebSocketMessage {
     Unsubscribe { event_type: EventType },
 
     /// Subscription confirmation
+    #[serde(rename = "subscription_confirmed")]
     Subscribed { event_type: EventType },
 
     /// Unsubscription confirmation
+    #[serde(rename = "unsubscription_confirmed")]
     Unsubscribed { event_type: EventType },
 
     /// Real-time event notification
@@ -74,7 +76,7 @@ pub enum EventType {
 
 /// Real-time event data
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "event_type", content = "payload")]
+#[serde(tag = "event_type")]
 pub enum RealTimeEvent {
     TransactionStatusUpdate(TransactionStatusEvent),
     RiskAlert(RiskAlertEvent),
@@ -157,7 +159,7 @@ pub struct BridgeOperationEvent {
 pub struct QuantumKeyEvent {
     pub key_id: String,
     pub user_id: String,
-    pub event_type: QuantumKeyEventType,
+    pub key_event_type: QuantumKeyEventType,
     pub algorithm: String,
     pub timestamp: DateTime<Utc>,
     pub expires_at: Option<DateTime<Utc>>,
@@ -176,7 +178,7 @@ pub struct UserProfileEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoServiceEvent {
     pub event_id: String,
-    pub event_type: CryptoEventType,
+    pub crypto_event_type: CryptoEventType,
     pub service_name: String,
     pub status: String,
     pub message: String,
@@ -383,11 +385,51 @@ impl RealTimeEvent {
 }
 
 /// Helper to create crypto service events
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_subscribed_message_serialization() {
+        let msg = WebSocketMessage::subscribed(EventType::SystemNotifications);
+        let json = msg.to_json().unwrap();
+        println!("Subscribed message: {}", json);
+        
+        // Check that it contains the expected type
+        assert!(json.contains("\"type\":\"subscribed\""));
+        assert!(json.contains("\"event_type\":\"system_notifications\""));
+    }
+
+    #[test]
+    fn test_subscription_confirmed_compatibility() {
+        // Test what the frontend expects vs what we send
+        let msg = WebSocketMessage::subscribed(EventType::SystemNotifications);
+        let json = msg.to_json().unwrap();
+        println!("Backend sends: {}", json);
+        
+        // What the test expects
+        let expected = r#"{"type":"subscription_confirmed","event_type":"system_notifications"}"#;
+        println!("Test expects: {}", expected);
+    }
+
+    #[test]
+    fn test_unsubscription_confirmed_compatibility() {
+        // Test what the frontend expects vs what we send
+        let msg = WebSocketMessage::unsubscribed(EventType::SystemNotifications);
+        let json = msg.to_json().unwrap();
+        println!("Backend sends: {}", json);
+        
+        // What the test expects
+        let expected = r#"{"type":"unsubscription_confirmed","event_type":"system_notifications"}"#;
+        println!("Test expects: {}", expected);
+    }
+}
+
 impl CryptoServiceEvent {
     pub fn service_status_change(service: &str, status: &str, message: &str) -> Self {
         Self {
             event_id: uuid::Uuid::new_v4().to_string(),
-            event_type: CryptoEventType::ServiceStatusChange,
+            crypto_event_type: CryptoEventType::ServiceStatusChange,
             service_name: service.to_string(),
             status: status.to_string(),
             message: message.to_string(),
@@ -399,7 +441,7 @@ impl CryptoServiceEvent {
     pub fn key_generated(key_id: &str, algorithm: &str) -> Self {
         Self {
             event_id: uuid::Uuid::new_v4().to_string(),
-            event_type: CryptoEventType::KeyGenerated,
+            crypto_event_type: CryptoEventType::KeyGenerated,
             service_name: "crypto-service".to_string(),
             status: "success".to_string(),
             message: format!("New {} key generated", algorithm),

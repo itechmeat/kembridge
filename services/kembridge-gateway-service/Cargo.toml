@@ -30,9 +30,10 @@ serde_json = "1.0"
 
 # Validation
 validator = { version = "0.20.0", features = ["derive"] }
+jsonwebtoken = "9.3.0"
 
 # Time
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde", "std"] }
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
 # Random number generation

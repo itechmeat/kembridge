@@ -6,9 +6,10 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { TEST_URLS } from '../utils/test-constants';
 
-const GATEWAY_URL = "http://localhost:4000";
-const CRYPTO_SERVICE_URL = "http://localhost:4003";
+const GATEWAY_URL = TEST_URLS.BACKEND.GATEWAY;
+const CRYPTO_SERVICE_URL = TEST_URLS.BACKEND.CRYPTO;
 
 test.describe("Gateway Crypto Proxy Integration Tests", () => {
   test.describe("Proxy Status Endpoints", () => {
