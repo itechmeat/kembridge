@@ -6,10 +6,11 @@
 import { test, expect } from '@playwright/test';
 import axios from 'axios';
 import { TEST_URLS } from '../utils/test-constants';
+import { getBackendUrl } from '../utils/page-evaluate-utils';
 
 // Test configuration
-const BACKEND_URL = TEST_URLS.BACKEND.GATEWAY;
-const AI_ENGINE_URL = TEST_URLS.BACKEND.AI_ENGINE;
+const BACKEND_URL = getBackendUrl('gateway');
+const AI_ENGINE_URL = getBackendUrl('aiEngine');
 const TIMEOUT = 30000;
 
 // Helper class for backend testing

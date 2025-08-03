@@ -3,8 +3,8 @@
  * This test validates what selectors actually work in the real application
  */
 import { test, expect } from '@playwright/test';
-import { RealisticSelectors, WORKING_SELECTORS } from '../utils/realistic-selectors.js';
-import { setupMockWallet } from '../utils/wallet-helpers.js';
+import { RealisticSelectors, WORKING_SELECTORS } from '../utils/selectors.js';
+import { setupMockWallet } from '../utils/mock-wallet-utility.js';
 
 test.describe('Selector Validation', () => {
   let selectors;

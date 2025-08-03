@@ -1,8 +1,3 @@
-/**
- * Wallet Manager - Main orchestrator for wallet operations
- * Handles multiple wallet providers and state management
- */
-
 import {
   WalletType,
   WalletState,

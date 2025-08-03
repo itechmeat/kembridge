@@ -1,8 +1,3 @@
-/**
- * WebSocket Client
- * Real-time connection for monitoring transactions and events
- */
-
 import { WEBSOCKET_CONFIG } from "../../constants/services";
 
 export interface WSMessage {
@@ -29,7 +24,7 @@ export interface RiskAlert {
 }
 
 export type WSEventType =
-  | "transaction_update" 
+  | "transaction_update"
   | "risk_alert"
   | "price_update"
   | "system_notification"
@@ -47,7 +42,8 @@ class WebSocketClient {
   private authToken: string | null = null;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private lastConnectAttempt = 0;
-  private connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown' = 'unknown';
+  private connectionQuality: "excellent" | "good" | "poor" | "unknown" =
+    "unknown";
   private connectionMetrics = {
     connected: 0,
     disconnected: 0,
@@ -101,7 +97,7 @@ class WebSocketClient {
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           this.connectionMetrics.connected++;
-          this.updateConnectionQuality('excellent');
+          this.updateConnectionQuality("excellent");
           this.startHeartbeat();
           resolve();
         };
@@ -128,7 +124,7 @@ class WebSocketClient {
           );
           this.isConnecting = false;
           this.connectionMetrics.disconnected++;
-          this.updateConnectionQuality('poor');
+          this.updateConnectionQuality("poor");
 
           if (
             !event.wasClean &&
@@ -142,7 +138,7 @@ class WebSocketClient {
           console.error("❌ WebSocket: Connection error:", error);
           this.isConnecting = false;
           this.connectionMetrics.errors++;
-          this.updateConnectionQuality('poor');
+          this.updateConnectionQuality("poor");
           reject(error);
         };
       } catch (error) {
@@ -247,6 +243,20 @@ class WebSocketClient {
    * Handles incoming messages
    */
   private handleMessage(message: WSMessage): void {
+    // Handle ping/pong messages for heartbeat
+    if (message.type === "Ping" || message.type === "ping") {
+      console.log("💓 WebSocket: Received ping, sending pong");
+      this.send("pong", {});
+      this.connectionMetrics.lastPongTime = Date.now();
+      return;
+    }
+
+    if (message.type === "Pong" || message.type === "pong") {
+      console.log("💓 WebSocket: Received pong");
+      this.connectionMetrics.lastPongTime = Date.now();
+      return;
+    }
+
     const listeners = this.listeners.get(message.type as WSEventType);
     if (listeners) {
       listeners.forEach((handler) => {
@@ -260,8 +270,8 @@ class WebSocketClient {
         }
       });
     } else {
-      console.log(
-        `📨 WebSocket: No listeners for message type: ${message.type}`
+      console.warn(
+        `Unknown WebSocket message type: ${message.type}`
       );
     }
   }
@@ -295,13 +305,13 @@ class WebSocketClient {
    */
   private startHeartbeat(): void {
     this.stopHeartbeat(); // Clear any existing heartbeat
-    
+
     this.pingInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send("ping", {});
       }
     }, WEBSOCKET_CONFIG.PING_INTERVAL_MS);
-    
+
     console.log("💓 WebSocket: Heartbeat started");
   }
 
@@ -319,7 +329,9 @@ class WebSocketClient {
   /**
    * Updates connection quality based on metrics
    */
-  private updateConnectionQuality(quality: 'excellent' | 'good' | 'poor' | 'unknown'): void {
+  private updateConnectionQuality(
+    quality: "excellent" | "good" | "poor" | "unknown"
+  ): void {
     if (this.connectionQuality !== quality) {
       this.connectionQuality = quality;
       console.log(`📊 WebSocket: Connection quality updated to ${quality}`);

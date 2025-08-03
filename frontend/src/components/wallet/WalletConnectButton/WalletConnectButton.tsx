@@ -1,20 +1,14 @@
-/**
- * Simple Wallet Connect Button
- * Shows a button that opens wallet selection modal
- */
-
-import React, { useState } from "react";
-import { Button } from "../../ui/Button";
+import { useState, FC } from "react";
+import { Button } from "../../ui/Button/Button";
 import { WalletConnect } from "../../auth/WalletConnect/WalletConnect";
 import { useWallet } from "../../../hooks/wallet/useWallet";
-import "./WalletConnectButton.scss";
 
 interface WalletConnectButtonProps {
   compact?: boolean;
   className?: string;
 }
 
-export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
+export const WalletConnectButton: FC<WalletConnectButtonProps> = ({
   compact = false,
   className = "",
 }) => {
@@ -45,7 +39,8 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
         size={compact ? "sm" : "md"}
         onClick={handleConnect}
         disabled={isConnecting}
-        className={`wallet-connect-button ${className}`}
+        className={className.trim()}
+        data-testid="connect-wallet-button"
       >
         {isConnecting ? "Connecting..." : "Connect"}
       </Button>

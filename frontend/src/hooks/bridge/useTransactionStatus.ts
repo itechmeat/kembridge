@@ -1,9 +1,3 @@
-/**
- * Transaction Status Hook
- * Real-time status updates with polling
- * Only fetches when user is authenticated since endpoint requires auth
- */
-
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import {
   bridgeService,

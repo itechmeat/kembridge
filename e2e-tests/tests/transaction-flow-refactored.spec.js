@@ -4,28 +4,50 @@
  */
 import { test, expect } from '@playwright/test';
 import { 
-  setupFullTestEnvironment, 
   setupBridgeFlow, 
   logTestResults,
   TEST_DATA, 
   BridgePage 
 } from '../utils/index.js';
+import { 
+  setupMockWalletAndNavigate,
+  setupMockWalletFast,
+  setupMockWalletForTestFile,
+  logPerformanceStats 
+} from '../utils/mock-wallet-utility.js';
+import { setupApiMonitoring } from '../utils/api-helpers.js';
 
 test.describe('Transaction Flow Testing (Refactored)', () => {
-  let testEnv;
+  let monitoring;
   let bridgePage;
+  let isFirstTest = true;
+
+  test.afterAll(async () => {
+    // Log performance statistics at the end of test suite
+    console.log('\n📊 Transaction Flow Test Suite Performance:');
+    logPerformanceStats();
+  });
 
   test.beforeEach(async ({ page }) => {
-    // Single line setup with all utilities
-    testEnv = await setupFullTestEnvironment(page);
-    bridgePage = new BridgePage(page, testEnv.monitoring);
+    // Use optimized setup: thorough for first test, fast for subsequent tests
+    const setupResult = isFirstTest 
+      ? await setupMockWalletForTestFile(page, '/')
+      : await setupMockWalletFast(page, '/');
+    
+    isFirstTest = false;
+    
+    console.log(`⏱️ Wallet setup completed in ${setupResult.totalTime}ms (from cache: ${setupResult.fromCache})`);
+    
+    // Setup API monitoring
+    monitoring = setupApiMonitoring(page);
+    bridgePage = new BridgePage(page, monitoring);
   });
 
   test('should complete ETH→NEAR transaction with form validation', async ({ page }) => {
     console.log('🚀 Testing complete ETH→NEAR transaction with validation...');
 
     // Setup bridge in one call
-    const bridgeSetup = await setupBridgeFlow(page, testEnv.monitoring);
+    const bridgeSetup = await setupBridgeFlow(page, monitoring);
     
     if (!bridgeSetup.success) {
       logTestResults({
@@ -52,9 +74,9 @@ test.describe('Transaction Flow Testing (Refactored)', () => {
       success: transactionResult.formAccessible && transactionResult.tokensLoaded,
       authResult: bridgeSetup.authResult,
       apiCallCounts: {
-        'Auth calls': testEnv.monitoring.getAuthCalls().length,
-        'Bridge calls': testEnv.monitoring.getBridgeCalls().length,
-        'Quote calls': testEnv.monitoring.getQuoteCalls().length
+        'Auth calls': monitoring.getAuthCalls().length,
+        'Bridge calls': monitoring.getBridgeCalls().length,
+        'Quote calls': monitoring.getQuoteCalls().length
       },
       errors,
       metrics: {
@@ -75,7 +97,7 @@ test.describe('Transaction Flow Testing (Refactored)', () => {
   test('should test token selector interactions', async ({ page }) => {
     console.log('🔍 Testing token selector interactions...');
 
-    const bridgeSetup = await setupBridgeFlow(page, testEnv.monitoring);
+    const bridgeSetup = await setupBridgeFlow(page, monitoring);
     
     if (!bridgeSetup.success) {
       console.log('⚠️ Skipping token selector test - bridge not accessible');
@@ -103,7 +125,7 @@ test.describe('Transaction Flow Testing (Refactored)', () => {
   test('should test bridge direction switching', async ({ page }) => {
     console.log('🔄 Testing bridge direction switching...');
 
-    const bridgeSetup = await setupBridgeFlow(page, testEnv.monitoring);
+    const bridgeSetup = await setupBridgeFlow(page, monitoring);
     
     if (!bridgeSetup.success) {
       console.log('⚠️ Skipping direction switch test - bridge not accessible');
@@ -139,7 +161,7 @@ test.describe('Transaction Flow Testing (Refactored)', () => {
   test('should verify security features integration', async ({ page }) => {
     console.log('🛡️ Testing security features integration...');
 
-    const bridgeSetup = await setupBridgeFlow(page, testEnv.monitoring);
+    const bridgeSetup = await setupBridgeFlow(page, monitoring);
     
     if (!bridgeSetup.success) {
       console.log('⚠️ Skipping security test - bridge not accessible');

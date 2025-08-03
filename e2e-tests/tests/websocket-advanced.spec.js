@@ -4,7 +4,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { TEST_URLS } from '../utils/test-constants';
+import { getFrontendUrl } from '../utils/page-evaluate-utils';
 
 test.describe('Advanced WebSocket Integration', () => {
   let consoleLogs = [];
@@ -26,7 +26,7 @@ test.describe('Advanced WebSocket Integration', () => {
     });
 
     // Navigate to bridge page
-    await page.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`);
+    await page.goto(`${getFrontendUrl('localDev')}/bridge`);
     await page.waitForLoadState('domcontentloaded');
     
     // Wait for page to be ready - look for main content
@@ -385,7 +385,7 @@ test.describe('Advanced WebSocket Integration', () => {
   test('should test multi-tab WebSocket behavior', async ({ page, context }) => {
     // Open second tab
     const secondPage = await context.newPage();
-    await secondPage.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`);
+    await secondPage.goto(`${getFrontendUrl('localDev')}/bridge`);
     await secondPage.waitForLoadState('domcontentloaded');
     await secondPage.waitForSelector('body', { timeout: 10000 });
     

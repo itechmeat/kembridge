@@ -1,10 +1,7 @@
-/**
- * Error Boundary Component
- * Catches JavaScript errors anywhere in the child component tree
- */
-
-import { Component, ReactNode, ErrorInfo } from "react";
+import { Component, type ReactNode, type ErrorInfo } from "react";
+import cn from "classnames";
 import { ERROR_MESSAGES } from "../../../constants";
+import styles from "./ErrorBoundary.module.scss";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -74,25 +71,25 @@ export class ErrorBoundary extends Component<
       }
 
       return (
-        <div className="error-boundary">
-          <div className="error-boundary__container">
-            <div className="error-boundary__icon">⚠️</div>
-            <h2 className="error-boundary__title">Something went wrong</h2>
-            <p className="error-boundary__message">
+        <div className={styles.root}>
+          <div className={styles.container}>
+            <div className={styles.icon}>⚠️</div>
+            <h2 className={styles.title}>Something went wrong</h2>
+            <p className={styles.message}>
               {this.state.error?.message || ERROR_MESSAGES.UNKNOWN_ERROR}
             </p>
 
-            <div className="error-boundary__actions">
+            <div className={styles.actions}>
               <button
                 onClick={this.handleRetry}
-                className="error-boundary__retry-btn"
+                className={cn(styles.button, styles.primary)}
                 type="button"
               >
                 Try Again
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="error-boundary__reload-btn"
+                className={cn(styles.button, styles.ghost)}
                 type="button"
               >
                 Reload Page
@@ -100,12 +97,10 @@ export class ErrorBoundary extends Component<
             </div>
 
             {import.meta.env.DEV && this.state.errorInfo && (
-              <details className="error-boundary__details">
+              <details className={styles.details}>
                 <summary>Error Details (Development)</summary>
-                <pre className="error-boundary__stack">
-                  {this.state.error?.stack}
-                </pre>
-                <pre className="error-boundary__component-stack">
+                <pre className={styles.stack}>{this.state.error?.stack}</pre>
+                <pre className={styles.componentStack}>
                   {this.state.errorInfo.componentStack}
                 </pre>
               </details>

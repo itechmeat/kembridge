@@ -1,8 +1,3 @@
-/**
- * Centralized API Client
- * Axios-based client for KEMBridge backend communication
- */
-
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_CONFIG, API_ENDPOINTS } from "./config";
 
@@ -72,6 +67,8 @@ class ApiClient {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
+      // Important: allow sending/receiving cookies (for CORS + CSRF if server uses cookies)
+      withCredentials: true,
     });
 
     // Load stored token
@@ -149,6 +146,16 @@ class ApiClient {
         tokensMatch: storedToken === token,
         memoryToken: !!this.authToken,
       });
+
+      // Use setTimeout to prevent setState during render issues
+      setTimeout(() => {
+        // Dispatch custom event to notify components immediately
+        window.dispatchEvent(
+          new CustomEvent("auth-token-changed", {
+            detail: { token, authenticated: true },
+          })
+        );
+      }, 0);
     } catch (error) {
       console.error("❌ API Client: Failed to save tokens:", error);
     }
@@ -166,31 +173,149 @@ class ApiClient {
       this.authToken = null;
       this.refreshToken = null;
       console.log("🗑️ API Client: All tokens cleared");
+
+      // Use setTimeout to prevent setState during render issues
+      setTimeout(() => {
+        // Dispatch custom event to notify components immediately
+        window.dispatchEvent(
+          new CustomEvent("auth-token-changed", {
+            detail: { token: null, authenticated: false },
+          })
+        );
+      }, 0);
     } catch (error) {
       console.warn("⚠️ API Client: Failed to clear tokens:", error);
     }
   }
 
   /**
-   * Setup request interceptor for adding auth token
+   * Setup request interceptor for adding auth token + CSRF
    */
   private setupRequestInterceptor(): void {
     this.client.interceptors.request.use(
-      (config) => {
+      async (config) => {
         // Add auth token if available
         if (this.authToken) {
+          config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${this.authToken}`;
         }
 
+        // Ensure credentials for CSRF/cookies
+        // AxiosRequestConfig already supports withCredentials
+        (config as AxiosRequestConfig).withCredentials = true;
+
+        // CSRF: require one-time token for state-changing methods
+        const method = (config.method || "get").toUpperCase();
+        const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(
+          method
+        );
+
+        // Normalize URL: avoid duplicating /api/v1
+        const rawUrl = config.url || "";
+        const base = `${API_CONFIG.BASE_URL}${API_CONFIG.VERSION}`;
+        
+        let normalizedUrl: string;
+        if (rawUrl.startsWith("http")) {
+          // Absolute URL - use as is
+          normalizedUrl = rawUrl;
+        } else {
+          // Relative URL - ensure it starts with single /api/v1
+          let relativeUrl = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+          
+          // Remove multiple /api/v1 prefixes if they exist
+          relativeUrl = relativeUrl.replace(/^(\/api\/v1)+/i, "/api/v1");
+          
+          // If doesn't start with /api/v1, add it
+          if (!relativeUrl.startsWith("/api/v1")) {
+            relativeUrl = `/api/v1${relativeUrl}`;
+          }
+          
+          // Combine with base URL
+          const baseNoTrailing = base.endsWith("/") ? base.slice(0, -1) : base;
+          const cleanBase = baseNoTrailing.replace(/\/api\/v1$/, ""); // Remove /api/v1 from base
+          normalizedUrl = `${cleanBase}${relativeUrl}`;
+        }
+
+        const absoluteUrl = new URL(normalizedUrl);
+
+        // Determine auth-route reliably relative to api-prefix
+        const pathname = absoluteUrl.pathname.replace(
+          /^(\/api\/v1)+/i,
+          "/api/v1"
+        );
+        const isAuthRoute = pathname.startsWith("/api/v1/auth/");
+
+        // Request specifically to our gateway
+        const isGateway =
+          absoluteUrl.hostname === "localhost" && absoluteUrl.port === "4000";
+
+        if (isGateway && isStateChanging && !isAuthRoute) {
+          try {
+            // Get one-time token only from our gateway
+            interface CsrfData {
+              data?: {
+                csrf_token: string;
+                header_name?: string;
+                expires_in?: number;
+                usage?: string;
+              };
+              // Fallback for direct structure
+              csrf_token?: string;
+              header_name?: string;
+            }
+            const csrfResp = await this.client.get<CsrfData>(
+              "/auth/csrf-token",
+              {
+                baseURL: `${API_CONFIG.BASE_URL}${API_CONFIG.VERSION}`,
+                withCredentials: true,
+              }
+            );
+            const token = csrfResp.data?.data?.csrf_token || csrfResp.data?.csrf_token;
+            if (!token) {
+              console.warn("⚠️ CSRF token not found in response:", csrfResp.data);
+              return config;
+            }
+            const headerName: string =
+              csrfResp.data?.data?.header_name || csrfResp.data?.header_name || "x-csrf-token";
+
+            config.headers = config.headers || {};
+            // Header expected by backend
+            const headers = config.headers as Record<string, unknown> & {
+              set?: (k: string, v: string) => void;
+            };
+            if (typeof headers.set === "function") {
+              headers.set(headerName, token);
+            } else {
+              (config.headers as Record<string, string>)[headerName] = token;
+            }
+
+            if (import.meta.env.DEV && pathname.includes("/risk/analyze")) {
+              console.debug("🧪 CSRF attached for risk/analyze", {
+                headerName,
+                hasToken: !!token,
+                method,
+                url: normalizedUrl,
+              });
+            }
+          } catch (e) {
+            console.warn(
+              "⚠️ Failed to fetch CSRF token, request may be rejected:",
+              e
+            );
+          }
+        }
+
+        // Update config URL with normalized URL
+        config.url = normalizedUrl;
+
         // Log request in dev mode
         if (import.meta.env.DEV) {
-          console.log(
-            `🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`,
-            {
-              data: config.data,
-              params: config.params,
-            }
-          );
+          console.log(`🔄 API Request: ${method} ${normalizedUrl}`, {
+            data: config.data,
+            params: config.params,
+            isGateway,
+            pathname,
+          });
         }
 
         return config;
@@ -238,7 +363,7 @@ class ApiClient {
 
         // Handle 401 errors (unauthorized)
         if (response?.status === 401) {
-          console.warn("🔒 API Client: Unauthorized");
+          console.warn("🔒 API Client: Unauthorized - token may be expired");
 
           // Try to refresh token if we have one
           if (
@@ -260,10 +385,14 @@ class ApiClient {
                 "❌ API Client: Token refresh failed:",
                 refreshError
               );
+              // Only clear tokens if refresh explicitly failed, not on initial 401
               this.clearToken();
             }
           } else {
-            this.clearToken();
+            // Don't automatically clear tokens on 401 - let user re-authenticate manually
+            console.log(
+              "ℹ️ API Client: 401 error, but keeping tokens for manual re-auth"
+            );
           }
 
           // TODO: Add redirect to login page or show authorization modal

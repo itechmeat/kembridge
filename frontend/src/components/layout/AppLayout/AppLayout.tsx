@@ -1,11 +1,7 @@
-/**
- * Main Application Layout
- * Provides consistent structure for all pages
- */
-
 import { FC, ReactNode } from "react";
+import cn from "classnames";
 import { ErrorBoundary } from "../../ui/ErrorBoundary/ErrorBoundary";
-import "./AppLayout.scss";
+import styles from "./AppLayout.module.scss";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,8 +11,8 @@ interface AppLayoutProps {
 export const AppLayout: FC<AppLayoutProps> = ({ children, className = "" }) => {
   return (
     <ErrorBoundary>
-      <div className={`app-layout ${className}`}>
-        <main className="app-layout__main">{children}</main>
+      <div className={cn(styles.appLayout, className?.trim())}>
+        <main className={styles.main}>{children}</main>
       </div>
     </ErrorBoundary>
   );

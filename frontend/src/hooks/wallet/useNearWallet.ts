@@ -1,10 +1,5 @@
-/**
- * NEAR Wallet hook
- * Hook for accessing NEAR wallet context
- */
-
 import { useContext } from "react";
-import { NearWalletContext } from "../../contexts/NearWalletContext";
+import { NearWalletContext } from "../../contexts/NearWalletContext/NearWalletContext";
 import type { NearWalletContextType } from "../../types/nearWallet";
 
 export const useNearWallet = (): NearWalletContextType => {

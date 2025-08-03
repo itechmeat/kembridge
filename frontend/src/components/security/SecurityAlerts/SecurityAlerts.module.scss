@@ -1,0 +1,289 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.securityAlerts {
+  position: fixed;
+  z-index: 1000;
+  max-width: 400px;
+  font-family: var(--font-primary);
+
+  &.top {
+    top: 20px;
+    right: 20px;
+  }
+
+  &.bottom {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  &.topLeft {
+    top: 20px;
+    left: 20px;
+  }
+
+  &.bottomLeft {
+    bottom: 20px;
+    left: 20px;
+  }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert {
+  background: var(--surface-primary);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-left: 4px solid;
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+  transition: all 0.3s ease;
+
+  &.dismissing {
+    animation: slideOut 0.3s ease;
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  &.critical {
+    border-left-color: var(--security-danger);
+    background: linear-gradient(
+      135deg,
+      var(--surface-primary) 0%,
+      rgba(255, 51, 102, 0.05) 100%
+    );
+
+    .alertIcon {
+      color: var(--security-danger);
+    }
+  }
+
+  &.high {
+    border-left-color: var(--security-warning);
+    background: linear-gradient(
+      135deg,
+      var(--surface-primary) 0%,
+      rgba(255, 102, 0, 0.05) 100%
+    );
+
+    .alertIcon {
+      color: var(--security-warning);
+    }
+  }
+
+  &.medium {
+    border-left-color: var(--warning);
+    background: linear-gradient(
+      135deg,
+      var(--surface-primary) 0%,
+      rgba(255, 193, 7, 0.05) 100%
+    );
+
+    .alertIcon {
+      color: var(--warning);
+    }
+  }
+
+  &.low {
+    border-left-color: var(--info);
+    background: linear-gradient(
+      135deg,
+      var(--surface-primary) 0%,
+      rgba(0, 123, 255, 0.05) 100%
+    );
+
+    .alertIcon {
+      color: var(--info);
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.content {
+  padding: 16px;
+}
+
+.alertHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.alertIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.alertTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.dismiss {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+  }
+}
+
+.message {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.primary {
+    background: var(--primary);
+    color: white;
+
+    &:hover {
+      background: var(--primary-dark);
+    }
+  }
+
+  &.secondary {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+
+    &:hover {
+      background: var(--surface-tertiary);
+    }
+  }
+
+  &.danger {
+    background: var(--security-danger);
+    color: white;
+
+    &:hover {
+      background: var(--danger-dark);
+    }
+  }
+}
+
+.overflow {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.overflowText {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--surface-secondary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+@include tablet {
+  .securityAlerts {
+    max-width: 350px;
+
+    &.top,
+    &.bottom {
+      right: 16px;
+    }
+
+    &.topLeft,
+    &.bottomLeft {
+      left: 16px;
+    }
+  }
+}
+
+@include mobile {
+  .securityAlerts {
+    max-width: calc(100vw - 32px);
+    left: 16px !important;
+    right: 16px !important;
+
+    &.top {
+      top: 16px;
+    }
+
+    &.bottom {
+      bottom: 16px;
+    }
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .actions {
+    flex-direction: column;
+
+    .action {
+      text-align: center;
+    }
+  }
+}

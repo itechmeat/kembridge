@@ -1,8 +1,3 @@
-/**
- * KEMBridge Error Handling Service
- * Real integration with backend error handling system
- */
-
 import { apiClient } from "./api/apiClient";
 
 // Error categories from backend

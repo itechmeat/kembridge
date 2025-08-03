@@ -10,47 +10,6 @@
 @use "base/reset";
 @use "base/animations";
 
-// ===== COMPONENTS =====
-@use "../components/ui/Button";
-@use "../components/ui/Modal";
-@use "../components/ui/Spinner";
-
-// Bridge Components
-@use "../components/bridge/SwapForm/SwapForm";
-@use "../components/bridge/TokenSelector/TokenSelector";
-
-// ===== PAGES =====
-@use "pages/home";
-
-// ===== NEAR WALLET SELECTOR OVERRIDES =====
-// Ensure NEAR modal appears above our main modal
-:global(.near-wallet-selector-modal) {
-  z-index: 1100 !important; // Higher than our modal's 1000
-}
-
-:global(.near-wallet-selector-modal .modal-overlay) {
-  z-index: 1100 !important;
-}
-
-:global(.near-wallet-selector-modal .modal-right) {
-  z-index: 1101 !important;
-}
-
-// Additional NEAR modal styling for better mobile experience
-:global(.near-wallet-selector-modal) {
-  .modal-overlay {
-    background: rgba(0, 0, 0, 0.6) !important;
-    backdrop-filter: blur(8px) !important;
-  }
-
-  .modal-right {
-    border-radius: 1rem !important;
-    max-width: 90vw !important;
-    max-height: 80vh !important;
-    margin: 2rem !important;
-  }
-}
-
 // ===== CSS CUSTOM PROPERTIES =====
 :root {
   // Brand colors
@@ -64,6 +23,7 @@
   --background: #{variables.$bg-primary};
   --background-secondary: #{variables.$bg-secondary};
   --surface: #{variables.$bg-card};
+  --surface-secondary: #{variables.$bg-secondary};
 
   // Text colors
   --text-primary: #{variables.$text-primary};
@@ -102,6 +62,8 @@
   --shadow-md: #{variables.$shadow-md};
   --shadow-lg: #{variables.$shadow-lg};
   --shadow-xl: #{variables.$shadow-xl};
+
+  --color-background: #fff;
 }
 
 // ===== HTML AND BODY =====

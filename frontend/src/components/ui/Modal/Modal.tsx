@@ -1,24 +1,20 @@
-/**
- * Modal Component
- * Reusable modal dialog with overlay and focus management
- */
-
-import React, { useEffect, useRef } from "react";
+import { FC, ReactNode, useEffect, useRef, MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import "./Modal.scss";
+import cn from "classnames";
+import styles from "./Modal.module.scss";
 
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export const Modal: FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
@@ -35,16 +31,16 @@ export const Modal: React.FC<ModalProps> = ({
     if (isOpen) {
       // Store previously focused element
       previousFocusRef.current = document.activeElement as HTMLElement;
-      
+
       // Focus modal
       modalRef.current?.focus();
-      
+
       // Prevent body scroll
       document.body.style.overflow = "hidden";
     } else {
       // Restore body scroll
       document.body.style.overflow = "";
-      
+
       // Restore focus
       if (previousFocusRef.current) {
         previousFocusRef.current.focus();
@@ -69,13 +65,13 @@ export const Modal: React.FC<ModalProps> = ({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose, closeOnEscape]);
 
-  const handleOverlayClick = (event: React.MouseEvent) => {
+  const handleOverlayClick = (event: MouseEvent) => {
     if (closeOnOverlayClick && event.target === event.currentTarget) {
       onClose();
     }
   };
 
-  const handleCloseClick = (event: React.MouseEvent) => {
+  const handleCloseClick = (event: MouseEvent) => {
     event.stopPropagation();
     onClose();
   };
@@ -83,31 +79,33 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
-      className="modal-overlay" 
+    <div
+      className={styles.overlay}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
     >
-      <div 
+      <div
         ref={modalRef}
-        className={`modal ${className}`.trim()}
+        className={cn(styles.modal, title && styles.hasTitle, className.trim())}
         tabIndex={-1}
+        data-testid="modal"
       >
         {(title || showCloseButton) && (
-          <div className="modal__header">
+          <div className={styles.header}>
             {title && (
-              <h2 id="modal-title" className="modal__title">
+              <h2 id="modal-title" className={styles.title}>
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
-                className="modal__close"
+                className={styles.close}
                 onClick={handleCloseClick}
                 aria-label="Close modal"
                 type="button"
+                data-testid="modal-close-button"
               >
                 <svg
                   width="24"
@@ -126,14 +124,11 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
-        
-        <div className="modal__content">
-          {children}
-        </div>
+
+        <div className={styles.content}>{children}</div>
       </div>
     </div>
   );
 
-  // Render to portal
   return createPortal(modalContent, document.body);
 };

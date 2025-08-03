@@ -1,10 +1,4 @@
-/**
- * AI Risk Engine Service
- * Real-time integration with AI Engine for risk analysis
- * NO MOCKS OR FALLBACKS - Only real API calls
- */
-
-import { SERVICE_URLS, REQUEST_CONFIG } from '../../constants/services';
+import { SERVICE_URLS, REQUEST_CONFIG } from "../../constants/services";
 
 // AI Engine endpoints (direct calls to AI service)
 const AI_ENGINE_BASE_URL = SERVICE_URLS.AI_ENGINE;
@@ -53,6 +47,62 @@ export interface AIBlacklistCheckResponse {
 
 export class AIRiskService {
   private static baseUrl = AI_ENGINE_BASE_URL;
+  private static healthCheckInterval: ReturnType<typeof setInterval> | null =
+    null;
+  private static isHealthy = false;
+  private static healthCheckCallbacks: Set<(isHealthy: boolean) => void> =
+    new Set();
+
+  /**
+   * Subscribe to health status changes
+   */
+  static subscribeToHealthStatus(
+    callback: (isHealthy: boolean) => void
+  ): () => void {
+    this.healthCheckCallbacks.add(callback);
+
+    // Start health monitoring if not already started
+    if (!this.healthCheckInterval) {
+      this.startHealthMonitoring();
+    }
+
+    // Return unsubscribe function
+    return () => {
+      this.healthCheckCallbacks.delete(callback);
+
+      // Stop monitoring if no more subscribers
+      if (this.healthCheckCallbacks.size === 0 && this.healthCheckInterval) {
+        clearInterval(this.healthCheckInterval);
+        this.healthCheckInterval = null;
+      }
+    };
+  }
+
+  /**
+   * Start global health monitoring
+   */
+  private static startHealthMonitoring(): void {
+    const checkHealth = async () => {
+      try {
+        await this.checkHealthStatus();
+        if (!this.isHealthy) {
+          this.isHealthy = true;
+          this.healthCheckCallbacks.forEach((callback) => callback(true));
+        }
+      } catch {
+        if (this.isHealthy) {
+          this.isHealthy = false;
+          this.healthCheckCallbacks.forEach((callback) => callback(false));
+        }
+      }
+    };
+
+    // Initial check
+    checkHealth();
+
+    // Check every 5 minutes instead of 2 minutes to reduce load
+    this.healthCheckInterval = setInterval(checkHealth, 300000);
+  }
 
   /**
    * Analyze transaction risk using AI Engine
@@ -80,13 +130,16 @@ export class AIRiskService {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_CONFIG.TIMEOUT_MS);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      REQUEST_CONFIG.TIMEOUT_MS
+    );
 
     try {
       const response = await fetch(`${this.baseUrl}/api/risk/analyze`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(aiRequest),
         signal: controller.signal,
@@ -96,13 +149,15 @@ export class AIRiskService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`AI Risk Analysis failed: ${response.status} - ${errorText}`);
+        throw new Error(
+          `AI Risk Analysis failed: ${response.status} - ${errorText}`
+        );
       }
 
       return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
-      if ((error as Error).name === 'AbortError') {
+      if ((error as Error).name === "AbortError") {
         throw new Error(`Request timeout after ${REQUEST_CONFIG.TIMEOUT_MS}ms`);
       }
       throw error;
@@ -113,17 +168,21 @@ export class AIRiskService {
    * Get user risk profile from AI Engine
    * @throws Error if AI Engine is not available or returns error
    */
-  static async getUserRiskProfile(userId: string): Promise<AIUserRiskProfileResponse> {
+  static async getUserRiskProfile(
+    userId: string
+  ): Promise<AIUserRiskProfileResponse> {
     const response = await fetch(`${this.baseUrl}/api/risk/profile/${userId}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`User Risk Profile fetch failed: ${response.status} - ${errorText}`);
+      throw new Error(
+        `User Risk Profile fetch failed: ${response.status} - ${errorText}`
+      );
     }
 
     return await response.json();
@@ -133,21 +192,26 @@ export class AIRiskService {
    * Check if address is blacklisted
    * @throws Error if AI Engine is not available or returns error
    */
-  static async checkAddressBlacklist(address: string, chain: string): Promise<AIBlacklistCheckResponse> {
+  static async checkAddressBlacklist(
+    address: string,
+    chain: string
+  ): Promise<AIBlacklistCheckResponse> {
     const url = new URL(`${this.baseUrl}/api/risk/blacklist/check`);
-    url.searchParams.append('address', address);
-    url.searchParams.append('chain', chain);
+    url.searchParams.append("address", address);
+    url.searchParams.append("chain", chain);
 
     const response = await fetch(url.toString(), {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Blacklist check failed: ${response.status} - ${errorText}`);
+      throw new Error(
+        `Blacklist check failed: ${response.status} - ${errorText}`
+      );
     }
 
     return await response.json();
@@ -167,15 +231,17 @@ export class AIRiskService {
     timestamp?: string;
   }> {
     const response = await fetch(`${this.baseUrl}/health`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`AI Engine health check failed: ${response.status} - ${errorText}`);
+      throw new Error(
+        `AI Engine health check failed: ${response.status} - ${errorText}`
+      );
     }
 
     return await response.json();
@@ -192,15 +258,17 @@ export class AIRiskService {
     last_updated: string;
   }> {
     const response = await fetch(`${this.baseUrl}/api/risk/blacklist/stats`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Blacklist stats fetch failed: ${response.status} - ${errorText}`);
+      throw new Error(
+        `Blacklist stats fetch failed: ${response.status} - ${errorText}`
+      );
     }
 
     return await response.json();
@@ -212,7 +280,7 @@ export class AIRiskService {
   static convertToFrontendRiskResult(aiResponse: AIRiskAnalysisResponse): {
     riskScore: {
       value: number;
-      level: 'low' | 'medium' | 'high';
+      level: "low" | "medium" | "high";
       confidence: number;
       timestamp: string;
     };
@@ -220,7 +288,7 @@ export class AIRiskService {
       type: string;
       weight: number;
       description: string;
-      impact: 'positive' | 'negative' | 'neutral';
+      impact: "positive" | "negative" | "neutral";
     }>;
     recommendations: string[];
     approved: boolean;
@@ -229,7 +297,7 @@ export class AIRiskService {
     return {
       riskScore: {
         value: aiResponse.risk_score,
-        level: aiResponse.risk_level as 'low' | 'medium' | 'high',
+        level: aiResponse.risk_level as "low" | "medium" | "high",
         confidence: aiResponse.ml_confidence || 0.8,
         timestamp: aiResponse.analysis_timestamp,
       },
@@ -237,10 +305,16 @@ export class AIRiskService {
         type: `ai_factor_${index}`,
         weight: aiResponse.risk_score / aiResponse.reasons.length,
         description: reason,
-        impact: aiResponse.risk_score > 0.7 ? 'negative' : 
-                aiResponse.risk_score > 0.3 ? 'neutral' : 'positive',
+        impact:
+          aiResponse.risk_score > 0.7
+            ? "negative"
+            : aiResponse.risk_score > 0.3
+            ? "neutral"
+            : "positive",
       })),
-      recommendations: aiResponse.recommended_action ? [aiResponse.recommended_action] : [],
+      recommendations: aiResponse.recommended_action
+        ? [aiResponse.recommended_action]
+        : [],
       approved: aiResponse.approved,
       analysisTimestamp: aiResponse.analysis_timestamp,
     };
@@ -257,10 +331,10 @@ export class AIRiskService {
     // This would be implemented when WebSocket integration is added
     // For now, just validate that AI Engine is available
     await this.checkHealthStatus();
-    
+
     return {
       monitoringId: `monitor_${transactionId}_${Date.now()}`,
-      status: 'monitoring_active',
+      status: "monitoring_active",
     };
   }
 

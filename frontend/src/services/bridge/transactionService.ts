@@ -1,8 +1,3 @@
-/**
- * Transaction Service
- * Transaction tracking and status management
- */
-
 import { SwapTransaction } from "../api/bridgeService";
 
 export interface TransactionStatusUpdate {

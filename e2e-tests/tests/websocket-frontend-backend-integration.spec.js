@@ -5,8 +5,15 @@
 
 import { test, expect } from '@playwright/test';
 import { TEST_URLS } from '../utils/test-constants';
+import { setupMockWalletAndNavigate } from '../utils/mock-wallet-utility.js';
+import { getFrontendUrl } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Frontend-Backend Integration', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup with mock wallet utility for better testing
+    await setupMockWalletAndNavigate(page, getFrontendUrl('localDev'));
+    await page.waitForTimeout(1000);
+  });
   test('should test frontend WebSocket client against backend server', async ({ page }) => {
     const consoleLogs = [];
     const wsEvents = [];
@@ -16,11 +23,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
       consoleLogs.push(msg.text());
     });
     
-    // Navigate to a minimal test page
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
-    
-    // Wait for page to load
-    await page.waitForTimeout(1000);
+    // Page already navigated in beforeEach
     
     // Inject frontend WebSocket client test directly
     const result = await page.evaluate(async () => {
@@ -36,7 +39,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
         
         try {
           // Create WebSocket connection like frontend does
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket('ws://localhost:4000/ws');
           
           return new Promise((resolve) => {
             const timeout = setTimeout(() => {
@@ -130,10 +133,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
   });
 
   test('should test websocket reconnection like frontend does', async ({ page }) => {
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
-    
-    // Wait for page to load
-    await page.waitForTimeout(1000);
+    // Page already navigated in beforeEach
     
     const result = await page.evaluate(async () => {
       const testReconnection = async () => {
@@ -144,7 +144,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
           totalMessages: 0
         };
         
-        let ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+        let ws = new WebSocket('ws://localhost:4000/ws');
         
         return new Promise((resolve) => {
           const timeout = setTimeout(() => resolve(results), 15000);
@@ -172,7 +172,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
             if (results.reconnectionAttempts <= 2) {
               // Simulate frontend reconnection logic
               setTimeout(() => {
-                ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+                ws = new WebSocket('ws://localhost:4000/ws');
                 
                 ws.onopen = () => {
                   console.log('✅ Reconnection successful');
@@ -212,7 +212,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
   });
 
   test('should test frontend constants and configuration', async ({ page }) => {
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
+    // Page already navigated in beforeEach
     
     // Test that frontend can access WebSocket configuration
     const wsConfig = await page.evaluate(() => {
@@ -223,7 +223,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
       
       // Or return what we expect based on constants.ts
       return {
-        URL: TEST_URLS.WEBSOCKET.GATEWAY,
+        URL: 'ws://localhost:4000/ws',
         RECONNECT_INTERVAL_MS: 5000,
         MAX_RECONNECT_ATTEMPTS: 10,
         PING_INTERVAL_MS: 30000
@@ -232,7 +232,7 @@ test.describe('WebSocket Frontend-Backend Integration', () => {
     
     console.log('🔍 WebSocket Config:', wsConfig);
     
-    expect(wsConfig.URL).toBe(TEST_URLS.WEBSOCKET.GATEWAY);
+    expect(wsConfig.URL).toBe('ws://localhost:4000/ws');
     expect(wsConfig.RECONNECT_INTERVAL_MS).toBe(5000);
     expect(wsConfig.MAX_RECONNECT_ATTEMPTS).toBe(10);
     

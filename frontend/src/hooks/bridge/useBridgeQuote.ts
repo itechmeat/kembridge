@@ -1,9 +1,3 @@
-/**
- * Bridge Quote Hook
- * Quote management with TanStack Query integration
- * Only fetches when user is authenticated since endpoint requires auth
- */
-
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import {
   bridgeService,

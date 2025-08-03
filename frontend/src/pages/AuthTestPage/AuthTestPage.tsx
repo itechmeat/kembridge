@@ -1,27 +1,22 @@
-/**
- * Authentication Test Page
- * Demonstrates new authentication components and flow
- */
-
-import React from "react";
+import { FC } from "react";
 import { AuthStatus } from "../../components/auth";
-import "./AuthTestPage.scss";
+import styles from "./AuthTestPage.module.scss";
 
-export const AuthTestPage: React.FC = () => {
+export const AuthTestPage: FC = () => {
   return (
-    <div className="auth-test-page">
-      <div className="auth-test-page__container">
-        <header className="auth-test-page__header">
+    <div className={styles.authTestPage}>
+      <div className={styles.container}>
+        <header className={styles.header}>
           <h1>Authentication Components Demo</h1>
           <p>Test the custom authentication UI components</p>
         </header>
 
-        <div className="auth-test-page__content">
+        <div className={styles.content}>
           {/* Authentication Status */}
-          <section className="auth-test-page__section">
+          <section className={styles.section}>
             <h2>Authentication Status</h2>
-            <div className="auth-test-page__status-demo">
-              <div className="status-example">
+            <div className={styles.statusDemo}>
+              <div className={styles.statusExample}>
                 <AuthStatus showFullStatus />
               </div>
             </div>

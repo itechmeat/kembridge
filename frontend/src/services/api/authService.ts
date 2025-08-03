@@ -1,9 +1,7 @@
-/**
- * Authentication Service
- * Web3 wallet authentication with backend
- */
-
-import apiClient, { VerifyWalletRequest, VerifyWalletResponse as ApiVerifyWalletResponse } from "./apiClient";
+import apiClient, {
+  VerifyWalletRequest,
+  VerifyWalletResponse as ApiVerifyWalletResponse,
+} from "./apiClient";
 
 // Type definitions for auth API
 export interface NonceRequest {
@@ -16,7 +14,6 @@ export interface NonceResponse {
   message: string;
   expires_at: string;
 }
-
 
 // Re-export the correct interface from apiClient
 export type VerifyWalletResponse = ApiVerifyWalletResponse;
@@ -74,6 +71,7 @@ class AuthService {
       chainType,
       nonce,
       signatureLength: signature?.length || 0,
+      messageLength: message?.length || 0,
     });
 
     const request: VerifyWalletRequest = {
@@ -83,6 +81,16 @@ class AuthService {
       chain_type: chainType,
       message,
     };
+
+    console.log("📤 Auth Service: Sending verification request:", {
+      wallet_address: request.wallet_address,
+      signature_preview: request.signature?.substring(0, 50) + "...",
+      signature_length: request.signature?.length,
+      nonce: request.nonce,
+      chain_type: request.chain_type,
+      message_preview: request.message?.substring(0, 100) + "...",
+      message_length: request.message?.length,
+    });
 
     const response = await apiClient.verifyWallet(request);
 
@@ -96,13 +104,18 @@ class AuthService {
       tokenValue: response.session_token,
     });
 
-    // Token is automatically saved by apiClient.verifyWallet call above
+    // Save token by wallet type and as main token (by apiClient.verifyWallet call above)
     if (response.verified && response.session_token) {
+      // Save token specifically for this wallet type
+      const walletType = chainType === "ethereum" ? "evm" : "near";
+      this.saveTokenByType(response.session_token, walletType);
+
       console.log("✅ Auth Service: Authentication successful", {
         tokenLength: response.session_token.length,
         tokenPreview: response.session_token.substring(0, 20) + "...",
         walletAddress: response.wallet_address,
         chainType: response.chain_type,
+        walletType,
       });
 
       // Verify token was actually saved by apiClient
@@ -114,13 +127,18 @@ class AuthService {
         tokensMatch: savedToken === response.session_token,
       });
     } else {
-      console.error("❌ Auth Service: Authentication failed or no session_token!", {
-        verified: response.verified,
-        hasSessionToken: !!response.session_token,
-        responseType: typeof response,
-        responseKeys: Object.keys(response || {}),
-        fullResponse: response,
-      });
+      console.error(
+        "❌ Auth Service: Authentication failed or no session_token!",
+        {
+          verified: response.verified,
+          hasSessionToken: !!response.session_token,
+          responseType: typeof response,
+          responseKeys: Object.keys(response || {}),
+          fullResponse: response,
+          walletAddress: response.wallet_address,
+          chainType: response.chain_type,
+        }
+      );
     }
 
     return response;
@@ -167,6 +185,69 @@ class AuthService {
    */
   getToken(): string | null {
     return apiClient.getAuthToken();
+  }
+
+  /**
+   * Gets all tokens by wallet type
+   */
+  getAllTokens(): { evm?: string; near?: string } {
+    const evmToken = localStorage.getItem("kembridge_auth_token_evm");
+    const nearToken = localStorage.getItem("kembridge_auth_token_near");
+
+    return {
+      evm: evmToken || undefined,
+      near: nearToken || undefined,
+    };
+  }
+
+  /**
+   * Saves token for specific wallet type
+   */
+  saveTokenByType(token: string, walletType: "evm" | "near"): void {
+    localStorage.setItem(`kembridge_auth_token_${walletType}`, token);
+
+    // Always save as main token (both EVM and NEAR)
+    // EVM has priority, but if no EVM token exists, NEAR token becomes main
+    const currentEvmToken = localStorage.getItem("kembridge_auth_token_evm");
+    const currentNearToken = localStorage.getItem("kembridge_auth_token_near");
+    
+    if (walletType === "evm" || !currentEvmToken) {
+      apiClient.setAuthToken(token);
+      console.log(`💾 Auth Service: Set ${token.substring(0, 10)}... as main token`);
+    }
+
+    console.log(`💾 Auth Service: Token saved for ${walletType}:`, {
+      tokenLength: token.length,
+      walletType,
+      hasEvmToken: !!currentEvmToken,
+      hasNearToken: !!currentNearToken,
+    });
+  }
+
+  /**
+   * Clears token for specific wallet type
+   */
+  clearTokenByType(walletType: "evm" | "near"): void {
+    localStorage.removeItem(`kembridge_auth_token_${walletType}`);
+
+    // Update main token based on remaining tokens
+    const remainingEvmToken = localStorage.getItem("kembridge_auth_token_evm");
+    const remainingNearToken = localStorage.getItem("kembridge_auth_token_near");
+    
+    if (walletType === "evm" && remainingNearToken) {
+      // If we cleared EVM but NEAR remains, make NEAR the main token
+      apiClient.setAuthToken(remainingNearToken);
+      console.log("🔄 Auth Service: Switched main token to NEAR");
+    } else if (!remainingEvmToken && !remainingNearToken) {
+      // If no tokens remain, clear main token
+      apiClient.logout();
+      console.log("🗑️ Auth Service: Cleared main token (no tokens remain)");
+    }
+
+    console.log(`🗑️ Auth Service: Token cleared for ${walletType}`, {
+      remainingEvmToken: !!remainingEvmToken,
+      remainingNearToken: !!remainingNearToken,
+    });
   }
 
   /**

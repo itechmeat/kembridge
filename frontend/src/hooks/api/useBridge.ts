@@ -1,8 +1,3 @@
-/**
- * Bridge Hooks
- * React hooks for cross-chain bridge operations with TanStack Query
- */
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   bridgeService,
@@ -76,7 +71,10 @@ export const useSwapStatus = (
     enabled: enabled && !!transactionId,
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds for active transactions
-      if (query.state.data?.status === "pending" || query.state.data?.status === "confirmed") {
+      if (
+        query.state.data?.status === "pending" ||
+        query.state.data?.status === "confirmed"
+      ) {
         return 5000; // 5 seconds
       }
       return false; // Don't refresh for completed transactions
@@ -128,7 +126,8 @@ export const useMultipleSwapStatus = (transactionIds: string[]) => {
     refetchInterval: (query) => {
       // Check if there are active transactions
       const hasActiveTransactions = query.state.data?.some(
-        (tx: SwapTransaction) => tx.status === "pending" || tx.status === "confirmed"
+        (tx: SwapTransaction) =>
+          tx.status === "pending" || tx.status === "confirmed"
       );
       return hasActiveTransactions ? 5000 : false;
     },

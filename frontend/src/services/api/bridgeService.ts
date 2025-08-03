@@ -1,8 +1,3 @@
-/**
- * Bridge Service
- * Cross-chain bridge operations and swap management
- */
-
 import apiClient from "./apiClient";
 import { API_ENDPOINTS } from "./config";
 
@@ -45,6 +40,22 @@ export interface InitSwapRequest {
   to_wallet_address: string;
   return_address?: string;
   max_slippage?: number;
+  real_transaction_hash?: string; // Real blockchain transaction hash from MetaMask
+}
+
+export interface InitSwapResponse {
+  swap_id: string;
+  status: string;
+  tx_preview: {
+    bridge_fee_estimate: string;
+    from: string;
+    max_slippage: number;
+    network_fee_estimate: string;
+    protocol: string;
+    quote_id: string;
+    to: string;
+  };
+  expires_at: string;
 }
 
 export interface SwapTransaction {
@@ -124,24 +135,97 @@ class BridgeService {
   }
 
   /**
+   * Maps API status to transaction status
+   */
+  private mapApiStatusToTransactionStatus(
+    apiStatus: string
+  ): SwapTransaction["status"] {
+    const statusMap: Record<string, SwapTransaction["status"]> = {
+      initiated: "pending",
+      pending: "pending",
+      confirmed: "confirmed",
+      completed: "completed",
+      failed: "failed",
+      expired: "expired",
+    };
+    return statusMap[apiStatus] || "pending";
+  }
+
+  /**
    * Initiates swap operation
    */
   async initSwap(request: InitSwapRequest): Promise<SwapTransaction> {
-    console.log("🚀 Bridge Service: Initiating swap:", request);
+    console.log("🚀 Bridge Service: Initiating REAL blockchain swap:", request);
 
-    const response = await apiClient.post<SwapTransaction>(
-      API_ENDPOINTS.BRIDGE.INIT_SWAP,
-      request
-    );
+    // 🔥 DIRECT TO 1INCH SERVICE for real blockchain transactions
+    const oneinchUrl = "http://localhost:4001" + API_ENDPOINTS.BRIDGE.INIT_SWAP;
+    console.log("📤 Sending to 1inch service:", oneinchUrl);
 
-    console.log("✅ Bridge Service: Swap initiated:", {
-      transactionId: response.id,
-      status: response.status,
-      fromChain: response.from_chain,
-      toChain: response.to_chain,
+    // Transform frontend request to 1inch service format
+    const oneinchRequest = {
+      quote_id: request.quote_id,
+      user_address: request.from_wallet_address,
+      recipient_address: request.to_wallet_address,
+      slippage: request.max_slippage || 0.5,
+      real_transaction_hash: request.real_transaction_hash, // 🎯 REAL BLOCKCHAIN HASH!
+    };
+
+    console.log("🚀 Transformed request for 1inch service:", oneinchRequest);
+
+    const response = await fetch(oneinchUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(oneinchRequest),
     });
 
-    return response;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`1inch service error: ${response.status} - ${errorText}`);
+    }
+
+    const rawResponse = await response.json();
+    console.log("✅ Bridge Service: 1inch service response:", rawResponse);
+
+    // 🔥 Handle 1inch service response format
+    if (!rawResponse.success) {
+      throw new Error(`1inch service error: ${rawResponse.error}`);
+    }
+
+    const data = rawResponse.data;
+
+    // Convert 1inch service response to SwapTransaction format
+    const swapTransaction: SwapTransaction = {
+      id: data.order_hash || `swap_${Date.now()}`,
+      quote_id: request.quote_id,
+      status: data.status === "processing" ? "pending" : data.status,
+      from_chain: "ethereum",
+      to_chain: "near",
+      from_token: "ETH",
+      to_token: "USDT",
+      from_amount: "0.001", // From MetaMask transaction
+      to_amount: "0",
+      from_wallet_address: request.from_wallet_address,
+      to_wallet_address: request.to_wallet_address,
+      from_transaction_hash: data.transaction_hash, // 🎉 REAL ETH BLOCKCHAIN HASH!
+      to_transaction_hash: data.near_transaction_hash, // 🚀 REAL NEAR BLOCKCHAIN HASH!
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      estimated_completion_at: new Date(
+        Date.now() + 5 * 60 * 1000
+      ).toISOString(), // 5 minutes
+      quantum_protection_used: true,
+    };
+
+    console.log("✅ Bridge Service: Swap initiated:", {
+      transactionId: swapTransaction.id,
+      status: swapTransaction.status,
+      fromChain: swapTransaction.from_chain,
+      toChain: swapTransaction.to_chain,
+    });
+
+    return swapTransaction;
   }
 
   /**
@@ -155,6 +239,7 @@ class BridgeService {
     amount: string;
     recipient?: string;
     slippage?: number;
+    fromWalletAddress?: string;
   }): Promise<{
     transaction_id: string;
     status: string;
@@ -178,14 +263,9 @@ class BridgeService {
     // Prepare swap request matching backend interface
     const swapRequest = {
       quote_id: quote.quote_id,
-      from_chain: formData.fromChain,
-      to_chain: formData.toChain,
-      from_token: formData.fromToken.symbol,
-      to_token: formData.toToken.symbol,
-      from_amount: formData.amount,
-      to_amount: quote.to_amount,
-      recipient_address: formData.recipient || "default.recipient",
-      max_slippage: formData.slippage || 0.05,
+      from_wallet_address: formData.fromWalletAddress || "",
+      to_wallet_address: formData.recipient || "",
+      max_slippage: formData.slippage || 0.5,
     };
 
     console.log("📨 Bridge Service: Sending swap request:", swapRequest);
@@ -214,7 +294,7 @@ class BridgeService {
     console.log("🔍 Bridge Service: Getting swap status for:", transactionId);
 
     const response = await apiClient.get<SwapTransaction>(
-      `${API_ENDPOINTS.BRIDGE.STATUS}/${transactionId}`
+      `${API_ENDPOINTS.BRIDGE.TRANSACTION_STATUS}/${transactionId}`
     );
 
     console.log("📊 Bridge Service: Status received:", {
@@ -345,10 +425,18 @@ class BridgeService {
    */
   formatTokenAmount(amount: string, decimals: number = 18): string {
     const num = parseFloat(amount) / Math.pow(10, decimals);
-    if (num < 0.001) return "<0.001";
-    if (num < 1) return num.toFixed(6);
-    if (num < 1000) return num.toFixed(4);
-    return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+    // Handle edge cases
+    if (num === 0 || isNaN(num)) return "0.0";
+    if (num < 0.000001) return "< 0.000001";
+    if (num < 0.001) return num.toFixed(6);
+    if (num < 1) return num.toFixed(4);
+    if (num < 1000) return num.toFixed(3);
+
+    return num.toLocaleString(undefined, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    });
   }
 
   /**

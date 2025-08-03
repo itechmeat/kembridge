@@ -1,8 +1,3 @@
-/**
- * Wallet service types and interfaces
- * Core types for multi-wallet integration
- */
-
 export enum WalletType {
   METAMASK = "metamask",
   NEAR = "near",

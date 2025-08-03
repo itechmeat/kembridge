@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
     curl \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/kembridge-1inch-service /usr/local/bin/

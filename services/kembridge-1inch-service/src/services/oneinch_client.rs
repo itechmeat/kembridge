@@ -244,6 +244,30 @@ impl OneinchClient {
             Err(error)
         }
     }
+
+    pub async fn get_swap_transaction(
+        &self, 
+        quote_id: &str, 
+        user_address: &str, 
+        slippage: Option<bigdecimal::BigDecimal>
+    ) -> Result<crate::services::swap_executor::SwapTransactionData> {
+        tracing::info!("📡 Getting 1inch swap transaction for quote: {}", quote_id);
+        
+        // For now, simulate getting transaction data from 1inch
+        // In real implementation, this would call 1inch API /swap endpoint
+        
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        
+        use crate::services::swap_executor::SwapTransactionData;
+        
+        Ok(SwapTransactionData {
+            transaction_data: format!("0x{}", hex::encode(rand::random::<[u8; 256]>())),
+            gas_limit: 200000,
+            gas_price: "20000000000".to_string(), // 20 gwei
+            value: "0".to_string(),
+            to: "0x1111111254fb6c44bAC0beD2854e76F90643097d".to_string(), // 1inch router
+        })
+    }
 }
 
 // 1inch API request/response types

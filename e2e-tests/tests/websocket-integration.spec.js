@@ -5,11 +5,12 @@
 
 import { test, expect } from '@playwright/test';
 import { TEST_URLS } from '../utils/test-constants';
+import { getFrontendUrl } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Integration', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to bridge page where WebSocket is initialized
-    await page.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${getFrontendUrl('localDev')}/bridge`, { waitUntil: 'domcontentloaded' });
     
     // Wait for the page to load
     await page.waitForTimeout(2000);

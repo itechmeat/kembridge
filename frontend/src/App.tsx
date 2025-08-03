@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { WalletProviders } from "./providers/WalletProviders";
-import { NearWalletProvider } from "./contexts/NearWalletContext.tsx";
+import { NearWalletProvider } from "./contexts/NearWalletContext/NearWalletContext.tsx";
+import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useNearWallet } from "./hooks/wallet/useNearWallet";
 import { setNearWalletContext } from "./services/wallet/providers/near";
 import { MobileLayout } from "./components/layout/MobileLayout/MobileLayout";
@@ -10,10 +11,9 @@ import { AuthTestPage } from "./pages/AuthTestPage/AuthTestPage";
 import { SecurityTestPage } from "./pages/SecurityTestPage/SecurityTestPage";
 import { setupGlobalErrorHandlers } from "./utils/errorHandler";
 import { useAuthInit } from "./hooks/api/useAuth";
-import ErrorNotificationDisplay from "./components/notifications/ErrorNotificationDisplay";
-import { useEffect, useCallback, useRef } from "react";
+import ErrorNotificationDisplay from "./components/notifications/ErrorNotificationDisplay/ErrorNotificationDisplay.tsx";
+import { useEffect, useCallback, useRef, useState } from "react";
 import "./styles/main.scss";
-import "./pages/BridgePage/BridgePage.scss";
 import "@rainbow-me/rainbowkit/styles.css";
 
 function AppContent() {
@@ -21,12 +21,13 @@ function AppContent() {
   const nearWallet = useNearWallet();
   const authInit = useAuthInit();
   const previousNearWalletRef = useRef(nearWallet);
+  const [isNearContextReady, setIsNearContextReady] = useState(false);
 
   // Memoized callback to prevent unnecessary re-renders
   const updateNearContext = useCallback(() => {
     const current = nearWallet;
     const previous = previousNearWalletRef.current;
-    
+
     // Only update if something actually changed
     if (
       current.selector !== previous.selector ||
@@ -34,7 +35,7 @@ function AppContent() {
       current.accountId !== previous.accountId ||
       current.isConnected !== previous.isConnected
     ) {
-      console.log("🔗 App: Connecting NEAR context to provider...");
+      console.log("🔗 App: Scheduling NEAR context update...");
       console.log("📊 App: NEAR context data:", {
         selector: !!current.selector,
         modal: !!current.modal,
@@ -42,11 +43,23 @@ function AppContent() {
         isConnected: current.isConnected,
       });
 
-      setNearWalletContext(current);
-      console.log("✅ App: NEAR context connected to provider");
+      // Use setTimeout to avoid setState during render
+      setTimeout(() => {
+        setNearWalletContext(current);
+        console.log("✅ App: NEAR context connected to provider");
+        setIsNearContextReady(true);
+      }, 0);
+
       previousNearWalletRef.current = current;
+    } else if (!isNearContextReady && current.selector) {
+      // Initial setup
+      setTimeout(() => {
+        setNearWalletContext(current);
+        console.log("✅ App: Initial NEAR context setup completed");
+        setIsNearContextReady(true);
+      }, 0);
     }
-  }, [nearWallet]);
+  }, [nearWallet, isNearContextReady]);
 
   useEffect(() => {
     updateNearContext();
@@ -63,36 +76,38 @@ function AppContent() {
 
   return (
     <WalletProviders>
-      <Router>
-        <MobileLayout>
-          <Routes>
-            <Route path="/" element={<WalletPage />} />
-            <Route path="/bridge" element={<BridgePage />} />
-            <Route path="/swap" element={<BridgePage />} />
-            <Route
-              path="/history"
-              element={
-                <div style={{ padding: "2rem", textAlign: "center" }}>
-                  History Page Coming Soon
-                </div>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <div style={{ padding: "2rem", textAlign: "center" }}>
-                  Settings Page Coming Soon
-                </div>
-              }
-            />
-            <Route path="/auth-test" element={<AuthTestPage />} />
-            <Route path="/security-test" element={<SecurityTestPage />} />
-          </Routes>
-        </MobileLayout>
+      <WebSocketProvider>
+        <Router>
+          <MobileLayout>
+            <Routes>
+              <Route path="/" element={<WalletPage />} />
+              <Route path="/bridge" element={<BridgePage />} />
+              <Route path="/swap" element={<BridgePage />} />
+              <Route
+                path="/history"
+                element={
+                  <div style={{ padding: "2rem", textAlign: "center" }}>
+                    History Page Coming Soon
+                  </div>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <div style={{ padding: "2rem", textAlign: "center" }}>
+                    Settings Page Coming Soon
+                  </div>
+                }
+              />
+              <Route path="/auth-test" element={<AuthTestPage />} />
+              <Route path="/security-test" element={<SecurityTestPage />} />
+            </Routes>
+          </MobileLayout>
 
-        {/* Global Error Notification Display */}
-        <ErrorNotificationDisplay maxVisible={5} position="top-right" />
-      </Router>
+          {/* Global Error Notification Display */}
+          <ErrorNotificationDisplay maxVisible={5} position="top-right" />
+        </Router>
+      </WebSocketProvider>
     </WalletProviders>
   );
 }

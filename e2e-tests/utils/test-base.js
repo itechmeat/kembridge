@@ -18,7 +18,7 @@ export async function setupFullTestEnvironment(page) {
   await page.goto('/');
   await page.waitForTimeout(TIMEOUTS.SHORT);
   
-  // Setup mock wallet after page load
+  // Setup mock wallet AFTER page is loaded
   await setupMockWallet(page);
   
   // Setup API monitoring

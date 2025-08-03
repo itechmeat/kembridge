@@ -1,8 +1,3 @@
-/**
- * WebSocket Service
- * Real-time connection management for bridge updates
- */
-
 import { API_CONFIG } from "../api/config";
 import {
   transactionService,
@@ -137,7 +132,12 @@ class WebSocketService {
   private handleTransactionUpdate(data: Record<string, unknown>): void {
     const update: TransactionStatusUpdate = {
       id: data.id as string,
-      status: data.status as "pending" | "confirmed" | "completed" | "failed" | "expired",
+      status: data.status as
+        | "pending"
+        | "confirmed"
+        | "completed"
+        | "failed"
+        | "expired",
       progress: (data.progress as number) || 0,
       currentStep: (data.current_step as string) || "",
       fromTxHash: data.from_tx_hash as string,

@@ -1,20 +1,19 @@
-/**
- * Wallet information display component
- * Shows connected wallet details and balance
- */
-
-import React, { useState } from "react";
+import { useState, FC } from "react";
+import cn from "classnames";
 import { useWallet } from "../../../hooks/wallet/useWallet";
 import { useBalance } from "../../../hooks/wallet/useBalance";
-import { useAuthStatus } from "../../../hooks/api/useAuth";
-import { formatAddress, formatUsdValue } from "../../../services/wallet/utils";
 import {
-  formatDisplayBalance,
-  formatTokenBalance,
-} from "../../../utils/wallet";
-import { Button } from "../../ui/Button";
-import { Spinner } from "../../ui/Spinner";
-import "./WalletInfo.scss";
+  useWalletAuthStatus,
+  useLogout,
+  useEthereumAuth,
+  useNearAuth,
+} from "../../../hooks/api/useAuth";
+import { formatAddress } from "../../../services/wallet/utils";
+import { formatBalance } from "../../../utils/formatBalance";
+import { Button } from "../../ui/Button/Button";
+import { Spinner } from "../../ui/Spinner/Spinner";
+import { WalletIcon } from "./WalletIcon";
+import styles from "./WalletInfo.module.scss";
 
 interface WalletInfoProps {
   showBalance?: boolean;
@@ -24,15 +23,27 @@ interface WalletInfoProps {
   className?: string;
 }
 
-export const WalletInfo: React.FC<WalletInfoProps> = ({
+export const WalletInfo: FC<WalletInfoProps> = ({
   showBalance = true,
-  showNetwork = true,
-  showTechnicalInfo = true, // Show by default for now
   compact = false,
   className = "",
 }) => {
-  const { account, disconnect, isConnected, state } = useWallet();
-  const { isAuthenticated } = useAuthStatus();
+  const { connect } = useWallet();
+  const {
+    isEvmAuthenticated,
+    isNearAuthenticated,
+    evmAddress,
+    nearAddress,
+    isEvmConnected,
+    isNearConnected,
+    hasAnyAuth,
+  } = useWalletAuthStatus();
+
+  // Auth hooks
+  const ethereumAuth = useEthereumAuth();
+  const nearAuth = useNearAuth();
+  const logout = useLogout();
+
   const {
     balances,
     isLoading: balanceLoading,
@@ -40,16 +51,55 @@ export const WalletInfo: React.FC<WalletInfoProps> = ({
   } = useBalance();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  if (!isConnected || !account) {
-    return null;
-  }
-
-  const handleDisconnect = async () => {
+  const handleEvmConnect = async () => {
     try {
-      await disconnect();
+      await connect("metamask");
       setIsDropdownOpen(false);
     } catch (error) {
-      console.error("Failed to disconnect wallet:", error);
+      console.error("Failed to connect EVM wallet:", error);
+    }
+  };
+
+  const handleNearConnect = async () => {
+    try {
+      await connect("near");
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error("Failed to connect NEAR wallet:", error);
+    }
+  };
+
+  const handleEvmAuth = async () => {
+    try {
+      await ethereumAuth.authenticate();
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error("Failed to authenticate EVM wallet:", error);
+    }
+  };
+
+  const handleNearAuth = async () => {
+    try {
+      await nearAuth.authenticate();
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error("Failed to authenticate NEAR wallet:", error);
+    }
+  };
+
+  const handleEvmLogout = async () => {
+    try {
+      await logout.mutateAsync("evm");
+    } catch (error) {
+      console.error("Failed to logout from EVM:", error);
+    }
+  };
+
+  const handleNearLogout = async () => {
+    try {
+      await logout.mutateAsync("near");
+    } catch (error) {
+      console.error("Failed to logout from NEAR:", error);
     }
   };
 
@@ -65,195 +115,308 @@ export const WalletInfo: React.FC<WalletInfoProps> = ({
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const totalUsdValue = balances.reduce((total, balance) => {
-    const usdValue = parseFloat(balance.usdValue || "0");
-    return total + usdValue;
-  }, 0);
+  // Determine what to show in main button
+  const getPrimaryDisplay = () => {
+    // If both wallets are authenticated, show both icons
+    if (isEvmAuthenticated && isNearAuthenticated) {
+      return {
+        type: "both",
+        authenticated: true,
+      };
+    }
 
-  const primaryBalance = balances[0]; // First balance is usually the native token
+    // If only EVM is authenticated (prioritize authenticated over connected)
+    if (isEvmAuthenticated && !isNearAuthenticated) {
+      return {
+        address: evmAddress,
+        type: "evm",
+        authenticated: true,
+      };
+    }
+
+    // If only NEAR is authenticated (prioritize authenticated over connected)
+    if (isNearAuthenticated && !isEvmAuthenticated) {
+      return {
+        address: nearAddress,
+        type: "near",
+        authenticated: true,
+      };
+    }
+
+    // If only EVM is connected but not authenticated
+    if (isEvmConnected && !isNearConnected) {
+      return {
+        address: evmAddress,
+        type: "evm",
+        authenticated: false,
+      };
+    }
+
+    // If only NEAR is connected but not authenticated
+    if (isNearConnected && !isEvmConnected) {
+      return {
+        address: nearAddress,
+        type: "near",
+        authenticated: false,
+      };
+    }
+
+    // If both are connected but neither authenticated, prioritize EVM
+    if (isEvmConnected && isNearConnected) {
+      return {
+        address: evmAddress,
+        type: "evm",
+        authenticated: false,
+      };
+    }
+
+    return null;
+  };
+
+  const primaryDisplay = getPrimaryDisplay();
 
   return (
     <div
-      className={`wallet-info ${
-        compact ? "wallet-info--compact" : ""
-      } ${className}`}
+      className={cn(
+        styles.walletInfo,
+        {
+          [styles.compact]: compact,
+        },
+        className.trim()
+      )}
     >
-      <div className="wallet-info__main" onClick={toggleDropdown}>
-        <div className="wallet-info__account">
-          <div className="wallet-info__avatar">
-            {/* TODO (feat): Add wallet-specific avatars */}
-            💼
-          </div>
-
-          <div className="wallet-info__details">
-            <div className="wallet-info__address">
-              {formatAddress(account.address)}
-            </div>
-
-            {showNetwork && account.network && (
-              <div className="wallet-info__network">{account.network.name}</div>
-            )}
-          </div>
-        </div>
-
-        {showBalance && !compact && (
-          <div className="wallet-info__balance">
-            {balanceLoading ? (
-              <Spinner size="sm" />
-            ) : primaryBalance ? (
-              <div className="wallet-info__balance-details">
-                <div className="wallet-info__balance-amount">
-                  {formatDisplayBalance(
-                    primaryBalance.balance,
-                    primaryBalance.symbol,
-                    primaryBalance.decimals
-                  )}
-                </div>
-                {totalUsdValue > 0 && (
-                  <div className="wallet-info__balance-usd">
-                    {formatUsdValue(totalUsdValue)}
-                  </div>
-                )}
+      <div className={styles.main} onClick={toggleDropdown}>
+        {primaryDisplay ? (
+          <div className={styles.account}>
+            {primaryDisplay.type === "both" ? (
+              // Both wallets authenticated - show both icons with + between them
+              <div className={styles.bothWallets}>
+                <WalletIcon type="metamask" size="sm" />
+                <span className={styles.plus}>+</span>
+                <WalletIcon type="near" size="sm" />
               </div>
             ) : (
-              <div className="wallet-info__balance-empty">No balance</div>
+              // Single wallet - show icon and address
+              <div className={styles.singleWallet}>
+                <WalletIcon
+                  type={primaryDisplay.type === "evm" ? "metamask" : "near"}
+                  size="sm"
+                />
+                <div className={styles.walletInfo}>
+                  <div className={styles.address}>
+                    {formatAddress(primaryDisplay.address || "")}
+                  </div>
+                </div>
+              </div>
             )}
+          </div>
+        ) : (
+          <div className={styles.connectButton}>
+            <span>Connect Wallet</span>
           </div>
         )}
 
-        <div className="wallet-info__dropdown-arrow">
-          {isDropdownOpen ? "▲" : "▼"}
-        </div>
+        <div className={styles.dropdownArrow}>{isDropdownOpen ? "▲" : "▼"}</div>
       </div>
 
       {isDropdownOpen && (
-        <div className="wallet-info__dropdown">
-          <div className="wallet-info__dropdown-content">
-            {/* Full address */}
-            <div className="wallet-info__dropdown-section">
-              <div className="wallet-info__dropdown-label">Address</div>
-              <div className="wallet-info__dropdown-value">
-                {account.address}
-              </div>
-            </div>
-
-            {/* Network info */}
-            {account.network && (
-              <div className="wallet-info__dropdown-section">
-                <div className="wallet-info__dropdown-label">Network</div>
-                <div className="wallet-info__dropdown-value">
-                  {account.network.name} ({account.network.type})
+        <div className={styles.dropdown}>
+          <div className={styles.dropdownContent}>
+            {/* EVM Section */}
+            <div className={styles.networkSection}>
+              <div className={styles.networkHeader}>
+                <div className={styles.networkTitle}>
+                  <WalletIcon type="metamask" size="sm" />
+                  Ethereum
                 </div>
+                {isEvmAuthenticated && (
+                  <span className={styles.statusBadge}>✅ Authenticated</span>
+                )}
               </div>
-            )}
 
-            {/* Balances */}
-            {showBalance && balances.length > 0 && (
-              <div className="wallet-info__dropdown-section">
-                <div className="wallet-info__dropdown-label">
-                  Balances
+              {isEvmConnected ? (
+                <div className={styles.networkContent}>
+                  <div className={styles.walletAddress}>
+                    {formatAddress(evmAddress || "", 10, 10)}
+                  </div>
+
+                  {/* EVM Balance */}
+                  {showBalance &&
+                    (() => {
+                      const ethBalance = balances.find(
+                        (b) => b.symbol === "ETH"
+                      );
+                      return ethBalance ? (
+                        <div className={styles.networkBalance}>
+                          <div className={styles.balanceDisplay}>
+                            <div className={styles.balanceAmount}>
+                              {formatBalance(ethBalance.balance)} ETH
+                              {ethBalance.usdValue && (
+                                <span className={styles.balanceUsd}>
+                                  ≈ ${ethBalance.usdValue}
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRefreshBalance}
+                              disabled={balanceLoading}
+                              className={styles.refreshBtn}
+                            >
+                              {balanceLoading ? <Spinner size="sm" /> : "🔄"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                  <div className={styles.walletActions}>
+                    {isEvmAuthenticated ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleEvmLogout}
+                        disabled={logout.isPending}
+                      >
+                        {logout.isPending ? <Spinner size="sm" /> : "Logout"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleEvmAuth}
+                        disabled={ethereumAuth.isAuthenticating}
+                      >
+                        {ethereumAuth.isAuthenticating ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          "Authenticate"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.networkContent}>
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
-                    onClick={handleRefreshBalance}
-                    disabled={balanceLoading}
-                    className="wallet-info__refresh-btn"
+                    onClick={handleEvmConnect}
+                    className={styles.connectBtn}
                   >
-                    {balanceLoading ? <Spinner size="sm" /> : "🔄"}
+                    Connect MetaMask
                   </Button>
                 </div>
-                <div className="wallet-info__balances">
-                  {balances.map((balance, index) => (
-                    <div key={index} className="wallet-info__balance-item">
-                      <div className="wallet-info__balance-token">
-                        <span className="wallet-info__balance-symbol">
-                          {balance.symbol}
-                        </span>
-                        <span className="wallet-info__balance-amount">
-                          {formatTokenBalance(
-                            balance.balance,
-                            balance.decimals,
-                            4
-                          )}
-                        </span>
-                      </div>
-                      {balance.usdValue && parseFloat(balance.usdValue) > 0 && (
-                        <div className="wallet-info__balance-usd">
-                          {formatUsdValue(balance.usdValue)}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Technical Info */}
-            {showTechnicalInfo && (
-              <div className="wallet-info__dropdown-section">
-                <div className="wallet-info__dropdown-label">
-                  Technical Info
-                </div>
-                <div className="wallet-info__technical-info">
-                  <div className="wallet-info__tech-item">
-                    <span className="wallet-info__tech-label">Connected:</span>
-                    <span className="wallet-info__tech-value">
-                      {isConnected ? "✅ Yes" : "❌ No"}
-                    </span>
-                  </div>
-                  <div className="wallet-info__tech-item">
-                    <span className="wallet-info__tech-label">
-                      Authenticated:
-                    </span>
-                    <span className="wallet-info__tech-value">
-                      {isAuthenticated ? "✅ Yes" : "❌ No"}
-                    </span>
-                  </div>
-                  <div className="wallet-info__tech-item">
-                    <span className="wallet-info__tech-label">
-                      Wallet Type:
-                    </span>
-                    <span className="wallet-info__tech-value">
-                      {account?.type || "None"}
-                    </span>
-                  </div>
-                  {account?.chainId && (
-                    <div className="wallet-info__tech-item">
-                      <span className="wallet-info__tech-label">Chain ID:</span>
-                      <span className="wallet-info__tech-value">
-                        {account.chainId}
-                      </span>
-                    </div>
-                  )}
-                  <div className="wallet-info__tech-item">
-                    <span className="wallet-info__tech-label">Connecting:</span>
-                    <span className="wallet-info__tech-value">
-                      {state.isConnecting ? "⏳ Yes" : "❌ No"}
-                    </span>
-                  </div>
-                  {state.error && (
-                    <div className="wallet-info__tech-item">
-                      <span className="wallet-info__tech-label">Error:</span>
-                      <span className="wallet-info__tech-value wallet-info__tech-error">
-                        ⚠️ {state.error}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="wallet-info__dropdown-actions">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleDisconnect}
-                className="wallet-info__disconnect-btn"
-              >
-                Disconnect
-              </Button>
+              )}
             </div>
+
+            {/* Divider between networks */}
+            <div className={styles.sectionDivider}></div>
+
+            {/* NEAR Section */}
+            <div className={styles.networkSection}>
+              <div className={styles.networkHeader}>
+                <div className={styles.networkTitle}>
+                  <WalletIcon type="near" size="sm" />
+                  NEAR Network
+                </div>
+                {isNearAuthenticated && (
+                  <span className={styles.statusBadge}>✅ Authenticated</span>
+                )}
+              </div>
+
+              {isNearConnected ? (
+                <div className={styles.networkContent}>
+                  <div className={styles.walletAddress}>
+                    {formatAddress(nearAddress || "", 10, 10)}
+                  </div>
+
+                  {/* NEAR Balance */}
+                  {showBalance &&
+                    (() => {
+                      const nearBalance = balances.find(
+                        (b) => b.symbol === "NEAR"
+                      );
+                      return nearBalance ? (
+                        <div className={styles.networkBalance}>
+                          <div className={styles.balanceDisplay}>
+                            <div className={styles.balanceAmount}>
+                              {formatBalance(nearBalance.balance)} NEAR
+                              {nearBalance.usdValue && (
+                                <span className={styles.balanceUsd}>
+                                  ≈ ${nearBalance.usdValue}
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRefreshBalance}
+                              disabled={balanceLoading}
+                              className={styles.refreshBtn}
+                            >
+                              {balanceLoading ? <Spinner size="sm" /> : "🔄"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                  <div className={styles.walletActions}>
+                    {isNearAuthenticated ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleNearLogout}
+                        disabled={logout.isPending}
+                      >
+                        {logout.isPending ? <Spinner size="sm" /> : "Logout"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleNearAuth}
+                        disabled={nearAuth.isAuthenticating}
+                      >
+                        {nearAuth.isAuthenticating ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          "Authenticate"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.networkContent}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleNearConnect}
+                    className={styles.connectBtn}
+                  >
+                    Connect NEAR
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Global Actions */}
+            {hasAnyAuth && (
+              <div className={styles.dropdownActions}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => logout.mutateAsync("all")}
+                  disabled={logout.isPending}
+                  className={styles.disconnectBtn}
+                >
+                  {logout.isPending ? <Spinner size="sm" /> : "Logout All"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

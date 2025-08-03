@@ -69,16 +69,16 @@ export default defineConfig({
     }
   ],
 
-  // Local dev server configuration
-  webServer: {
-    command: 'make health-quick',
-    port: 4100,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60000,
-    env: {
-      NODE_ENV: 'test'
-    }
-  },
+  // Local dev server configuration - disabled since backend runs in Docker
+  // webServer: {
+  //   command: 'make health-quick',
+  //   port: 4100,
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 60000,
+  //   env: {
+  //     NODE_ENV: 'test'
+  //   }
+  // },
   
   // Global setup and teardown (commented out until created)
   // globalSetup: require.resolve('./tests/global-setup.ts'),

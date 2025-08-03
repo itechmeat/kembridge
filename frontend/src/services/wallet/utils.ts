@@ -1,8 +1,3 @@
-/**
- * Wallet service utilities
- * Shared utilities for wallet operations
- */
-
 import {
   NetworkType,
   NetworkInfo,

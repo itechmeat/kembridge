@@ -1,9 +1,3 @@
-/**
- * Supported Tokens Hook
- * List of supported tokens for bridge operations
- * Only fetches when user is authenticated since endpoint requires auth
- */
-
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import {
   bridgeService,

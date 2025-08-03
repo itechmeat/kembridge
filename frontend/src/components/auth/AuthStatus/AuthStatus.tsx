@@ -1,10 +1,4 @@
-/**
- * Authentication status component
- * Shows current auth state and provides login/logout actions
- * Enhanced with improved wallet connection handling
- */
-
-import React, { useState } from "react";
+import { FC, useState } from "react";
 import {
   useAuthStatus,
   useEthereumAuth,
@@ -13,16 +7,17 @@ import {
 } from "../../../hooks/api/useAuth";
 import { useWallet } from "../../../hooks/wallet/useWallet";
 import { useUserInfo } from "../../../hooks/api/useUser";
-import { Button } from "../../ui/Button";
-import { Spinner } from "../../ui/Spinner";
-import "./AuthStatus.scss";
+import { Button } from "../../ui/Button/Button";
+import { Spinner } from "../../ui/Spinner/Spinner";
+import styles from "./AuthStatus.module.scss";
+import cn from "classnames";
 
 interface AuthStatusProps {
   showFullStatus?: boolean;
   className?: string;
 }
 
-export const AuthStatus: React.FC<AuthStatusProps> = ({
+export const AuthStatus: FC<AuthStatusProps> = ({
   showFullStatus = false,
   className = "",
 }) => {
@@ -56,7 +51,7 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
   const handleLogout = async () => {
     try {
-      await logout.mutateAsync();
+      await logout.mutateAsync("all");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -74,8 +69,8 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
   const getStatusIndicator = () => {
     if (!isBackendConnected) {
       return (
-        <div className="auth-status__indicator auth-status__indicator--error">
-          <span className="auth-status__dot"></span>
+        <div className={cn(styles.indicator, styles.indicator_error)}>
+          <span className={styles.dot}></span>
           Backend Offline
         </div>
       );
@@ -83,8 +78,8 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
     if (!isConnected) {
       return (
-        <div className="auth-status__indicator auth-status__indicator--warning">
-          <span className="auth-status__dot"></span>
+        <div className={cn(styles.indicator, styles.indicator_warning)}>
+          <span className={styles.dot}></span>
           No Wallet
         </div>
       );
@@ -92,7 +87,7 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
     if (isAuthenticating) {
       return (
-        <div className="auth-status__indicator auth-status__indicator--loading">
+        <div className={cn(styles.indicator, styles.indicator_loading)}>
           <Spinner size="sm" />
           Authenticating...
         </div>
@@ -101,8 +96,8 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
     if (isConnected && !isAuthenticated) {
       return (
-        <div className="auth-status__indicator auth-status__indicator--info">
-          <span className="auth-status__dot"></span>
+        <div className={cn(styles.indicator, styles.indicator_info)}>
+          <span className={styles.dot}></span>
           Wallet Connected
         </div>
       );
@@ -110,16 +105,16 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
     if (isAuthenticated && profile) {
       return (
-        <div className="auth-status__indicator auth-status__indicator--success">
-          <span className="auth-status__dot"></span>
+        <div className={cn(styles.indicator, styles.indicator_success)}>
+          <span className={styles.dot}></span>
           Authenticated
         </div>
       );
     }
 
     return (
-      <div className="auth-status__indicator auth-status__indicator--warning">
-        <span className="auth-status__dot"></span>
+      <div className={cn(styles.indicator, styles.indicator_warning)}>
+        <span className={styles.dot}></span>
         Not Authenticated
       </div>
     );
@@ -127,39 +122,31 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 
   return (
     <div
-      className={`auth-status ${
-        showFullStatus ? "auth-status--full" : ""
-      } ${className}`}
+      className={cn(styles.root, { [styles.full]: showFullStatus }, className)}
     >
-      {/* Status Indicator */}
       {getStatusIndicator()}
 
-      {/* Full Status View */}
       {showFullStatus && (
-        <div className="auth-status__details">
-          {/* Backend Status */}
-          <div className="auth-status__row">
-            <span className="auth-status__label">Backend:</span>
+        <div className={styles.details}>
+          <div className={styles.row}>
+            <span className={styles.label}>Backend:</span>
             <span
-              className={`auth-status__value ${
-                isBackendConnected
-                  ? "auth-status__value--success"
-                  : "auth-status__value--error"
-              }`}
+              className={cn(
+                styles.value,
+                isBackendConnected ? styles.value_success : styles.value_error
+              )}
             >
               {isBackendConnected ? "Connected" : "Offline"}
             </span>
           </div>
 
-          {/* Wallet Status */}
-          <div className="auth-status__row">
-            <span className="auth-status__label">Wallet:</span>
+          <div className={styles.row}>
+            <span className={styles.label}>Wallet:</span>
             <span
-              className={`auth-status__value ${
-                isConnected
-                  ? "auth-status__value--success"
-                  : "auth-status__value--error"
-              }`}
+              className={cn(
+                styles.value,
+                isConnected ? styles.value_success : styles.value_error
+              )}
             >
               {isConnected
                 ? `Connected (${account?.address?.slice(0, 8)}...)`
@@ -167,15 +154,13 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
             </span>
           </div>
 
-          {/* Authentication Status */}
-          <div className="auth-status__row">
-            <span className="auth-status__label">Auth:</span>
+          <div className={styles.row}>
+            <span className={styles.label}>Auth:</span>
             <span
-              className={`auth-status__value ${
-                isAuthenticated
-                  ? "auth-status__value--success"
-                  : "auth-status__value--error"
-              }`}
+              className={cn(
+                styles.value,
+                isAuthenticated ? styles.value_success : styles.value_error
+              )}
             >
               {isAuthenticated
                 ? `Authenticated (${profile?.id?.slice(0, 8)}...)`
@@ -183,59 +168,53 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
             </span>
           </div>
 
-          {/* Wallet Details */}
           {isConnected && account && (
             <>
-              <div className="auth-status__row">
-                <span className="auth-status__label">Type:</span>
-                <span className="auth-status__value">{account.type}</span>
+              <div className={styles.row}>
+                <span className={styles.label}>Type:</span>
+                <span className={styles.value}>{account.type}</span>
               </div>
 
               {account.address && (
-                <div className="auth-status__row">
-                  <span className="auth-status__label">Address:</span>
-                  <span
-                    className="auth-status__value"
-                    style={{ fontSize: "0.8em" }}
-                  >
+                <div className={styles.row}>
+                  <span className={styles.label}>Address:</span>
+                  <span className={styles.value} style={{ fontSize: "0.8em" }}>
                     {account.address}
                   </span>
                 </div>
               )}
 
               {account.chainId && (
-                <div className="auth-status__row">
-                  <span className="auth-status__label">Chain ID:</span>
-                  <span className="auth-status__value">{account.chainId}</span>
+                <div className={styles.row}>
+                  <span className={styles.label}>Chain ID:</span>
+                  <span className={styles.value}>{account.chainId}</span>
                 </div>
               )}
             </>
           )}
 
-          {/* User Info */}
           {isAuthenticated && profile && (
-            <div className="auth-status__user">
-              <div className="auth-status__row">
-                <span className="auth-status__label">User ID:</span>
-                <span className="auth-status__value">{profile.id}</span>
+            <div className={styles.user}>
+              <div className={styles.row}>
+                <span className={styles.label}>User ID:</span>
+                <span className={styles.value}>{profile.id}</span>
               </div>
-              <div className="auth-status__row">
-                <span className="auth-status__label">Tier:</span>
-                <span className="auth-status__value">{profile.tier}</span>
+              <div className={styles.row}>
+                <span className={styles.label}>Tier:</span>
+                <span className={styles.value}>{profile.tier}</span>
               </div>
-              <div className="auth-status__row">
-                <span className="auth-status__label">Wallets:</span>
-                <span className="auth-status__value">
+              <div className={styles.row}>
+                <span className={styles.label}>Wallets:</span>
+                <span className={styles.value}>
                   {profile.wallet_addresses.length} connected
                 </span>
               </div>
             </div>
           )}
 
-          {/* Error Display */}
           {(state.error || displayError) && (
-            <div className="auth-status__error">
-              <span className="auth-status__error-text">
+            <div className={styles.error}>
+              <span className={styles.errorText}>
                 {displayError || state.error}
               </span>
               <Button
@@ -246,15 +225,14 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
                   ethereumAuth.reset();
                   nearAuth.reset();
                 }}
-                className="auth-status__error-clear"
+                className={styles.errorClear}
               >
                 ✕
               </Button>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="auth-status__actions">
+          <div className={styles.actions}>
             {isConnected && !isAuthenticated && !isAuthenticating && (
               <Button
                 variant="primary"

@@ -1,15 +1,10 @@
-/**
- * WebSocket Error Handling and Recovery
- * Advanced error handling and reconnection strategies for WebSocket connections
- */
-
-import { wsClient } from './wsClient';
+import { wsClient } from "./wsClient";
 
 export interface WebSocketError {
   code: number;
   message: string;
   timestamp: number;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   recoverable: boolean;
   retryAfter?: number;
 }
@@ -39,7 +34,7 @@ class WebSocketErrorHandler {
   private listeners = new Set<(error: WebSocketError) => void>();
 
   constructor() {
-    console.log('🛠️ WebSocket Error Handler: Initializing');
+    console.log("🛠️ WebSocket Error Handler: Initializing");
     this.setupDefaultRecoveryStrategies();
     this.setupErrorMonitoring();
   }
@@ -50,15 +45,15 @@ class WebSocketErrorHandler {
   private setupDefaultRecoveryStrategies(): void {
     // Strategy 1: Simple reconnection for network issues
     this.addRecoveryStrategy({
-      name: 'simple_reconnect',
+      name: "simple_reconnect",
       condition: (error) => error.code === 1006 && error.recoverable,
       action: async () => {
-        console.log('🔄 Attempting simple reconnection...');
+        console.log("🔄 Attempting simple reconnection...");
         try {
           await wsClient.connect();
           return true;
         } catch (e) {
-          console.error('❌ Simple reconnection failed:', e);
+          console.error("❌ Simple reconnection failed:", e);
           return false;
         }
       },
@@ -67,18 +62,18 @@ class WebSocketErrorHandler {
 
     // Strategy 2: Reset and reconnect for authentication issues
     this.addRecoveryStrategy({
-      name: 'auth_reset_reconnect',
+      name: "auth_reset_reconnect",
       condition: (error) => error.code === 1008 || error.code === 4001,
       action: async () => {
-        console.log('🔐 Attempting authentication reset and reconnection...');
+        console.log("🔐 Attempting authentication reset and reconnection...");
         try {
           // Clear any stored auth tokens that might be invalid
           // This would require integration with auth service
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           await wsClient.connect();
           return true;
         } catch (e) {
-          console.error('❌ Auth reset reconnection failed:', e);
+          console.error("❌ Auth reset reconnection failed:", e);
           return false;
         }
       },
@@ -87,19 +82,24 @@ class WebSocketErrorHandler {
 
     // Strategy 3: Progressive backoff for persistent issues
     this.addRecoveryStrategy({
-      name: 'progressive_backoff',
+      name: "progressive_backoff",
       condition: () => this.recoveryAttempts >= 2,
       action: async () => {
-        const delay = Math.min(1000 * Math.pow(2, this.recoveryAttempts), 30000);
-        console.log(`⏳ Progressive backoff: waiting ${delay}ms before retry...`);
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
+        const delay = Math.min(
+          1000 * Math.pow(2, this.recoveryAttempts),
+          30000
+        );
+        console.log(
+          `⏳ Progressive backoff: waiting ${delay}ms before retry...`
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
         try {
           await wsClient.connect();
           return true;
         } catch (e) {
-          console.error('❌ Progressive backoff reconnection failed:', e);
+          console.error("❌ Progressive backoff reconnection failed:", e);
           return false;
         }
       },
@@ -108,31 +108,35 @@ class WebSocketErrorHandler {
 
     // Strategy 4: Server health check and retry
     this.addRecoveryStrategy({
-      name: 'health_check_retry',
-      condition: (error) => error.severity === 'high',
+      name: "health_check_retry",
+      condition: (error) => error.severity === "high",
       action: async () => {
-        console.log('🏥 Checking server health before retry...');
-        
+        console.log("🏥 Checking server health before retry...");
+
         try {
           // Simulate health check - in real implementation would check backend health
-          const healthCheck = await fetch('/health', { method: 'GET' });
+          const healthCheck = await fetch("/health", { method: "GET" });
           if (healthCheck.ok) {
-            console.log('✅ Server health check passed, attempting reconnection...');
+            console.log(
+              "✅ Server health check passed, attempting reconnection..."
+            );
             await wsClient.connect();
             return true;
           } else {
-            console.log('⚠️ Server health check failed, delaying retry...');
+            console.log("⚠️ Server health check failed, delaying retry...");
             return false;
           }
         } catch (e) {
-          console.error('❌ Health check failed:', e);
+          console.error("❌ Health check failed:", e);
           return false;
         }
       },
       priority: 4,
     });
 
-    console.log(`🛠️ Initialized ${this.recoveryStrategies.length} recovery strategies`);
+    console.log(
+      `🛠️ Initialized ${this.recoveryStrategies.length} recovery strategies`
+    );
   }
 
   /**
@@ -149,36 +153,36 @@ class WebSocketErrorHandler {
           code: 1006,
           message: `Connection failed: ${error}`,
           timestamp: Date.now(),
-          severity: 'high',
+          severity: "high",
           recoverable: true,
         });
         throw error;
       }
     };
 
-    console.log('🛠️ Error monitoring setup complete');
+    console.log("🛠️ Error monitoring setup complete");
   }
 
   /**
    * Handle WebSocket error with automatic recovery
    */
   async handleError(error: WebSocketError): Promise<void> {
-    console.error('🚨 WebSocket error:', error);
-    
+    console.error("🚨 WebSocket error:", error);
+
     // Add to error log
     this.errors.push(error);
-    
+
     // Keep only last 50 errors
     if (this.errors.length > 50) {
       this.errors.shift();
     }
 
     // Notify listeners
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(error);
       } catch (e) {
-        console.error('Error in error listener:', e);
+        console.error("Error in error listener:", e);
       }
     });
 
@@ -193,22 +197,24 @@ class WebSocketErrorHandler {
    */
   private async attemptRecovery(error: WebSocketError): Promise<boolean> {
     if (this.recoveryAttempts >= this.maxRecoveryAttempts) {
-      console.error('❌ Max recovery attempts reached, giving up');
+      console.error("❌ Max recovery attempts reached, giving up");
       return false;
     }
 
     this.isRecovering = true;
     this.recoveryAttempts++;
 
-    console.log(`🛠️ Attempting recovery (attempt ${this.recoveryAttempts}/${this.maxRecoveryAttempts})`);
+    console.log(
+      `🛠️ Attempting recovery (attempt ${this.recoveryAttempts}/${this.maxRecoveryAttempts})`
+    );
 
     // Sort strategies by priority
     const applicableStrategies = this.recoveryStrategies
-      .filter(strategy => strategy.condition(error))
+      .filter((strategy) => strategy.condition(error))
       .sort((a, b) => a.priority - b.priority);
 
     if (applicableStrategies.length === 0) {
-      console.warn('⚠️ No applicable recovery strategies found');
+      console.warn("⚠️ No applicable recovery strategies found");
       this.isRecovering = false;
       return false;
     }
@@ -216,37 +222,42 @@ class WebSocketErrorHandler {
     // Try each applicable strategy
     for (const strategy of applicableStrategies) {
       console.log(`🛠️ Trying recovery strategy: ${strategy.name}`);
-      
+
       try {
         const success = await strategy.action(error);
         if (success) {
-          console.log(`✅ Recovery successful using strategy: ${strategy.name}`);
+          console.log(
+            `✅ Recovery successful using strategy: ${strategy.name}`
+          );
           this.isRecovering = false;
           this.recoveryAttempts = 0;
-          
+
           // Notify listeners of recovery
-          this.listeners.forEach(listener => {
+          this.listeners.forEach((listener) => {
             try {
               // Use a recovery event type
               const recoveryEvent = {
                 ...error,
                 message: `Recovered using ${strategy.name}`,
-                severity: 'low' as const,
+                severity: "low" as const,
               };
               listener(recoveryEvent);
             } catch (e) {
-              console.error('Error in recovery listener:', e);
+              console.error("Error in recovery listener:", e);
             }
           });
-          
+
           return true;
         }
       } catch (strategyError) {
-        console.error(`❌ Recovery strategy ${strategy.name} failed:`, strategyError);
+        console.error(
+          `❌ Recovery strategy ${strategy.name} failed:`,
+          strategyError
+        );
       }
     }
 
-    console.error('❌ All recovery strategies failed');
+    console.error("❌ All recovery strategies failed");
     this.isRecovering = false;
     return false;
   }
@@ -264,7 +275,7 @@ class WebSocketErrorHandler {
    * Remove recovery strategy
    */
   removeRecoveryStrategy(name: string): boolean {
-    const index = this.recoveryStrategies.findIndex(s => s.name === name);
+    const index = this.recoveryStrategies.findIndex((s) => s.name === name);
     if (index !== -1) {
       this.recoveryStrategies.splice(index, 1);
       console.log(`🛠️ Removed recovery strategy: ${name}`);
@@ -286,7 +297,7 @@ class WebSocketErrorHandler {
    */
   setAutoRecovery(enabled: boolean): void {
     this.autoRecoveryEnabled = enabled;
-    console.log(`🛠️ Auto recovery ${enabled ? 'enabled' : 'disabled'}`);
+    console.log(`🛠️ Auto recovery ${enabled ? "enabled" : "disabled"}`);
   }
 
   /**
@@ -301,8 +312,12 @@ class WebSocketErrorHandler {
    */
   getErrorStats() {
     const now = Date.now();
-    const last24h = this.errors.filter(e => now - e.timestamp < 24 * 60 * 60 * 1000);
-    const lastHour = this.errors.filter(e => now - e.timestamp < 60 * 60 * 1000);
+    const last24h = this.errors.filter(
+      (e) => now - e.timestamp < 24 * 60 * 60 * 1000
+    );
+    const lastHour = this.errors.filter(
+      (e) => now - e.timestamp < 60 * 60 * 1000
+    );
 
     const severityCounts = this.errors.reduce((acc, error) => {
       acc[error.severity] = (acc[error.severity] || 0) + 1;
@@ -327,7 +342,7 @@ class WebSocketErrorHandler {
    */
   clearErrorHistory(): void {
     this.errors.length = 0;
-    console.log('🛠️ Error history cleared');
+    console.log("🛠️ Error history cleared");
   }
 
   /**
@@ -335,15 +350,15 @@ class WebSocketErrorHandler {
    */
   async forceRecovery(): Promise<boolean> {
     if (this.isRecovering) {
-      console.warn('⚠️ Recovery already in progress');
+      console.warn("⚠️ Recovery already in progress");
       return false;
     }
 
     const mockError: WebSocketError = {
       code: 1006,
-      message: 'Manual recovery triggered',
+      message: "Manual recovery triggered",
       timestamp: Date.now(),
-      severity: 'medium',
+      severity: "medium",
       recoverable: true,
     };
 
@@ -357,7 +372,7 @@ class WebSocketErrorHandler {
     this.isRecovering = false;
     this.recoveryAttempts = 0;
     this.errors.length = 0;
-    console.log('🛠️ Error handler reset');
+    console.log("🛠️ Error handler reset");
   }
 }
 
@@ -368,7 +383,7 @@ export const webSocketErrorHandler = new WebSocketErrorHandler();
 export const createWebSocketError = (
   code: number,
   message: string,
-  severity: WebSocketError['severity'] = 'medium',
+  severity: WebSocketError["severity"] = "medium",
   recoverable = true
 ): WebSocketError => ({
   code,

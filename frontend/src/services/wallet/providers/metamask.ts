@@ -1,8 +1,3 @@
-/**
- * MetaMask wallet provider implementation
- * Handles MetaMask-specific wallet operations
- */
-
 import {
   WalletProvider,
   WalletType,

@@ -1,12 +1,7 @@
-/**
- * Authentication Hooks
- * React hooks for Web3 authentication with TanStack Query
- */
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { authService } from "../../services/api/authService";
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { useSignMessage } from "wagmi";
 import { Buffer } from "buffer";
 import { useNearWallet } from "../wallet/useNearWallet";
@@ -151,12 +146,29 @@ export const useEthereumAuth = () => {
 
       // Check if token is actually saved after authentication
       const tokenAfterAuth = authService.getToken();
+      const allTokens = authService.getAllTokens();
       const isAuthAfterAuth = authService.isAuthenticated();
       console.log("🔍 Ethereum Auth: Post-auth token check", {
         tokenExists: !!tokenAfterAuth,
         isAuthenticated: isAuthAfterAuth,
         tokenLength: tokenAfterAuth?.length || 0,
+        evmToken: !!allTokens.evm,
+        nearToken: !!allTokens.near,
       });
+
+      // Force trigger auth status update
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("auth-token-changed", {
+            detail: {
+              token: allTokens.evm || tokenAfterAuth,
+              authenticated: true,
+              source: "ethereum-auth-completed",
+              walletType: "evm",
+            },
+          })
+        );
+      }, 100);
 
       // Invalidate queries for UI updates
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
@@ -221,23 +233,48 @@ export const useNearAuth = () => {
         chainType: "near",
       });
 
+      console.log("📝 NEAR Auth: Received nonce data:", {
+        nonce: nonceData.nonce,
+        nonceLength: nonceData.nonce?.length,
+        nonceType: typeof nonceData.nonce,
+        message: nonceData.message,
+        messageLength: nonceData.message?.length,
+      });
+
       // 2. Use message from backend nonce response
       const message = nonceData.message;
-      console.log("📝 NEAR Auth: Using message from nonce response for signing");
+      console.log(
+        "📝 NEAR Auth: Using message from nonce response for signing"
+      );
 
       // 3. Sign message using NEAR Wallet Selector
       console.log("🖊️ NEAR Auth: Requesting signature for message:", message);
 
       const wallet = await selector.wallet();
-      
+
       // NEAR wallet signing requires specific format
       const signRequest = {
         message: message,
         recipient: "kembridge.testnet",
-        nonce: Buffer.from(nonceData.nonce, 'hex'),
+        nonce: Buffer.from(nonceData.nonce, "hex"),
       };
-      
-      const signedMessage = await (wallet.signMessage as (request: typeof signRequest) => Promise<{accountId: string; publicKey: string; signature: string; state?: string} | void>)(signRequest);
+
+      console.log("🔍 NEAR Auth: Sign request details:", {
+        message: signRequest.message,
+        recipient: signRequest.recipient,
+        nonce: signRequest.nonce,
+        nonceBuffer: Array.from(signRequest.nonce), // Show as array for debugging
+        originalNonceHex: nonceData.nonce,
+      });
+
+      const signedMessage = await (
+        wallet.signMessage as (request: typeof signRequest) => Promise<{
+          accountId: string;
+          publicKey: string;
+          signature: string;
+          state?: string;
+        } | void>
+      )(signRequest);
 
       if (!signedMessage) {
         throw new Error("Failed to sign message with NEAR wallet");
@@ -246,15 +283,34 @@ export const useNearAuth = () => {
       console.log("✍️ NEAR Auth: Message signed successfully", {
         signature: signedMessage.signature,
         publicKey: signedMessage.publicKey,
+        accountId: signedMessage.accountId,
+        signatureLength: signedMessage.signature?.length,
+        signatureType: typeof signedMessage.signature,
       });
 
       // The signature is already a string from NEAR Wallet Selector
+      // For backend compatibility, add "0x" prefix to NEAR signatures
       const signatureBase64 = signedMessage.signature;
+      const formattedSignature = signatureBase64.startsWith("0x")
+        ? signatureBase64
+        : `0x${signatureBase64}`;
+
+      console.log("🔍 NEAR Auth: Preparing verification request:", {
+        walletAddress: accountId,
+        signature: formattedSignature,
+        originalSignature: signatureBase64,
+        signatureLength: formattedSignature?.length,
+        nonce: nonceData.nonce,
+        nonceLength: nonceData.nonce?.length,
+        chainType: "near",
+        message: message,
+        messageLength: message?.length,
+      });
 
       // 4. Verify signature on backend
       const authResult = await verifyWallet.mutateAsync({
         walletAddress: accountId,
-        signature: signatureBase64,
+        signature: formattedSignature,
         nonce: nonceData.nonce,
         chainType: "near",
         message,
@@ -264,12 +320,29 @@ export const useNearAuth = () => {
 
       // Check if token is actually saved after authentication
       const tokenAfterAuth = authService.getToken();
+      const allTokens = authService.getAllTokens();
       const isAuthAfterAuth = authService.isAuthenticated();
       console.log("🔍 NEAR Auth: Post-auth token check", {
         tokenExists: !!tokenAfterAuth,
         isAuthenticated: isAuthAfterAuth,
         tokenLength: tokenAfterAuth?.length || 0,
+        evmToken: !!allTokens.evm,
+        nearToken: !!allTokens.near,
       });
+
+      // Force trigger auth status update
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("auth-token-changed", {
+            detail: {
+              token: allTokens.near || tokenAfterAuth,
+              authenticated: true,
+              source: "near-auth-completed",
+              walletType: "near",
+            },
+          })
+        );
+      }, 100);
 
       // Invalidate queries for UI updates
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
@@ -305,14 +378,128 @@ export const useNearAuth = () => {
 export const useLogout = () => {
   const queryClient = useQueryClient();
 
+  // Hooks for wallet disconnection
+  const { disconnect: disconnectEVM } = useDisconnect();
+  const nearWallet = useNearWallet();
+
   return useMutation({
-    mutationFn: async () => {
-      await authService.logout();
+    mutationFn: async (walletType?: "evm" | "near" | "all") => {
+      if (walletType && walletType !== "all") {
+        // Clear specific wallet type
+        authService.clearTokenByType(walletType);
+
+        // Disconnect and clear data for specific wallet
+        if (walletType === "evm") {
+          // Disconnect EVM wallet (MetaMask)
+          try {
+            await disconnectEVM();
+            console.log("🔌 useLogout: Disconnected EVM wallet");
+          } catch (error) {
+            console.warn("⚠️ useLogout: EVM disconnect failed:", error);
+          }
+
+          // Clear EVM-specific localStorage items
+          try {
+            localStorage.removeItem("wagmi.store");
+            localStorage.removeItem("wagmi.wallet");
+            localStorage.removeItem("wagmi.cache");
+            console.log("🗑️ useLogout: Cleared EVM localStorage data");
+          } catch (error) {
+            console.warn(
+              "⚠️ useLogout: Failed to clear EVM localStorage:",
+              error
+            );
+          }
+        } else if (walletType === "near") {
+          // Disconnect NEAR wallet
+          try {
+            await nearWallet.signOut();
+            console.log("🔌 useLogout: Disconnected NEAR wallet");
+          } catch (error) {
+            console.warn("⚠️ useLogout: NEAR disconnect failed:", error);
+          }
+
+          // Clear NEAR-specific localStorage items
+          try {
+            localStorage.removeItem("near-wallet-selector");
+            localStorage.removeItem("near_app_wallet_auth_key");
+            localStorage.removeItem(
+              "nearWalletConnection_keypom-wallet_default"
+            );
+            console.log("🗑️ useLogout: Cleared NEAR localStorage data");
+          } catch (error) {
+            console.warn(
+              "⚠️ useLogout: Failed to clear NEAR localStorage:",
+              error
+            );
+          }
+        }
+
+        console.log(
+          `✅ useLogout: Logged out and disconnected ${walletType} wallet`
+        );
+      } else {
+        // Clear all tokens
+        await authService.logout();
+        authService.clearTokenByType("evm");
+        authService.clearTokenByType("near");
+
+        // Disconnect all wallets
+        try {
+          // Disconnect EVM wallet
+          await disconnectEVM();
+          console.log("🔌 useLogout: Disconnected EVM wallet");
+        } catch (error) {
+          console.warn("⚠️ useLogout: EVM disconnect failed:", error);
+        }
+
+        try {
+          // Disconnect NEAR wallet
+          await nearWallet.signOut();
+          console.log("🔌 useLogout: Disconnected NEAR wallet");
+        } catch (error) {
+          console.warn("⚠️ useLogout: NEAR disconnect failed:", error);
+        }
+
+        // Clear all wallet-related localStorage items
+        try {
+          localStorage.removeItem("kembridge_last_connected_wallet");
+          localStorage.removeItem("wagmi.store");
+          localStorage.removeItem("wagmi.wallet");
+          localStorage.removeItem("wagmi.cache");
+          localStorage.removeItem("near-wallet-selector");
+          localStorage.removeItem("near_app_wallet_auth_key");
+          localStorage.removeItem("nearWalletConnection_keypom-wallet_default");
+          console.log("🗑️ useLogout: Cleared all wallet localStorage data");
+        } catch (error) {
+          console.warn("⚠️ useLogout: Failed to clear localStorage:", error);
+        }
+
+        console.log("✅ useLogout: Logged out and disconnected all wallets");
+      }
     },
-    onSuccess: () => {
-      console.log("✅ useLogout: Logged out successfully");
-      // Clear all cache on logout
-      queryClient.clear();
+    onSuccess: (_, walletType) => {
+      console.log("✅ useLogout: Logout successful for:", walletType || "all");
+
+      // Trigger auth status update
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("auth-token-changed", {
+            detail: {
+              authenticated: false,
+              source: "logout-completed",
+              walletType: walletType || "all",
+            },
+          })
+        );
+      }, 50);
+
+      // Clear relevant cache on logout
+      if (!walletType || walletType === "all") {
+        queryClient.clear();
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      }
     },
     onError: (error) => {
       console.error("❌ useLogout: Logout failed:", error);
@@ -320,19 +507,21 @@ export const useLogout = () => {
   });
 };
 
-// Global state to prevent duplicate AuthStatus logs
-let lastLoggedAuthState: string | null = null;
-
 /**
- * Hook for checking authentication status
+ * Hook for checking authentication status for specific wallet types
  */
-export const useAuthStatus = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [token, setToken] = useState(authService.getToken());
+export const useWalletAuthStatus = () => {
+  const [evmToken, setEvmToken] = useState<string | null>(null);
+  const [nearToken, setNearToken] = useState<string | null>(null);
 
-  // Check both Wagmi and custom wallet connection states
-  const { isConnected: isWagmiConnected } = useAccount();
+  // Check wallet connection states
+  const { isConnected: isWagmiConnected, address: evmAddress } = useAccount();
+  const { isConnected: isNearConnected, accountId: nearAccountId } =
+    useNearWallet();
   const [isCustomWalletConnected, setIsCustomWalletConnected] = useState(false);
+
+  // Add debounce ref to prevent rapid updates
+  const debounceTimeoutRef = useRef<number | null>(null);
 
   // Check custom wallet connection state
   useEffect(() => {
@@ -348,49 +537,146 @@ export const useAuthStatus = () => {
     };
 
     checkCustomWallet();
-    const interval = setInterval(checkCustomWallet, 10000);
+    const interval = setInterval(checkCustomWallet, 30000); // Увеличили с 10сек до 30сек
     return () => clearInterval(interval);
   }, []);
 
   // Subscribe to token and wallet connection changes
   useEffect(() => {
     const checkAuth = () => {
-      const hasToken = authService.isAuthenticated();
-      const currentToken = authService.getToken();
-      const hasWalletConnection = isWagmiConnected || isCustomWalletConnected;
+      // Get tokens by wallet type from localStorage
+      const allTokens = authService.getAllTokens();
+      const currentEvmToken = allTokens.evm || null;
+      const currentNearToken = allTokens.near || null;
 
-      // User is authenticated only if they have BOTH token AND wallet connection
-      const currentAuth = hasToken && hasWalletConnection;
+      // Check wallet connections
+      const hasEvmConnection = isWagmiConnected && !!evmAddress;
+      const hasNearConnection = isNearConnected && !!nearAccountId;
+      const hasCustomConnection = isCustomWalletConnected;
 
-      // Only log significant changes and avoid duplicate logs across all hook instances
-      if (currentAuth !== isAuthenticated) {
-        const logMessage = `${currentAuth}-${hasToken}-${hasWalletConnection}`;
-        if (logMessage !== lastLoggedAuthState) {
-          console.log(
-            `🔐 AuthStatus: Authentication changed to: ${currentAuth}`
-          );
-          lastLoggedAuthState = logMessage;
-        }
-        setIsAuthenticated(currentAuth);
+      // EVM authentication: token + (wagmi connected OR custom wallet)
+      const isEvmAuthenticated =
+        !!currentEvmToken && (hasEvmConnection || hasCustomConnection);
+
+      // NEAR authentication: token + near connected
+      const isNearAuthenticated = !!currentNearToken && hasNearConnection;
+
+      // Only log auth state changes to reduce console spam
+      if (import.meta.env.DEV && 
+          (currentEvmToken !== evmToken || currentNearToken !== nearToken)) {
+        console.log("🔐 WalletAuthStatus: Multi-wallet auth state changed:", {
+          evmTokenChanged: currentEvmToken !== evmToken,
+          nearTokenChanged: currentNearToken !== nearToken,
+          isEvmAuthenticated,
+          isNearAuthenticated,
+        });
       }
 
-      if (currentToken !== token) {
-        setToken(currentToken);
+      // Update states only if changed
+      if (currentEvmToken !== evmToken) {
+        setEvmToken(currentEvmToken);
       }
+      if (currentNearToken !== nearToken) {
+        setNearToken(currentNearToken);
+      }
+    };
+
+    // Debounced version of checkAuth to prevent rapid updates
+    const debouncedCheckAuth = () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      debounceTimeoutRef.current = window.setTimeout(() => {
+        checkAuth();
+      }, 500); // Увеличили с 100ms до 500ms для снижения частоты вызовов
     };
 
     // Check immediately on mount
     checkAuth();
 
-    // Set interval for periodic checking (reduced frequency)
-    const interval = setInterval(checkAuth, 10000);
+    // Listen for localStorage changes (when auth token is saved)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.includes("kembridge")) {
+        console.log("🔄 WalletAuthStatus: Storage change detected:", {
+          key: e.key,
+          hasNewValue: !!e.newValue,
+        });
+        debouncedCheckAuth();
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, token, isWagmiConnected, isCustomWalletConnected]);
+    // Listen for custom auth events
+    const handleAuthEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      // Only log auth events in development and when there are actual changes
+      if (import.meta.env.DEV && detail?.source) {
+        console.log("🔄 WalletAuthStatus: Auth event:", detail.source);
+      }
+      debouncedCheckAuth();
+    };
+
+    // Add event listeners
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("auth-token-changed", handleAuthEvent);
+
+    // Set interval for periodic checking (reduced frequency as fallback)
+    const interval = setInterval(checkAuth, 60000); // Reduced from 30s to 60s to prevent spam
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-token-changed", handleAuthEvent);
+    };
+  }, [evmToken, nearToken, isWagmiConnected, evmAddress, isNearConnected, nearAccountId, isCustomWalletConnected]); // Include all used dependencies
+
+  // Memoized computed values to prevent unnecessary re-renders
+  const authStatus = useMemo(() => ({
+    // EVM wallet status
+    isEvmAuthenticated:
+      !!evmToken &&
+      ((isWagmiConnected && !!evmAddress) || isCustomWalletConnected),
+    evmAddress: evmAddress || null,
+    evmToken,
+    isEvmConnected:
+      (isWagmiConnected && !!evmAddress) || isCustomWalletConnected,
+
+    // NEAR wallet status
+    isNearAuthenticated: !!nearToken && isNearConnected && !!nearAccountId,
+    nearAddress: nearAccountId || null,
+    nearToken,
+    isNearConnected: isNearConnected && !!nearAccountId,
+
+    // Overall status
+    hasAnyAuth: !!evmToken || !!nearToken,
+    hasBothAuth: !!evmToken && !!nearToken,
+  }), [
+    evmToken,
+    nearToken,
+    isWagmiConnected,
+    evmAddress,
+    isNearConnected,
+    nearAccountId,
+    isCustomWalletConnected,
+  ]);
+
+  return authStatus;
+};
+
+/**
+ * Legacy hook for backwards compatibility
+ * @deprecated Use useWalletAuthStatus instead
+ */
+export const useAuthStatus = () => {
+  const { isEvmAuthenticated, isNearAuthenticated, evmToken, nearToken } =
+    useWalletAuthStatus();
 
   return {
-    isAuthenticated,
-    token,
+    isAuthenticated: isEvmAuthenticated || isNearAuthenticated,
+    token: evmToken || nearToken || null, // EVM token has priority
   };
 };
 

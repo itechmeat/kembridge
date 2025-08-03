@@ -40,6 +40,11 @@ uuid = { version = "1.17.0", features = ["v4", "serde"] }
 rand = "0.8"
 hex = "0.4"
 
+# Cryptography for CSRF tokens
+sha2 = "0.10"
+base64 = "0.22"
+lazy_static = "1.4"
+
 # Configuration
 config = "0.15.13"
 dotenvy = "0.15"

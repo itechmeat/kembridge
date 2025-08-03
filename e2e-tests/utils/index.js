@@ -11,6 +11,7 @@ export * from './test-base.js';
 export * from './api-helpers.js';
 export * from './wallet-helpers.js';
 export * from './element-helpers.js';
+export * from './mock-wallet-utility.js';
 
 // Page objects
 export { BridgePage } from '../page-objects/BridgePage.js';

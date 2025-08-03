@@ -1,8 +1,3 @@
-/**
- * NEAR wallet provider implementation using React Context
- * Based on official NEAR wallet-selector examples
- */
-
 import type { NearWalletContextType } from "../../../types/nearWallet";
 import {
   WalletProvider,

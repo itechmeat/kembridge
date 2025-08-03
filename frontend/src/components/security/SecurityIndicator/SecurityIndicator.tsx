@@ -1,17 +1,21 @@
-import React from 'react';
-import { SecurityIndicatorProps, SecurityLevel } from '../../../types';
-import './SecurityIndicator.scss';
+import { FC } from "react";
+import cn from "classnames";
+import { SecurityIndicatorProps, SecurityLevel } from "../../../types";
+import styles from "./SecurityIndicator.module.scss";
 
-export const SecurityIndicator: React.FC<SecurityIndicatorProps> = ({
+export const SecurityIndicator: FC<SecurityIndicatorProps> = ({
   quantumProtection,
   riskScore,
   isOnline,
   compact = false,
-  className = '',
+  className = "",
   quantumKeyId,
   encryptionScheme,
   lastKeyRotation,
   transactionCount,
+  wsConnected = false,
+  connectionQuality = "unknown",
+  wsErrors = [],
 }) => {
   // Determine security level based on quantum protection and risk score
   const getSecurityLevel = (): SecurityLevel => {
@@ -27,54 +31,110 @@ export const SecurityIndicator: React.FC<SecurityIndicatorProps> = ({
   const getStatusText = (): string => {
     switch (securityLevel) {
       case SecurityLevel.SECURE:
-        return quantumProtection ? 'Quantum Protected' : 'Protected';
+        return quantumProtection ? "Quantum Protected" : "Protected";
       case SecurityLevel.WARNING:
-        return 'Medium Risk';
+        return "Medium Risk";
       case SecurityLevel.DANGER:
-        return quantumProtection ? 'High Risk' : 'Quantum Offline';
+        return quantumProtection ? "High Risk" : "Quantum Offline";
       case SecurityLevel.OFFLINE:
-        return 'System Offline';
+        return "System Offline";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
   const getQuantumSchemeDisplay = (): string => {
-    if (!quantumProtection || !encryptionScheme) return 'Disabled';
+    if (!quantumProtection || !encryptionScheme) return "Disabled";
     return encryptionScheme;
   };
 
   const getKeyRotationStatus = (): string => {
-    if (!lastKeyRotation) return 'Never';
+    if (!lastKeyRotation) return "Never";
     const now = new Date();
     const rotation = new Date(lastKeyRotation);
-    const diffHours = Math.floor((now.getTime() - rotation.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Recent';
+    const diffHours = Math.floor(
+      (now.getTime() - rotation.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffHours < 1) return "Recent";
     if (diffHours < 24) return `${diffHours}h ago`;
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays}d ago`;
   };
 
   const formatTransactionCount = (): string => {
-    if (!transactionCount) return '0';
+    if (!transactionCount) return "0";
     if (transactionCount < 1000) return transactionCount.toString();
-    if (transactionCount < 1000000) return `${Math.floor(transactionCount / 1000)}K`;
+    if (transactionCount < 1000000)
+      return `${Math.floor(transactionCount / 1000)}K`;
     return `${Math.floor(transactionCount / 1000000)}M`;
+  };
+
+  const getQuantumKeyStrength = (): string => {
+    // Получаем силу ключа из encryptionScheme или используем дефолт
+    const keyStrength = encryptionScheme?.includes("1024")
+      ? 1024
+      : encryptionScheme?.includes("512")
+      ? 512
+      : 256;
+
+    // Конвертируем в процент надежности
+    const strengthPercent = Math.min(
+      Math.round((keyStrength / 1024) * 100),
+      100
+    );
+    return `${strengthPercent}%`;
+  };
+
+  const getSystemEfficiency = (): string => {
+    // Комбинируем факторы: онлайн статус, квантовая защита, низкий риск
+    let efficiency = 0;
+    if (isOnline) efficiency += 40;
+    if (quantumProtection) efficiency += 40;
+    if (riskScore < 0.3) efficiency += 20;
+
+    return `${Math.round(efficiency)}%`;
+  };
+
+  const getWebSocketStatus = (): string => {
+    if (!wsConnected) return "Disconnected";
+    switch (connectionQuality) {
+      case "excellent":
+        return "Stable";
+      case "good":
+        return "Connected";
+      case "poor":
+        return "Unstable";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getWebSocketHealthColor = (): string => {
+    if (!wsConnected) return "disabled";
+    switch (connectionQuality) {
+      case "excellent":
+      case "good":
+        return "enabled";
+      case "poor":
+        return "warning";
+      default:
+        return "disabled";
+    }
   };
 
   const getStatusIcon = (): string => {
     switch (securityLevel) {
       case SecurityLevel.SECURE:
-        return '🔒';
+        return "🔒";
       case SecurityLevel.WARNING:
-        return '⚠️';
+        return "⚠️";
       case SecurityLevel.DANGER:
-        return '🚨';
+        return "🚨";
       case SecurityLevel.OFFLINE:
-        return '📴';
+        return "📴";
       default:
-        return '❓';
+        return "❓";
     }
   };
 
@@ -84,71 +144,184 @@ export const SecurityIndicator: React.FC<SecurityIndicatorProps> = ({
 
   if (compact) {
     return (
-      <div className={`security-indicator security-indicator--compact security-indicator--${securityLevel} ${className}`} data-testid="security-indicator">
-        <span className="security-indicator__icon" data-testid="security-icon">{getStatusIcon()}</span>
-        <span className="security-indicator__score" data-testid="risk-score">{getRiskScoreDisplay()}</span>
+      <div
+        className={cn(
+          styles.securityIndicator,
+          styles.compact,
+          styles[securityLevel],
+          className
+        )}
+        data-testid="security-indicator"
+      >
+        <span className={styles.icon} data-testid="security-icon">
+          {getStatusIcon()}
+        </span>
+        <span className={styles.score} data-testid="risk-score">
+          {getRiskScoreDisplay()}
+        </span>
       </div>
     );
   }
 
-  const getSecurityClasses = (): string => {
-    const baseClasses = `security-indicator security-indicator--${securityLevel}`;
-    const quantumClass = quantumProtection ? 'quantum-protected' : '';
-    return `${baseClasses} ${quantumClass} ${className}`.trim();
-  };
-
   return (
-    <div className={getSecurityClasses()} data-testid="security-indicator">
-      <div className="security-indicator__header" data-testid="security-header">
-        <span className="security-indicator__icon" data-testid="security-icon">{getStatusIcon()}</span>
-        <span className="security-indicator__title">Security Status</span>
-      </div>
-      
-      <div className="security-indicator__content" data-testid="security-content">
-        <div className="security-indicator__status">
-          <span className="security-indicator__status-text" data-testid="security-level">{getStatusText()}</span>
-          <span className="security-indicator__connection" data-testid="connection-status">
-            {isOnline ? '🟢 Online' : '🔴 Offline'}
+    <div
+      className={cn(
+        styles.securityIndicator,
+        styles[securityLevel],
+        { [styles.quantumProtected]: quantumProtection },
+        className
+      )}
+      data-testid="security-indicator"
+    >
+      <div className={styles.content} data-testid="security-content">
+        <div className={styles.status}>
+          <span className={styles.statusText} data-testid="security-level">
+            {getStatusText()}
+          </span>
+          <span className={styles.connection} data-testid="connection-status">
+            {isOnline ? "🟢 Online" : "🔴 Offline"}
           </span>
         </div>
-        
-        <div className="security-indicator__details" data-testid="security-details">
-          <div className="security-indicator__detail">
-            <span className="security-indicator__detail-label">Quantum Protection:</span>
-            <span className={`security-indicator__detail-value ${quantumProtection ? 'enabled' : 'disabled'}`} data-testid="quantum-protection-status">
-              {getQuantumSchemeDisplay()}
+
+        <div className={styles.details} data-testid="security-details">
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>
+              AI Risk Score (from AI Engine):
+            </span>
+            <span
+              className={cn(
+                styles.detailValue,
+                styles[
+                  `riskScore${
+                    securityLevel.charAt(0).toUpperCase() +
+                    securityLevel.slice(1)
+                  }`
+                ]
+              )}
+              data-testid="risk-score"
+            >
+              {getRiskScoreDisplay()}
             </span>
           </div>
-          
-          <div className="security-indicator__detail">
-            <span className="security-indicator__detail-label">Risk Score:</span>
-            <span className={`security-indicator__detail-value risk-score--${securityLevel}`} data-testid="risk-score">
-              {getRiskScoreDisplay()}
+
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>Quantum Key Strength:</span>
+            <span
+              className={cn(styles.detailValue, {
+                [styles.enabled]: quantumProtection,
+                [styles.disabled]: !quantumProtection,
+              })}
+              data-testid="quantum-key-strength"
+            >
+              {quantumProtection ? getQuantumKeyStrength() : "N/A"}
+            </span>
+          </div>
+
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>System Efficiency:</span>
+            <span
+              className={cn(styles.detailValue, {
+                [styles.enabled]: isOnline && quantumProtection,
+                [styles.disabled]: !isOnline || !quantumProtection,
+              })}
+              data-testid="system-efficiency"
+            >
+              {getSystemEfficiency()}
+            </span>
+          </div>
+
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>
+              Quantum Protection (Backend):
+            </span>
+            <span
+              className={cn(styles.detailValue, {
+                [styles.enabled]: quantumProtection,
+                [styles.disabled]: !quantumProtection,
+              })}
+              data-testid="quantum-protection-status"
+            >
+              {getQuantumSchemeDisplay()}
             </span>
           </div>
 
           {quantumProtection && (
             <>
-              <div className="security-indicator__detail">
-                <span className="security-indicator__detail-label">Key ID:</span>
-                <span className="security-indicator__detail-value key-id" data-testid="quantum-key-id">
-                  {quantumKeyId ? `${quantumKeyId.slice(0, 8)}...` : 'N/A'}
+              <div className={styles.detail}>
+                <span className={styles.detailLabel}>
+                  Encryption Algorithm:
+                </span>
+                <span
+                  className={cn(styles.detailValue, styles.keyId)}
+                  data-testid="quantum-key-id"
+                >
+                  {quantumKeyId || "N/A"}
                 </span>
               </div>
-              
-              <div className="security-indicator__detail">
-                <span className="security-indicator__detail-label">Last Rotation:</span>
-                <span className="security-indicator__detail-value" data-testid="key-rotation-status">
+
+              <div className={styles.detail}>
+                <span className={styles.detailLabel}>
+                  Key Rotation (Security Service):
+                </span>
+                <span
+                  className={styles.detailValue}
+                  data-testid="key-rotation-status"
+                >
                   {getKeyRotationStatus()}
                 </span>
               </div>
-              
-              <div className="security-indicator__detail">
-                <span className="security-indicator__detail-label">Protected Txs:</span>
-                <span className="security-indicator__detail-value" data-testid="protected-count">
+
+              <div className={styles.detail}>
+                <span className={styles.detailLabel}>
+                  User Transactions (API):
+                </span>
+                <span
+                  className={styles.detailValue}
+                  data-testid="protected-count"
+                >
                   {formatTransactionCount()}
                 </span>
               </div>
+
+              <div className={styles.detail}>
+                <span className={styles.detailLabel}>
+                  WebSocket Connection:
+                </span>
+                <span
+                  className={cn(
+                    styles.detailValue,
+                    styles[getWebSocketHealthColor()]
+                  )}
+                  data-testid="websocket-status"
+                >
+                  {getWebSocketStatus()}
+                </span>
+              </div>
+
+              <div className={styles.detail}>
+                <span className={styles.detailLabel}>System Health:</span>
+                <span
+                  className={cn(styles.detailValue, {
+                    [styles.enabled]: isOnline,
+                    [styles.disabled]: !isOnline,
+                  })}
+                  data-testid="system-health"
+                >
+                  {isOnline ? "All Systems Operational" : "System Offline"}
+                </span>
+              </div>
+
+              {wsErrors.length > 0 && (
+                <div className={styles.detail}>
+                  <span className={styles.detailLabel}>Connection Issues:</span>
+                  <span
+                    className={cn(styles.detailValue, styles.disabled)}
+                    data-testid="websocket-errors"
+                  >
+                    {wsErrors.length} error{wsErrors.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>

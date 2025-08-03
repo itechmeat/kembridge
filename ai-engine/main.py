@@ -83,7 +83,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -180,6 +180,11 @@ async def health_check():
         "blacklist_loaded": True,
         "timestamp": datetime.now().isoformat()
     }
+
+@app.options("/health")
+async def health_options():
+    """OPTIONS endpoint for health check CORS preflight"""
+    return {"message": "OK"}
 
 # Dependency to get database connection
 async def get_db_connection():

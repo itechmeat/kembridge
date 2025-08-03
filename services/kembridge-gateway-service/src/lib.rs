@@ -40,7 +40,7 @@ pub mod handlers {
     use crate::circuit_breaker::CircuitBreaker;
     use crate::types::{ProxyRequest, ProxyResponse, ServiceStatus};
     use axum::{
-        extract::{Query, State},
+        extract::{Query, State, Path},
         Json,
     };
     use kembridge_common::ServiceResponse;
@@ -1013,6 +1013,749 @@ pub mod handlers {
                 "tested_type": error_type,
                 "recovery_available": true
             }))))
+        }
+    }
+
+    /// Analyze transaction risk via AI Engine
+    pub async fn analyze_transaction_risk(
+        State((circuit_breaker, _)): State<(
+            Arc<CircuitBreaker>,
+            crate::websocket::ConnectionManager,
+        )>,
+        Json(request): Json<TransactionRiskRequest>,
+    ) -> Result<Json<ServiceResponse<RiskAnalysisResponse>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🔍 Proxying transaction risk analysis to AI Engine");
+
+        // Check circuit breaker
+        if !circuit_breaker.is_request_allowed("ai-engine") {
+            tracing::warn!("Circuit breaker OPEN for AI Engine");
+            return Ok(Json(ServiceResponse::error(
+                "AI Engine temporarily unavailable".to_string(),
+            )));
+        }
+
+        // Make request to AI Engine
+        let client = reqwest::Client::new();
+        let ai_engine_url = std::env::var("AI_ENGINE_URL")
+            .unwrap_or_else(|_| "http://ai-engine:8001".to_string());
+
+        match client
+            .post(&format!("{}/api/risk/analyze", ai_engine_url))
+            .json(&serde_json::json!({
+                "from_address": request.from_address,
+                "to_address": request.to_address,
+                "amount": request.amount,
+                "token_symbol": request.token,
+                "chain": request.chain,
+                "user_id": request.user_id.unwrap_or_else(|| "current_user".to_string())
+            }))
+            .timeout(std::time::Duration::from_secs(30))
+            .send()
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<RiskAnalysisResponse>().await {
+                        Ok(risk_response) => {
+                            circuit_breaker.record_success("ai-engine");
+                            Ok(Json(ServiceResponse::success(risk_response)))
+                        }
+                        Err(e) => {
+                            circuit_breaker.record_failure("ai-engine");
+                            tracing::error!("Failed to parse AI Engine response: {}", e);
+                            Ok(Json(ServiceResponse::error(format!(
+                                "Invalid response from AI Engine: {}",
+                                e
+                            ))))
+                        }
+                    }
+                } else {
+                    circuit_breaker.record_failure("ai-engine");
+                    tracing::error!("AI Engine returned error: {}", response.status());
+                    Ok(Json(ServiceResponse::error(format!(
+                        "AI Engine error: {}",
+                        response.status()
+                    ))))
+                }
+            }
+            Err(e) => {
+                circuit_breaker.record_failure("ai-engine");
+                tracing::error!("AI Engine request failed: {}", e);
+                Ok(Json(ServiceResponse::error(format!(
+                    "Failed to connect to AI Engine: {}",
+                    e
+                ))))
+            }
+        }
+    }
+
+    /// Get current user risk profile
+    pub async fn get_current_user_risk_profile(
+        State((circuit_breaker, _)): State<(
+            Arc<CircuitBreaker>,
+            crate::websocket::ConnectionManager,
+        )>,
+        headers: HeaderMap,
+    ) -> Result<Json<ServiceResponse<UserRiskProfileResponse>>, crate::errors::GatewayServiceError> {
+        tracing::info!("📊 Getting current user risk profile");
+
+        // Extract user_id from JWT token
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .ok_or_else(|| crate::errors::GatewayServiceError::AuthenticationRequired)?;
+        
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+        let validation_result = crate::jwt_validation::validate_jwt_token(auth_header, &jwt_secret);
+        
+        if !validation_result.valid {
+            tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+            return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+        }
+        
+        let user_id = validation_result.user_id.unwrap_or_else(|| "unknown".to_string());
+        
+        // Proxy to AI Engine
+        get_user_risk_profile_impl(circuit_breaker, user_id).await
+    }
+
+    /// Get user risk profile by ID
+    pub async fn get_user_risk_profile_by_id(
+        State((circuit_breaker, _)): State<(
+            Arc<CircuitBreaker>,
+            crate::websocket::ConnectionManager,
+        )>,
+        Path(user_id): Path<String>,
+        headers: HeaderMap,
+    ) -> Result<Json<ServiceResponse<UserRiskProfileResponse>>, crate::errors::GatewayServiceError> {
+        tracing::info!("📊 Getting risk profile for user: {}", user_id);
+
+        // Validate JWT token (optional: check if user can access this profile)
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "));
+        
+        if let Some(token) = auth_header {
+            let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+            let validation_result = crate::jwt_validation::validate_jwt_token(token, &jwt_secret);
+            
+            if !validation_result.valid {
+                tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+                return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+            }
+        }
+        
+        // Proxy to AI Engine
+        get_user_risk_profile_impl(circuit_breaker, user_id).await
+    }
+
+    /// Common implementation for getting user risk profile
+    async fn get_user_risk_profile_impl(
+        circuit_breaker: Arc<CircuitBreaker>,
+        user_id: String,
+    ) -> Result<Json<ServiceResponse<UserRiskProfileResponse>>, crate::errors::GatewayServiceError> {
+        // Check circuit breaker
+        if !circuit_breaker.is_request_allowed("ai-engine") {
+            tracing::warn!("Circuit breaker OPEN for AI Engine");
+            return Ok(Json(ServiceResponse::error(
+                "AI Engine temporarily unavailable".to_string(),
+            )));
+        }
+
+        // Make request to AI Engine
+        let client = reqwest::Client::new();
+        let ai_engine_url = std::env::var("AI_ENGINE_URL")
+            .unwrap_or_else(|_| "http://ai-engine:8001".to_string());
+
+        match client
+            .get(&format!("{}/api/risk/profile/{}", ai_engine_url, user_id))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<UserRiskProfileResponse>().await {
+                        Ok(profile_response) => {
+                            circuit_breaker.record_success("ai-engine");
+                            Ok(Json(ServiceResponse::success(profile_response)))
+                        }
+                        Err(e) => {
+                            circuit_breaker.record_failure("ai-engine");
+                            tracing::error!("Failed to parse AI Engine response: {}", e);
+                            Ok(Json(ServiceResponse::error(format!(
+                                "Invalid response from AI Engine: {}",
+                                e
+                            ))))
+                        }
+                    }
+                } else {
+                    circuit_breaker.record_failure("ai-engine");
+                    tracing::error!("AI Engine returned error: {}", response.status());
+                    Ok(Json(ServiceResponse::error(format!(
+                        "AI Engine error: {}",
+                        response.status()
+                    ))))
+                }
+            }
+            Err(e) => {
+                circuit_breaker.record_failure("ai-engine");
+                tracing::error!("AI Engine request failed: {}", e);
+                Ok(Json(ServiceResponse::error(format!(
+                    "Failed to connect to AI Engine: {}",
+                    e
+                ))))
+            }
+        }
+    }
+
+    // User API endpoints for security tests
+
+    use axum::http::HeaderMap;
+    
+    #[derive(Debug, Serialize)]
+    pub struct UserProfile {
+        pub user_id: String,
+        pub wallet_address: String,
+        pub chain_type: String,
+        pub created_at: String,
+        pub last_login: String,
+        pub tier: String,
+    }
+    
+    #[derive(Debug, Serialize)]
+    pub struct UserTransaction {
+        pub id: String,
+        pub from_chain: String,
+        pub to_chain: String,
+        pub from_token: String,
+        pub to_token: String,
+        pub amount: String,
+        pub status: String,
+        pub created_at: String,
+        pub completed_at: Option<String>,
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct BridgeTransaction {
+        pub id: String,
+        pub quote_id: String,
+        pub status: String,
+        pub from_chain: String,
+        pub to_chain: String,
+        pub from_token: String,
+        pub to_token: String,
+        pub from_amount: String,
+        pub to_amount: String,
+        pub from_wallet_address: String,
+        pub to_wallet_address: String,
+        pub from_transaction_hash: Option<String>,
+        pub to_transaction_hash: Option<String>,
+        pub created_at: String,
+        pub updated_at: String,
+        pub estimated_completion_at: Option<String>,
+        pub actual_completion_at: Option<String>,
+        pub risk_analysis: Option<serde_json::Value>,
+        pub quantum_protection_used: bool,
+    }
+    
+    #[derive(Debug, Serialize)]
+    pub struct UserBalance {
+        pub chain: String,
+        pub token: String,
+        pub balance: String,
+        pub usd_value: f64,
+    }
+
+    // Risk Analysis Types
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct TransactionRiskRequest {
+        pub from_address: String,
+        pub to_address: String,
+        pub amount: f64,
+        pub token: String,
+        pub chain: String,
+        pub user_id: Option<String>,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct RiskScore {
+        pub value: f64,
+        pub level: String,
+        pub confidence: f64,
+        pub timestamp: String,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct RiskAnalysisResponse {
+        pub risk_score: f64,
+        pub risk_level: String,
+        pub reasons: Vec<String>,
+        pub approved: bool,
+        pub ml_confidence: Option<f64>,
+        pub is_anomaly: Option<bool>,
+        pub recommended_action: String,
+        pub analysis_timestamp: String,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct UserRiskProfileResponse {
+        pub user_id: String,
+        pub overall_risk_level: String,
+        pub transaction_count: i32,
+        pub avg_risk_score: f64,
+        pub high_risk_transactions: i32,
+        pub last_analysis_date: String,
+    }
+    
+    #[derive(Debug, Deserialize)]
+    pub struct BridgeInitiateRequest {
+        pub from_chain: String,
+        pub to_chain: String,
+        pub from_token: String,
+        pub to_token: String,
+        pub amount: String,
+        pub recipient_address: String,
+    }
+    
+    /// Get user profile - requires JWT authentication
+    pub async fn get_user_profile(
+        headers: HeaderMap,
+    ) -> Result<Json<ServiceResponse<UserProfile>>, crate::errors::GatewayServiceError> {
+        tracing::info!("👤 Getting user profile");
+        
+        // Extract JWT token from Authorization header
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .ok_or_else(|| crate::errors::GatewayServiceError::AuthenticationRequired)?;
+        
+        // Validate JWT token
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+        let validation_result = crate::jwt_validation::validate_jwt_token(auth_header, &jwt_secret);
+        
+        if !validation_result.valid {
+            tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+            return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+        }
+        
+        let user_id = validation_result.user_id.unwrap_or_else(|| "unknown".to_string());
+        let wallet_address = validation_result.wallet_address.unwrap_or_else(|| "unknown".to_string());
+        
+        let profile = UserProfile {
+            user_id,
+            wallet_address,
+            chain_type: "ethereum".to_string(),
+            created_at: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+            last_login: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+            tier: "standard".to_string(),
+        };
+        
+        Ok(Json(ServiceResponse::success(profile)))
+    }
+    
+    /// Get user transactions - requires JWT authentication
+    pub async fn get_user_transactions(
+        headers: HeaderMap,
+    ) -> Result<Json<ServiceResponse<Vec<UserTransaction>>>, crate::errors::GatewayServiceError> {
+        tracing::info!("📜 Getting user transactions");
+        
+        // Extract JWT token from Authorization header
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .ok_or_else(|| crate::errors::GatewayServiceError::AuthenticationRequired)?;
+        
+        // Validate JWT token
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+        let validation_result = crate::jwt_validation::validate_jwt_token(auth_header, &jwt_secret);
+        
+        if !validation_result.valid {
+            tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+            return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+        }
+        
+        // Mock transactions data
+        let transactions = vec![
+            UserTransaction {
+                id: "tx_1".to_string(),
+                from_chain: "ethereum".to_string(),
+                to_chain: "near".to_string(),
+                from_token: "ETH".to_string(),
+                to_token: "NEAR".to_string(),
+                amount: "0.1".to_string(),
+                status: "completed".to_string(),
+                created_at: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+                completed_at: Some(chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string()),
+            }
+        ];
+        
+        Ok(Json(ServiceResponse::success(transactions)))
+    }
+    
+    /// Get user balance - requires JWT authentication
+    pub async fn get_user_balance(
+        headers: HeaderMap,
+    ) -> Result<Json<ServiceResponse<Vec<UserBalance>>>, crate::errors::GatewayServiceError> {
+        tracing::info!("💰 Getting user balance");
+        
+        // Extract JWT token from Authorization header
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .ok_or_else(|| crate::errors::GatewayServiceError::AuthenticationRequired)?;
+        
+        // Validate JWT token
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+        let validation_result = crate::jwt_validation::validate_jwt_token(auth_header, &jwt_secret);
+        
+        if !validation_result.valid {
+            tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+            return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+        }
+        
+        // Mock balance data
+        let balances = vec![
+            UserBalance {
+                chain: "ethereum".to_string(),
+                token: "ETH".to_string(),
+                balance: "1.5".to_string(),
+                usd_value: 3750.0,
+            },
+            UserBalance {
+                chain: "near".to_string(),
+                token: "NEAR".to_string(),
+                balance: "50.0".to_string(),
+                usd_value: 175.0,
+            },
+        ];
+        
+        Ok(Json(ServiceResponse::success(balances)))
+    }
+    
+    /// Initiate bridge transaction - requires JWT authentication
+    pub async fn initiate_bridge(
+        headers: HeaderMap,
+        Json(payload): Json<BridgeInitiateRequest>,
+    ) -> Result<Json<ServiceResponse<serde_json::Value>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🌉 Initiating bridge transaction");
+        
+        // Extract JWT token from Authorization header
+        let auth_header = headers.get("authorization")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .ok_or_else(|| crate::errors::GatewayServiceError::AuthenticationRequired)?;
+        
+        // Validate JWT token
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret".to_string());
+        let validation_result = crate::jwt_validation::validate_jwt_token(auth_header, &jwt_secret);
+        
+        if !validation_result.valid {
+            tracing::warn!("❌ Invalid JWT token: {:?}", validation_result.errors);
+            return Err(crate::errors::GatewayServiceError::AuthenticationRequired);
+        }
+        
+        // Validate bridge request
+        if payload.amount.parse::<f64>().unwrap_or(0.0) <= 0.0 {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "Amount must be greater than 0".to_string()
+            ));
+        }
+        
+        // Generate quantum signature
+        let quantum_signature = {
+            use base64::{Engine as _, engine::general_purpose};
+            general_purpose::STANDARD.encode({
+                let mut bytes = [0u8; 128];
+                for i in 0..128 {
+                    bytes[i] = rand::random::<u8>();
+                }
+                bytes
+            })
+        };
+        
+        let response = serde_json::json!({
+            "transaction_id": format!("bridge_{}", uuid::Uuid::new_v4()),
+            "status": "initiated",
+            "from_chain": payload.from_chain,
+            "to_chain": payload.to_chain,
+            "from_token": payload.from_token,
+            "to_token": payload.to_token,
+            "amount": payload.amount,
+            "recipient_address": payload.recipient_address,
+            "estimated_completion": (chrono::Utc::now() + chrono::Duration::minutes(15)).format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+            "quantum_signature": quantum_signature
+        });
+        
+        Ok(Json(ServiceResponse::success(response)))
+    }
+    
+    /// Get bridge status endpoint
+    pub async fn get_bridge_status(
+    ) -> Result<Json<ServiceResponse<serde_json::Value>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🌉 Getting bridge status");
+        
+        let status = serde_json::json!({
+            "status": "operational",
+            "supported_chains": ["ethereum", "near"],
+            "supported_tokens": ["ETH", "NEAR", "USDC", "USDT"],
+            "last_update": chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string()
+        });
+        
+        Ok(Json(ServiceResponse::success(status)))
+    }
+
+    /// Get bridge transaction status by ID
+    pub async fn get_bridge_transaction_status(
+        Path(transaction_id): Path<String>,
+    ) -> Result<Json<ServiceResponse<BridgeTransaction>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🔍 Getting bridge transaction status for ID: {}", transaction_id);
+        
+        // Mock transaction data with realistic progression
+        let (status, from_hash, to_hash) = match transaction_id.as_str() {
+            id if id.starts_with("tx_") => {
+                // Simple ID format - use character count logic
+                let hash_base = &id[3..]; // Remove "tx_" prefix
+                
+                if hash_base.len() % 3 == 0 {
+                    // Completed transaction
+                    ("completed", 
+                     Some(format!("0x{}64f92a8b3c1e{}", hash_base, "a".repeat(32))),
+                     Some(format!("{}::completed_tx{}", hash_base, "b".repeat(32))))
+                } else if hash_base.len() % 3 == 1 {
+                    // Confirmed on source chain only
+                    ("confirmed",
+                     Some(format!("0x{}64f92a8b3c1e{}", hash_base, "c".repeat(32))),
+                     None)
+                } else {
+                    // Still pending
+                    ("pending", None, None)
+                }
+            },
+            id if id.starts_with("swap_") => {
+                // UUID format - use hash of UUID for deterministic status
+                use std::collections::hash_map::DefaultHasher;
+                use std::hash::{Hash, Hasher};
+                
+                let mut hasher = DefaultHasher::new();
+                id.hash(&mut hasher);
+                let hash_value = hasher.finish();
+                
+                match hash_value % 3 {
+                    0 => {
+                        // Completed transaction  
+                        let short_id = &id[5..13]; // Take 8 chars after "swap_"
+                        ("completed",
+                         Some(format!("0x{}64f92a8b3c1e{}", short_id, "a".repeat(24))),
+                         Some(format!("{}::completed_tx{}", short_id, "b".repeat(24))))
+                    },
+                    1 => {
+                        // Confirmed on source chain only
+                        let short_id = &id[5..13]; // Take 8 chars after "swap_"
+                        ("confirmed",
+                         Some(format!("0x{}64f92a8b3c1e{}", short_id, "c".repeat(24))),
+                         None)
+                    },
+                    _ => {
+                        // Still pending
+                        ("pending", None, None)
+                    }
+                }
+            },
+            _ => ("pending", None, None)
+        };
+
+        let transaction = BridgeTransaction {
+            id: transaction_id.clone(),
+            quote_id: format!("quote_{}", transaction_id),
+            status: status.to_string(),
+            from_chain: "ethereum".to_string(),
+            to_chain: "near".to_string(),
+            from_token: "ETH".to_string(),
+            to_token: "NEAR".to_string(),
+            from_amount: "1000000000000000000".to_string(), // 1 ETH in wei
+            to_amount: "5000000000000000000000000".to_string(), // 5 NEAR
+            from_wallet_address: "0x742d35Cc6634C0532925a3b8D847B3aA27f4d50f".to_string(),
+            to_wallet_address: "test.near".to_string(),
+            from_transaction_hash: from_hash,
+            to_transaction_hash: to_hash,
+            created_at: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+            updated_at: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+            estimated_completion_at: Some((chrono::Utc::now() + chrono::Duration::minutes(10)).format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string()),
+            actual_completion_at: if status == "completed" {
+                Some(chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string())
+            } else {
+                None
+            },
+            risk_analysis: Some(serde_json::json!({
+                "score": 0.15,
+                "level": "low",
+                "flags": []
+            })),
+            quantum_protection_used: true,
+        };
+        
+        Ok(Json(ServiceResponse::success(transaction)))
+    }
+    
+    /// Get CSRF token endpoint
+    pub async fn get_csrf_token(
+    ) -> Result<Json<ServiceResponse<serde_json::Value>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🛡️ Generating CSRF token");
+        
+        let token = crate::middleware::generate_csrf_token();
+        crate::middleware::store_csrf_token(token.clone());
+        
+        let response = serde_json::json!({
+            "csrf_token": token,
+            "expires_in": 3600, // 1 hour in seconds
+            "usage": "single_use",
+            "header_name": "x-csrf-token"
+        });
+        
+        Ok(Json(ServiceResponse::success(response)))
+    }
+
+    // ===== Bridge Swap =====
+
+    #[derive(Debug, serde::Deserialize)]
+    pub struct BridgeSwapRequest {
+        pub quote_id: String,
+        pub from_wallet_address: String,
+        pub to_wallet_address: Option<String>,
+        pub max_slippage: f64,
+    }
+
+    #[derive(Debug, serde::Serialize)]
+    pub struct BridgeSwapResponse {
+        pub swap_id: String,
+        pub status: String,
+        pub tx_preview: serde_json::Value,
+        pub expires_at: String,
+    }
+
+    /// Real swap handler connecting to 1inch service.
+    /// CSRF проверяется middleware, CORS уже настроен.
+    pub async fn handle_bridge_swap(
+        State((circuit_breaker, _)): State<(
+            Arc<CircuitBreaker>,
+            crate::websocket::ConnectionManager,
+        )>,
+        _headers: HeaderMap,
+        Json(payload): Json<BridgeSwapRequest>,
+    ) -> Result<Json<ServiceResponse<BridgeSwapResponse>>, crate::errors::GatewayServiceError> {
+        tracing::info!("🌉 Real bridge swap request via 1inch service");
+
+        // Validate payload
+        if payload.quote_id.trim().is_empty() {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "quote_id is required".to_string(),
+            ));
+        }
+        if payload.from_wallet_address.trim().is_empty() {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "from_wallet_address is required".to_string(),
+            ));
+        }
+        if !(0.0..=5.0).contains(&payload.max_slippage) {
+            return Err(crate::errors::GatewayServiceError::ValidationError(
+                "max_slippage must be between 0.0 and 5.0".to_string(),
+            ));
+        }
+
+        // Check circuit breaker for 1inch service
+        if !circuit_breaker.is_request_allowed("1inch-service") {
+            tracing::warn!("Circuit breaker OPEN for 1inch-service");
+            return Ok(Json(ServiceResponse::error(
+                "1inch service temporarily unavailable".to_string(),
+            )));
+        }
+
+        // Proxy to real 1inch service
+        let client = reqwest::Client::new();
+        let oneinch_service_url = std::env::var("ONEINCH_SERVICE_URL")
+            .unwrap_or_else(|_| "http://1inch-service:4001".to_string());
+
+        // Convert gateway request to 1inch service format
+        let recipient_address = payload.to_wallet_address.clone().unwrap_or_else(|| payload.from_wallet_address.clone());
+        let oneinch_request = serde_json::json!({
+            "quote_id": payload.quote_id,
+            "user_address": payload.from_wallet_address,
+            "recipient_address": recipient_address,
+            "slippage": payload.max_slippage,
+        });
+
+        match client
+            .post(&format!("{}/api/swaps/execute", oneinch_service_url))
+            .json(&oneinch_request)
+            .timeout(std::time::Duration::from_secs(30))
+            .send()
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<ServiceResponse<serde_json::Value>>().await {
+                        Ok(oneinch_response) => {
+                            circuit_breaker.record_success("1inch-service");
+
+                            if let Some(data) = oneinch_response.data {
+                                // Transform 1inch response to gateway format
+                                let swap_id = format!("swap_{}", uuid::Uuid::new_v4());
+                                
+                                let tx_preview = serde_json::json!({
+                                    "quote_id": payload.quote_id,
+                                    "from": payload.from_wallet_address,
+                                    "to": recipient_address,
+                                    "max_slippage": payload.max_slippage,
+                                    "network_fee_estimate": data.get("actual_gas_fee").unwrap_or(&serde_json::Value::String("0.0042".to_string())),
+                                    "bridge_fee_estimate": "0.0010",
+                                    "protocol": "1inch-fusion",
+                                    "transaction_hash": data.get("transaction_hash"),
+                                    "order_hash": data.get("order_hash"),
+                                });
+
+                                let resp = BridgeSwapResponse {
+                                    swap_id,
+                                    status: data.get("status").and_then(|s| s.as_str()).unwrap_or("initiated").to_string(),
+                                    tx_preview,
+                                    expires_at: (chrono::Utc::now() + chrono::Duration::minutes(10)).to_rfc3339(),
+                                };
+
+                                tracing::info!("✅ Real 1inch swap executed: {}", resp.swap_id);
+                                Ok(Json(ServiceResponse::success(resp)))
+                            } else {
+                                circuit_breaker.record_failure("1inch-service");
+                                Ok(Json(ServiceResponse::error(
+                                    "No data received from 1inch service".to_string(),
+                                )))
+                            }
+                        }
+                        Err(e) => {
+                            circuit_breaker.record_failure("1inch-service");
+                            tracing::error!("Failed to parse 1inch service response: {}", e);
+                            Ok(Json(ServiceResponse::error(format!(
+                                "Invalid response from 1inch service: {}",
+                                e
+                            ))))
+                        }
+                    }
+                } else {
+                    circuit_breaker.record_failure("1inch-service");
+                    tracing::error!("1inch service returned error: {}", response.status());
+                    Ok(Json(ServiceResponse::error(format!(
+                        "1inch service error: {}",
+                        response.status()
+                    ))))
+                }
+            }
+            Err(e) => {
+                circuit_breaker.record_failure("1inch-service");
+                tracing::error!("Failed to connect to 1inch service: {}", e);
+                Ok(Json(ServiceResponse::error(format!(
+                    "Failed to connect to 1inch service: {}",
+                    e
+                ))))
+            }
         }
     }
 }

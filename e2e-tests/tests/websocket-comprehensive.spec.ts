@@ -5,7 +5,7 @@
 
 import { test, expect } from '@playwright/test';
 import { WebSocketTestUtils } from '../utils/websocket-utils';
-import { TEST_URLS } from '../utils/test-constants';
+import { getWebSocketUrl, getBackendUrl, getFrontendUrl } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Comprehensive Tests', () => {
   let wsUtils: WebSocketTestUtils;
@@ -17,7 +17,7 @@ test.describe('WebSocket Comprehensive Tests', () => {
 
   test.describe('Connection Establishment', () => {
     test('should establish WebSocket connection to /ws endpoint', async ({ page }) => {
-      const connectionResult = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY);
+      const connectionResult = await wsUtils.testConnection(getWebSocketUrl('gateway'));
       
       expect(connectionResult.connected).toBe(true);
       expect(connectionResult.connectionTime).toBeLessThan(5000);
@@ -27,7 +27,7 @@ test.describe('WebSocket Comprehensive Tests', () => {
     });
 
     test('should handle connection timeout gracefully', async ({ page }) => {
-      const connectionResult = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.NON_EXISTENT, 2000);
+      const connectionResult = await wsUtils.testConnection(getWebSocketUrl('nonExistent'), 2000);
       
       expect(connectionResult.connected).toBe(false);
       expect(connectionResult.errors.length).toBeGreaterThan(0);
@@ -37,9 +37,9 @@ test.describe('WebSocket Comprehensive Tests', () => {
 
     test('should validate WebSocket URL format', async ({ page }) => {
       const invalidUrls = [
-        TEST_URLS.BACKEND.GATEWAY + '/ws', // Wrong protocol
+        getBackendUrl('gateway') + '/ws', // Wrong protocol
         'ws://invalid-host:4000/ws',     // Invalid host
-        TEST_URLS.BACKEND.GATEWAY + '/invalid' // Invalid endpoint
+        getBackendUrl('gateway') + '/invalid' // Invalid endpoint
       ];
 
       for (const url of invalidUrls) {
@@ -323,7 +323,7 @@ test.describe('WebSocket Comprehensive Tests', () => {
   test.describe('Cross-tab Event Synchronization', () => {
     test('should synchronize events across multiple tabs', async ({ page, context }) => {
       const secondPage = await context.newPage();
-      await secondPage.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`);
+      await secondPage.goto(`${getFrontendUrl('localDev')}/bridge`);
       
       const syncResult = await wsUtils.testCrossTabSync(page, secondPage);
       

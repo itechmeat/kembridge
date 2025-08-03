@@ -1,16 +1,12 @@
-/**
- * Wallet Page Component
- * Main page for wallet connection and management
- */
-
-import React, { useCallback } from "react";
+import { FC, useCallback, memo } from "react";
 import { useWallet } from "../../hooks/wallet/useWallet";
 import { useAuthStatus, useLogout } from "../../hooks/api/useAuth";
 import { useUserInfo } from "../../hooks/api/useUser";
 import { AuthManager } from "../../components/auth/AuthManager/AuthManager";
-import "./WalletPage.scss";
+import classNames from "classnames";
+import styles from "./WalletPage.module.scss";
 
-export const WalletPage: React.FC = React.memo(() => {
+export const WalletPage: FC = memo(() => {
   console.log("🏗️ WalletPage: Component rendering");
 
   // Wallet connection status (MetaMask/NEAR)
@@ -22,7 +18,6 @@ export const WalletPage: React.FC = React.memo(() => {
   const { profile, isLoading: isProfileLoading } = useUserInfo();
   const logout = useLogout();
 
-
   console.log("📊 WalletPage: State:", {
     isWalletConnected,
     isAuthenticated,
@@ -33,7 +28,7 @@ export const WalletPage: React.FC = React.memo(() => {
   // Memoized logout handler to prevent re-renders
   const handleLogout = useCallback(async () => {
     try {
-      await logout.mutateAsync();
+      await logout.mutateAsync("all");
       console.log("✅ WalletPage: Logout successful");
     } catch (error) {
       console.error("❌ WalletPage: Logout failed:", error);
@@ -53,17 +48,17 @@ export const WalletPage: React.FC = React.memo(() => {
   // If wallet is not connected or not authenticated
   if (!isWalletConnected || !isAuthenticated) {
     return (
-      <div className="wallet-page wallet-page--onboarding">
-        <div className="wallet-page__container">
-          <div className="onboarding">
-            <div className="onboarding__icon">🔗</div>
-            <h1 className="onboarding__title">Welcome to KEMBridge</h1>
-            <p className="onboarding__description">
+      <div className={classNames(styles.walletPage, styles.onboarding)}>
+        <div className={styles.container}>
+          <div className={styles.onboardingContent}>
+            <div className={styles.onboardingIcon}>🔗</div>
+            <h1 className={styles.onboardingTitle}>Welcome to KEMBridge</h1>
+            <p className={styles.onboardingDescription}>
               Quantum-secured cross-chain bridge for safe asset transfers
             </p>
 
             {/* Authentication Section */}
-            <div className="onboarding__auth">
+            <div className={styles.onboardingAuth}>
               <AuthManager
                 onAuthSuccess={handleAuthSuccess}
                 onAuthError={handleAuthError}
@@ -71,30 +66,28 @@ export const WalletPage: React.FC = React.memo(() => {
             </div>
 
             {/* Connection Status */}
-            <div className="onboarding__status">
-              <div className="status-indicators">
+            <div className={styles.onboardingStatus}>
+              <div className={styles.statusIndicators}>
                 <div
-                  className={`status-indicator ${
-                    isWalletConnected
-                      ? "status-indicator--connected"
-                      : "status-indicator--disconnected"
-                  }`}
+                  className={classNames(styles.statusIndicator, {
+                    [styles.connected]: isWalletConnected,
+                    [styles.disconnected]: !isWalletConnected,
+                  })}
                 >
-                  <div className="status-indicator__dot" />
-                  <span className="status-indicator__text">
+                  <div className={styles.statusDot} />
+                  <span className={styles.statusText}>
                     Wallet {isWalletConnected ? "Connected" : "Disconnected"}
                   </span>
                 </div>
 
                 <div
-                  className={`status-indicator ${
-                    isAuthenticated
-                      ? "status-indicator--connected"
-                      : "status-indicator--disconnected"
-                  }`}
+                  className={classNames(styles.statusIndicator, {
+                    [styles.connected]: isAuthenticated,
+                    [styles.disconnected]: !isAuthenticated,
+                  })}
                 >
-                  <div className="status-indicator__dot" />
-                  <span className="status-indicator__text">
+                  <div className={styles.statusDot} />
+                  <span className={styles.statusText}>
                     Backend{" "}
                     {isAuthenticated ? "Authenticated" : "Not Authenticated"}
                   </span>
@@ -110,10 +103,10 @@ export const WalletPage: React.FC = React.memo(() => {
   // Show loading if profile is loading
   if (isProfileLoading) {
     return (
-      <div className="wallet-page wallet-page--loading">
-        <div className="wallet-page__container">
-          <div className="loading-message">
-            <div className="loading-spinner">⏳</div>
+      <div className={classNames(styles.walletPage, styles.loading)}>
+        <div className={styles.container}>
+          <div className={styles.loadingMessage}>
+            <div className={styles.loadingSpinner}>⏳</div>
             <span>Loading user profile...</span>
           </div>
         </div>
@@ -122,23 +115,29 @@ export const WalletPage: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="wallet-page">
-      <div className="wallet-page__container">
+    <div className={styles.walletPage}>
+      <div className={styles.container}>
         {/* User Profile Header */}
         {profile && (
-          <div className="user-profile-header">
-            <div className="user-profile-header__main">
-              <div className="user-profile-header__info">
-                <h2 className="user-profile-header__title">
-                  Welcome! 👋
-                </h2>
-                <div className="user-profile-header__details">
-                  <span className={`user-tier user-tier--${profile.tier}`}>
+          <div className={styles.userProfileHeader}>
+            <div className={styles.userProfileMain}>
+              <div className={styles.userProfileInfo}>
+                <h2 className={styles.userProfileTitle}>Welcome! 👋</h2>
+                <div className={styles.userProfileDetails}>
+                  <span
+                    className={classNames(
+                      styles.userTier,
+                      styles[profile.tier]
+                    )}
+                  >
                     {profile.tier.toUpperCase()}
                   </span>
                   {profile.risk_profile && (
                     <span
-                      className={`risk-level risk-level--${profile.risk_profile.level}`}
+                      className={classNames(
+                        styles.riskLevel,
+                        styles[profile.risk_profile.level]
+                      )}
                     >
                       Risk: {profile.risk_profile.level.toUpperCase()}
                     </span>
@@ -146,13 +145,13 @@ export const WalletPage: React.FC = React.memo(() => {
                 </div>
               </div>
 
-              <div className="user-profile-header__wallets">
+              <div className={styles.userProfileWallets}>
                 {profile.wallet_addresses.slice(0, 2).map((address) => (
-                  <div key={address} className="wallet-chip">
-                    <span className="wallet-chip__icon">
+                  <div key={address} className={styles.walletChip}>
+                    <span className={styles.walletChipIcon}>
                       {address.startsWith("0x") ? "🦊" : "🔷"}
                     </span>
-                    <span className="wallet-chip__address">
+                    <span className={styles.walletChipAddress}>
                       {address.slice(0, 6)}...{address.slice(-4)}
                     </span>
                   </div>
@@ -163,57 +162,62 @@ export const WalletPage: React.FC = React.memo(() => {
         )}
 
         {/* Wallet Dashboard */}
-        <div className="wallet-dashboard">
-          <h2 className="wallet-dashboard__title">Dashboard</h2>
-          <p className="wallet-dashboard__description">
+        <div className={styles.walletDashboard}>
+          <h2 className={styles.walletDashboardTitle}>Dashboard</h2>
+          <p className={styles.walletDashboardDescription}>
             Manage your assets through quantum-secured bridge
           </p>
         </div>
 
         {/* Quick Actions */}
-        <div className="quick-actions">
-          <h2 className="quick-actions__title">Quick Actions</h2>
-          <div className="quick-actions__grid">
+        <div className={styles.quickActions}>
+          <h2 className={styles.quickActionsTitle}>Quick Actions</h2>
+          <div className={styles.quickActionsGrid}>
             <button
-              className="quick-action-btn"
+              className={styles.quickActionBtn}
               onClick={() => {
                 // TODO: Navigate to swap page
                 console.log("🔄 Navigate to swap page");
               }}
+              data-testid="quick-action-swap"
             >
               🔄 Swap
             </button>
             <button
-              className="quick-action-btn"
+              className={styles.quickActionBtn}
               onClick={() => {
                 // TODO: Navigate to history page
                 console.log("📋 Navigate to history page");
               }}
+              data-testid="bottom-nav-history"
             >
               📋 History
             </button>
             <button
-              className="quick-action-btn"
+              className={styles.quickActionBtn}
               onClick={() => {
                 // TODO: Navigate to settings page
                 console.log("⚙️ Navigate to settings page");
               }}
+              data-testid="bottom-nav-settings"
             >
               ⚙️ Settings
             </button>
             <button
-              className="quick-action-btn"
+              className={styles.quickActionBtn}
               onClick={() => {
                 // TODO: Show security modal
                 console.log("🔐 Show security modal");
               }}
+              data-testid="bottom-nav-wallet"
             >
               🔐 Security
             </button>
             <button
-              className="quick-action-btn quick-action-btn--danger"
+              className={classNames(styles.quickActionBtn, styles.danger)}
               onClick={handleLogout}
               disabled={logout.isPending}
+              data-testid="disconnect-button"
             >
               {logout.isPending ? "⏳" : "🚪"} Logout
             </button>
@@ -221,22 +225,26 @@ export const WalletPage: React.FC = React.memo(() => {
         </div>
 
         {/* Security Status */}
-        <div className="security-status">
-          <h3 className="security-status__title">🛡️ Security Status</h3>
-          <div className="security-status__items">
-            <div className="security-item">
-              <span className="security-item__icon">⚛️</span>
-              <span className="security-item__text">
+        <div className={styles.securityStatus}>
+          <h3 className={styles.securityStatusTitle}>🛡️ Security Status</h3>
+          <div className={styles.securityStatusItems}>
+            <div className={styles.securityItem}>
+              <span className={styles.securityItemIcon}>⚛️</span>
+              <span className={styles.securityItemText}>
                 Quantum Protection Active
               </span>
-              <span className="security-item__status security-item__status--active">
+              <span
+                className={classNames(styles.securityItemStatus, styles.active)}
+              >
                 ✓
               </span>
             </div>
-            <div className="security-item">
-              <span className="security-item__icon">🤖</span>
-              <span className="security-item__text">AI Risk Analysis</span>
-              <span className="security-item__status security-item__status--active">
+            <div className={styles.securityItem}>
+              <span className={styles.securityItemIcon}>🤖</span>
+              <span className={styles.securityItemText}>AI Risk Analysis</span>
+              <span
+                className={classNames(styles.securityItemStatus, styles.active)}
+              >
                 ✓
               </span>
             </div>

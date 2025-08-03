@@ -1,0 +1,454 @@
+.walletInfo {
+  position: relative;
+  display: inline-block;
+
+  .main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    // min-width: 200px;
+
+    &:hover {
+      border-color: var(--primary);
+      background: var(--primary-light, #f0f9ff);
+    }
+  }
+
+  .account {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .address {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .network {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.125rem;
+  }
+
+  .balance {
+    text-align: right;
+  }
+
+  .balanceContent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+  }
+
+  .balanceMain {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+  }
+
+  .balanceUsd {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .balanceEmpty {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+
+  .dropdownArrow {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+  }
+
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    margin-top: 0.5rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.2s ease;
+    min-width: 300px;
+  }
+
+  .dropdownContent {
+    padding: 1rem;
+  }
+
+  .dropdownSection {
+    margin-bottom: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .dropdownLabel {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .balances {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .balanceItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: var(--background-secondary, #f8fafc);
+    border-radius: 0.375rem;
+  }
+
+  .balanceToken {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .balanceSymbol {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .balanceAmount {
+    color: var(--text-primary);
+    font-family: monospace;
+  }
+
+  .refreshBtn {
+    padding: 0.25rem;
+    min-width: auto;
+    height: auto;
+  }
+
+  .dropdownActions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .technicalInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  .techItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .techLabel {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .techValue {
+    color: var(--text-primary);
+    font-family: monospace;
+  }
+
+  .techError {
+    color: var(--error, #ef4444);
+  }
+
+  .disconnectBtn {
+    // Specific styles for disconnect button if needed
+  }
+
+  // Compact variant
+  &.compact {
+    .main {
+      padding: 0.375rem 0.75rem;
+      // min-width: 150px;
+      gap: 0.5rem;
+    }
+
+    .address {
+      font-size: 0.75rem;
+    }
+
+    .network {
+      font-size: 0.625rem;
+    }
+
+    .balanceMain {
+      font-size: 0.75rem;
+    }
+
+    .balanceUsd {
+      font-size: 0.625rem;
+    }
+
+    .dropdown {
+      min-width: 280px;
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// New styles for multi-wallet support
+.type {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  margin-top: 0.125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+
+  &.authenticated {
+    background: rgba(34, 197, 94, 0.1);
+    color: #059669;
+  }
+
+  &.notAuthenticated {
+    background: rgba(251, 146, 60, 0.1);
+    color: #ea580c;
+  }
+}
+
+.connectButton {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.statusBadge {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background: rgba(34, 197, 94, 0.1);
+  color: #059669;
+  margin-left: 0.5rem;
+}
+
+.walletSection {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.walletAddress {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  word-break: break-all;
+}
+
+.walletActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.connectBtn {
+  width: 100%;
+}
+
+.refreshBtn {
+  padding: 0.25rem;
+  min-width: auto;
+}
+
+// Multi-wallet display styles
+.bothWallets {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.plus {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.singleWallet {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.walletInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+// New network section styles
+.networkSection {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.networkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.networkTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.networkContent {
+  .technicalInfo {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+}
+
+.networkBalance {
+  margin: 0.75rem 0;
+}
+
+.balanceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.balanceDisplay {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.balanceAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.balanceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--background-secondary, #f8fafc);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.balanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.balanceLabel {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.balanceValues {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.balanceAmount {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.balanceTotal {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-light, #e2e8f0);
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.networkDivider {
+  height: 1px;
+  background: var(--border, #d1d5db);
+  margin: 1rem 0;
+}
+
+.actionsSection {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.refreshBtn {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  min-width: auto;
+}
+
+.sectionDivider {
+  height: 1px;
+  background: var(--border, #d1d5db);
+  margin: 1rem 0;
+}

@@ -1,8 +1,3 @@
-/**
- * User Service
- * User profile and account management
- */
-
 import apiClient from "./apiClient";
 import { API_ENDPOINTS } from "./config";
 
@@ -91,27 +86,21 @@ class UserService {
 
   /**
    * Gets the user's statistics
+   * TODO: Implement proper statistics endpoint on backend
    */
   async getStatistics(): Promise<UserStatistics> {
-    console.log("📊 User Service: Getting user statistics");
+    console.log("📊 User Service: Returning mock statistics (endpoint not implemented)");
 
-    const response = await apiClient.get<UserStatistics>(
-      `${API_ENDPOINTS.USER.PROFILE}/statistics`
-    );
-
-    console.log("✅ User Service: Statistics received:", {
-      totalTransactions: response.total_transactions,
-      totalVolume: response.total_volume_usd,
-      successRate:
-        response.total_transactions > 0
-          ? (
-              (response.successful_transactions / response.total_transactions) *
-              100
-            ).toFixed(1) + "%"
-          : "0%",
-    });
-
-    return response;
+    // Return mock data until backend endpoint is implemented
+    return {
+      total_transactions: 0,
+      total_volume_usd: 0,
+      successful_transactions: 0,
+      failed_transactions: 0,
+      average_transaction_value: 0,
+      monthly_volume: 0,
+      transaction_count_by_month: [],
+    };
   }
 
   /**

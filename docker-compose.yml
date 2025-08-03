@@ -15,7 +15,6 @@ services:
       - POSTGRES_PASSWORD=dev_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend-scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -49,6 +48,7 @@ services:
     environment:
       - REDIS_URL=redis://:dev_redis_password@redis:6379
       - ONEINCH_API_KEY=${ONEINCH_API_KEY:-}
+      - DEMO_MODE=true
       - PORT=4001
       - RUST_LOG=info
       - CARGO_HOME=/cargo
@@ -57,12 +57,15 @@ services:
     volumes:
       # 🔥 Source code hot reload
       - ./services:/app:cached
+      # 🚀 NEAR transaction scripts for cross-chain bridge
+      - ./scripts:/scripts:cached
       # 🚀 Shared cargo caches for speed
       - micro_dev_cargo_cache:/cargo/registry:cached
       - micro_dev_git_cache:/cargo/git:cached
       - micro_dev_target_cache:/app/target:cached
     working_dir: /app/kembridge-1inch-service
-    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    command:
+      ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     depends_on:
       redis:
         condition: service_healthy
@@ -72,8 +75,8 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
-      
-  # 🔥 HOT RELOAD: Blockchain Service  
+
+  # 🔥 HOT RELOAD: Blockchain Service
   blockchain-service-dev:
     container_name: kembridge-blockchain-service
     image: kembridge-blockchain-service:dev
@@ -84,8 +87,8 @@ services:
       - "4002:4002"
     environment:
       - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
-      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://mainnet.infura.io/v3/your-key}
-      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.mainnet.near.org}
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161}
+      - NEAR_RPC_URL=${NEAR_RPC_URL:-https://rpc.testnet.near.org}
       - PORT=4002
       - RUST_LOG=info
       - CARGO_HOME=/cargo
@@ -97,7 +100,8 @@ services:
       - micro_dev_git_cache:/cargo/git:cached
       - micro_dev_target_cache:/app/target:cached
     working_dir: /app/kembridge-blockchain-service
-    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    command:
+      ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,7 +111,7 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
-        
+
   # 🔥 HOT RELOAD: Crypto Service
   crypto-service-dev:
     container_name: kembridge-crypto-service
@@ -129,14 +133,15 @@ services:
       - micro_dev_git_cache:/cargo/git:cached
       - micro_dev_target_cache:/app/target:cached
     working_dir: /app/kembridge-crypto-service
-    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    command:
+      ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
       interval: 30s
       timeout: 10s
       start_period: 30s
       retries: 3
-      
+
   # 🔥 HOT RELOAD: Auth Service
   auth-service-dev:
     container_name: kembridge-auth-service
@@ -160,7 +165,8 @@ services:
       - micro_dev_git_cache:/cargo/git:cached
       - micro_dev_target_cache:/app/target:cached
     working_dir: /app/kembridge-auth-service
-    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    command:
+      ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -170,7 +176,7 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
-        
+
   # 🔥 HOT RELOAD: Gateway Service (with Circuit Breaker)
   gateway-service-dev:
     container_name: kembridge-gateway-service
@@ -188,10 +194,10 @@ services:
       - CARGO_INCREMENTAL=1
       - REDIS_URL=redis://:dev_redis_password@redis:6379
       - AUTH_SERVICE_URL=http://auth-service-dev:4004
-      - CRYPTO_SERVICE_URL=http://crypto-service-dev:4003
-      - BLOCKCHAIN_SERVICE_URL=http://blockchain-service-dev:4002
-      - ONEINCH_SERVICE_URL=http://oneinch-service-dev:4001
-      - AI_ENGINE_URL=http://ai-engine:4003
+      - CRYPTO_SERVICE_URL=http://kembridge-crypto-service:4003
+      - BLOCKCHAIN_SERVICE_URL=http://kembridge-blockchain-service:4002
+      - ONEINCH_SERVICE_URL=http://kembridge-oneinch-service:4001
+      - AI_ENGINE_URL=http://kembridge-ai-engine:4003
       - JWT_SECRET=dev_super_secret_jwt_key_for_development_only
     volumes:
       - ./services:/app:cached
@@ -199,7 +205,8 @@ services:
       - micro_dev_git_cache:/cargo/git:cached
       - micro_dev_target_cache:/app/target:cached
     working_dir: /app/kembridge-gateway-service
-    command: ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
+    command:
+      ["cargo-watch", "-x", "run", "-w", "src", "-w", "../kembridge-common/src"]
     depends_on:
       auth-service-dev:
         condition: service_healthy
@@ -226,7 +233,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "4010:4010"  # Frontend dev server in Docker
+      - "4010:4010" # Frontend dev server in Docker
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:4000
@@ -251,7 +258,7 @@ services:
       context: ./ai-engine
       dockerfile: Dockerfile
     ports:
-      - "4005:4003"  # AI Engine on port 4005
+      - "4005:4003" # AI Engine on port 4005
     environment:
       - DATABASE_URL=postgresql://postgres:dev_password@postgres:5432/kembridge_dev
       - REDIS_URL=redis://:dev_redis_password@redis:6379
@@ -260,7 +267,8 @@ services:
     volumes:
       - ./ai-engine:/app:cached
     working_dir: /app
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4003", "--reload"]
+    command:
+      ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4003", "--reload"]
     depends_on:
       postgres:
         condition: service_healthy

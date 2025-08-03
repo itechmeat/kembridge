@@ -1,10 +1,14 @@
-/**
- * AmountInput Component
- * Amount input with real-time validation and balance checking
- */
-
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, FC, ChangeEvent } from "react";
+import cn from "classnames";
 import type { BridgeToken } from "../../../types/bridge";
+import {
+  sanitizeNumericInput,
+  containsMaliciousContent,
+  logSecurityEvent,
+} from "../../../utils/security";
+import { formatBalance } from "../../../utils/formatBalance";
+import { CoinIcon } from "../../../components/ui";
+import styles from "./AmountInput.module.scss";
 
 export interface AmountInputProps {
   value: string;
@@ -18,7 +22,7 @@ export interface AmountInputProps {
   onMaxClick?: () => void;
 }
 
-export const AmountInput: React.FC<AmountInputProps> = ({
+export const AmountInput: FC<AmountInputProps> = ({
   value,
   onChange,
   token,
@@ -137,12 +141,27 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     }
   }, [balance, onChange, onMaxClick]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+
+    // Security: Check for malicious content
+    if (containsMaliciousContent(newValue)) {
+      logSecurityEvent("XSS_ATTEMPT", newValue, "AmountInput");
+      return;
+    }
 
     // Allow empty string
     if (newValue === "") {
       onChange("");
+      return;
+    }
+
+    // Sanitize numeric input
+    const sanitizedValue = sanitizeNumericInput(newValue);
+
+    // If sanitization changed the value, it contained invalid characters
+    if (sanitizedValue !== newValue) {
+      onChange(sanitizedValue);
       return;
     }
 
@@ -180,11 +199,11 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
   return (
     <div
-      className={`amount-input ${className} ${
-        error ? "amount-input--error" : ""
-      }`}
+      className={cn(styles.amountInput, className.trim(), {
+        [styles.error]: !!error,
+      })}
     >
-      <div className="amount-input__wrapper">
+      <div className={styles.wrapper}>
         <input
           type="text"
           inputMode="decimal"
@@ -192,7 +211,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           value={value}
           onChange={handleInputChange}
           disabled={disabled}
-          className="amount-input__field"
+          className={styles.field}
           data-testid="amount-input"
         />
 
@@ -201,26 +220,35 @@ export const AmountInput: React.FC<AmountInputProps> = ({
             type="button"
             onClick={handleMaxClick}
             disabled={disabled}
-            className="amount-input__max-button"
+            className={styles.maxButton}
+            data-testid="max-button"
           >
             MAX
           </button>
         )}
       </div>
 
-      <div className="amount-input__info">
+      <div className={styles.info}>
         {balance && (
-          <span className="amount-input__balance">
-            Balance: {balance} {token?.symbol}
-          </span>
+          <div className={styles.balance}>
+            <span>Balance: {formatBalance(balance)}</span>
+            <div className={styles.tokenInfo}>
+              <CoinIcon symbol={token?.symbol || ""} size="small" />
+              <span>{token?.symbol}</span>
+            </div>
+          </div>
         )}
 
         {showUsdValue && usdValue && (
-          <span className="amount-input__usd-value">{usdValue}</span>
+          <span className={styles.usdValue}>{usdValue}</span>
         )}
       </div>
 
-      {error && <div className="amount-input__error">{error}</div>}
+      {error && (
+        <div className={styles.error} data-testid="insufficient-balance-error">
+          {error}
+        </div>
+      )}
     </div>
   );
 };

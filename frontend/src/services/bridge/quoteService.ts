@@ -1,8 +1,3 @@
-/**
- * Quote Service
- * Advanced quote management and price calculations
- */
-
 import { SwapQuote, SwapQuoteRequest } from "../api/bridgeService";
 
 export interface QuoteComparison {

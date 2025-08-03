@@ -1,0 +1,273 @@
+.transactionHistory {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+
+  &Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+  }
+
+  &Count {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+  }
+
+  &Loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  &List {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &Empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+  }
+
+  &Item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  &Main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  &Route {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+
+    @media (min-width: 640px) {
+      margin-bottom: 0;
+    }
+  }
+
+  &Chain {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  &Arrow {
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  &Amounts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+
+  &From {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  &To {
+    color: #64748b;
+
+    @media (min-width: 640px) {
+      &:before {
+        content: "→ ";
+        margin-right: 0.25rem;
+      }
+    }
+  }
+
+  &Status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    background: rgba(156, 163, 175, 0.1);
+    color: #6b7280;
+    align-self: flex-start;
+
+    @media (min-width: 640px) {
+      align-self: center;
+    }
+  }
+
+  &Details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  &Date {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  &Usd {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  &Hashes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &Hash {
+    font-size: 0.7rem;
+    color: #6366f1;
+    text-decoration: none;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.2);
+      text-decoration: underline;
+    }
+  }
+
+  &LoadMore {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  &LoadButton {
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: #5b5bd6;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  // Error state
+  &Error {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  &ErrorMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+    color: #dc2626;
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+// Small screens adjustments
+@media (max-width: 480px) {
+  .transactionHistory {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+
+    &Item {
+      padding: 0.75rem;
+    }
+
+    &Header h3 {
+      font-size: 1rem;
+    }
+
+    &Chain {
+      font-size: 0.6rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    &Hash {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+}

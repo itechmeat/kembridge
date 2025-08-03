@@ -1,12 +1,8 @@
-/**
- * Wallet Button Component
- * Individual wallet connection button with status indicators
- */
-
-import React from "react";
-import { Spinner } from "../../ui/Spinner";
+import { FC } from "react";
+import { Spinner } from "../../ui/Spinner/Spinner";
 import type { WalletConfig, WalletType } from "../WalletConnect/WalletConnect";
-import "./WalletButton.scss";
+import styles from "./WalletButton.module.scss";
+import cn from "classnames";
 
 export interface WalletButtonProps {
   wallet: WalletConfig;
@@ -16,7 +12,7 @@ export interface WalletButtonProps {
   onSelect: (walletType: WalletType) => void;
 }
 
-export const WalletButton: React.FC<WalletButtonProps> = ({
+export const WalletButton: FC<WalletButtonProps> = ({
   wallet,
   isSelected = false,
   isConnecting = false,
@@ -35,11 +31,19 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
     }
 
     if (!wallet.isAvailable) {
-      return <span className="wallet-button__status wallet-button__status--unavailable">Unavailable</span>;
+      return (
+        <span className={cn(styles.status, styles.status_unavailable)}>
+          Unavailable
+        </span>
+      );
     }
 
     if (wallet.id !== "near" && wallet.isInstalled === false) {
-      return <span className="wallet-button__status wallet-button__status--install">Install</span>;
+      return (
+        <span className={cn(styles.status, styles.status_install)}>
+          Install
+        </span>
+      );
     }
 
     return null;
@@ -49,45 +53,39 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
 
   return (
     <button
-      className={`
-        wallet-button 
-        ${isSelected ? "wallet-button--selected" : ""}
-        ${isConnecting ? "wallet-button--connecting" : ""}
-        ${!wallet.isAvailable ? "wallet-button--unavailable" : ""}
-        ${!isClickable ? "wallet-button--disabled" : ""}
-      `.trim()}
+      className={cn(styles.walletButton, {
+        [styles.selected]: isSelected,
+        [styles.connecting]: isConnecting,
+        [styles.unavailable]: !wallet.isAvailable,
+        [styles.disabled]: !isClickable,
+      })}
       onClick={handleClick}
       disabled={!isClickable}
       type="button"
     >
-      <div className="wallet-button__content">
-        <div className="wallet-button__icon">
-          <img 
-            src={wallet.icon} 
+      <div className={styles.content}>
+        <div className={styles.icon}>
+          <img
+            src={wallet.icon}
             alt={`${wallet.name} icon`}
             onError={(e) => {
-              // Fallback to emoji if icon fails to load
-              e.currentTarget.style.display = 'none';
-              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = 'block';
+              e.currentTarget.style.display = "none";
+              const fallback = e.currentTarget
+                .nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "block";
             }}
           />
-          <span 
-            className="wallet-button__icon-fallback"
-            style={{ display: 'none' }}
-          >
+          <span className={styles.iconFallback} style={{ display: "none" }}>
             🔗
           </span>
         </div>
 
-        <div className="wallet-button__info">
-          <div className="wallet-button__name">{wallet.name}</div>
-          <div className="wallet-button__description">{wallet.description}</div>
+        <div className={styles.info}>
+          <div className={styles.name}>{wallet.name}</div>
+          <div className={styles.description}>{wallet.description}</div>
         </div>
 
-        <div className="wallet-button__action">
-          {getStatusIndicator()}
-        </div>
+        <div className={styles.action}>{getStatusIndicator()}</div>
       </div>
     </button>
   );

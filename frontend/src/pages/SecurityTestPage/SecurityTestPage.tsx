@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { FC, useState } from 'react';
 import { 
   SecurityIndicator, 
   RiskAnalysisDisplay, 
@@ -6,16 +6,21 @@ import {
   SecurityAlerts,
   QuantumProtectionDisplay
 } from '../../components/security';
+import { useRiskAnalysisLogger } from '../../hooks/security';
 import { AlertType, AlertPriority } from '../../types/security';
 import type { SecurityAlert, RiskAnalysisResult } from '../../types/security';
-import './SecurityTestPage.scss';
+import classNames from 'classnames';
+import styles from './SecurityTestPage.module.scss';
 
-export const SecurityTestPage: React.FC = () => {
+export const SecurityTestPage: FC = () => {
   // Demo state for testing
   const [riskScore, setRiskScore] = useState(0.3);
   const [quantumProtection, setQuantumProtection] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  
+  // Centralized risk analysis logger
+  const { logRiskUpdate } = useRiskAnalysisLogger(1000);
 
   // Mock risk analysis data
   const mockRiskData: RiskAnalysisResult = {
@@ -117,17 +122,17 @@ export const SecurityTestPage: React.FC = () => {
   };
 
   return (
-    <div className="security-test-page">
-      <div className="security-test-page__header">
+    <div className={styles.securityTestPage}>
+      <div className={styles.header}>
         <h1>Security Components Test Page</h1>
         <p>Interactive testing environment for KEMBridge security components</p>
       </div>
 
       {/* Controls */}
-      <div className="security-test-page__controls">
+      <div className={styles.controls}>
         <h2>Controls</h2>
-        <div className="controls-grid">
-          <div className="control-group">
+        <div className={styles.controlsGrid}>
+          <div className={styles.controlGroup}>
             <label>Risk Score: {Math.round(riskScore * 100)}%</label>
             <input
               type="range"
@@ -139,7 +144,7 @@ export const SecurityTestPage: React.FC = () => {
             />
           </div>
           
-          <div className="control-group">
+          <div className={styles.controlGroup}>
             <label>
               <input
                 type="checkbox"
@@ -150,7 +155,7 @@ export const SecurityTestPage: React.FC = () => {
             </label>
           </div>
           
-          <div className="control-group">
+          <div className={styles.controlGroup}>
             <label>
               <input
                 type="checkbox"
@@ -161,17 +166,17 @@ export const SecurityTestPage: React.FC = () => {
             </label>
           </div>
           
-          <div className="control-group">
+          <div className={styles.controlGroup}>
             <button onClick={generateTestAlert}>Generate Test Alert</button>
           </div>
         </div>
       </div>
 
       {/* Quantum Protection Display */}
-      <div className="security-test-page__section">
+      <div className={styles.section}>
         <h2>Quantum Protection Display</h2>
-        <div className="component-demo">
-          <div className="demo-item full-width">
+        <div className={styles.componentDemo}>
+          <div className={classNames(styles.demoItem, styles.fullWidth)}>
             <QuantumProtectionDisplay
               isActive={quantumProtection}
               encryptionScheme="ML-KEM-1024"
@@ -187,10 +192,10 @@ export const SecurityTestPage: React.FC = () => {
       </div>
 
       {/* Security Indicator */}
-      <div className="security-test-page__section">
+      <div className={styles.section}>
         <h2>Security Indicator</h2>
-        <div className="component-demo">
-          <div className="demo-item">
+        <div className={styles.componentDemo}>
+          <div className={styles.demoItem}>
             <h3>Full Version</h3>
             <SecurityIndicator
               quantumProtection={quantumProtection}
@@ -203,7 +208,7 @@ export const SecurityTestPage: React.FC = () => {
             />
           </div>
           
-          <div className="demo-item">
+          <div className={styles.demoItem}>
             <h3>Compact Version</h3>
             <SecurityIndicator
               quantumProtection={quantumProtection}
@@ -216,10 +221,10 @@ export const SecurityTestPage: React.FC = () => {
       </div>
 
       {/* Risk Score Visualization */}
-      <div className="security-test-page__section">
+      <div className={styles.section}>
         <h2>Risk Score Visualization</h2>
-        <div className="component-demo">
-          <div className="demo-item">
+        <div className={styles.componentDemo}>
+          <div className={styles.demoItem}>
             <h3>Small</h3>
             <RiskScoreVisualization
               score={riskScore}
@@ -229,7 +234,7 @@ export const SecurityTestPage: React.FC = () => {
             />
           </div>
           
-          <div className="demo-item">
+          <div className={styles.demoItem}>
             <h3>Medium</h3>
             <RiskScoreVisualization
               score={riskScore}
@@ -241,7 +246,7 @@ export const SecurityTestPage: React.FC = () => {
             />
           </div>
           
-          <div className="demo-item">
+          <div className={styles.demoItem}>
             <h3>Large</h3>
             <RiskScoreVisualization
               score={riskScore}
@@ -254,15 +259,15 @@ export const SecurityTestPage: React.FC = () => {
       </div>
 
       {/* Risk Analysis Display */}
-      <div className="security-test-page__section">
+      <div className={styles.section}>
         <h2>Risk Analysis Display</h2>
-        <div className="component-demo">
-          <div className="demo-item full-width">
+        <div className={styles.componentDemo}>
+          <div className={classNames(styles.demoItem, styles.fullWidth)}>
             <RiskAnalysisDisplay
               riskData={mockRiskData}
               realTime={true}
               showDetails={true}
-              onUpdate={(data) => console.log('Risk data updated:', data)}
+              onUpdate={logRiskUpdate}
             />
           </div>
         </div>
