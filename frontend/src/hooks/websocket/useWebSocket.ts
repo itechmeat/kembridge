@@ -1,9 +1,4 @@
-/**
- * WebSocket Hooks
- * React hooks for real-time communication
- */
-
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   wsClient,
   type TransactionUpdate,
@@ -15,19 +10,33 @@ import { useAuthStatus } from "../api/useAuth";
  * Hook for managing WebSocket connection
  */
 export const useWebSocketConnection = () => {
+  const lastTokenRef = useRef<string | null>(null);
   const { isAuthenticated, token } = useAuthStatus();
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionState, setConnectionState] =
-    useState<string>("disconnected");
+  const [connectionState, setConnectionState] = useState<string>("loading"); // Изменено с "disconnected" на "loading"
   const [error, setError] = useState<string | null>(null);
 
-  // Connect when authenticated
   useEffect(() => {
+    if (token === lastTokenRef.current) {
+      return;
+    }
+
+    lastTokenRef.current = token;
+
+    console.log("🔌 useWebSocket: Auth state changed:", {
+      isAuthenticated,
+      hasToken: !!token,
+      tokenLength: token?.length || 0,
+      connectionState: wsClient.connectionState,
+      isCurrentlyConnected: wsClient.isConnected,
+    });
+
     if (isAuthenticated && token) {
       console.log("🔌 useWebSocket: Connecting with auth token");
+      setConnectionState("connecting"); // Добавлено состояние connecting
 
       wsClient
-        .connect()
+        .connect(token)
         .then(() => {
           // Authenticate after connection
           wsClient.authenticate(token);
@@ -38,9 +47,16 @@ export const useWebSocketConnection = () => {
         })
         .catch((err) => {
           setError(err.message || "Failed to connect");
+          setConnectionState("disconnected");
           console.error("❌ useWebSocket: Connection failed:", err);
         });
+    } else if (!isAuthenticated) {
+      console.log("🔌 useWebSocket: Not authenticated, setting loading state");
+      // Показываем loading пока не определится статус аутентификации
+      setConnectionState("loading");
+      setIsConnected(false);
     } else {
+      console.log("🔌 useWebSocket: Not authenticated, disconnecting");
       // Disconnect if not authenticated
       wsClient.disconnect();
       setIsConnected(false);
@@ -51,7 +67,7 @@ export const useWebSocketConnection = () => {
     return () => {
       wsClient.disconnect();
     };
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token]); // Убираем token из зависимостей, так как мы проверяем его через ref
 
   // Monitor connection state
   useEffect(() => {
@@ -60,8 +76,8 @@ export const useWebSocketConnection = () => {
       setConnectionState(wsClient.connectionState);
     };
 
-    // Check state every 5 seconds
-    const interval = setInterval(updateConnectionState, 5000);
+    // Check state every 30 seconds instead of 5
+    const interval = setInterval(updateConnectionState, 30000);
 
     return () => clearInterval(interval);
   }, []);

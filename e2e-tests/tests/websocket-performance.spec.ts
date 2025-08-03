@@ -6,6 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { WebSocketTestUtils } from '../utils/websocket-utils';
 import { TEST_URLS } from '../utils/test-constants';
+import { evaluateWithWebSocket, evaluateWithConfig, getFrontendUrl, getWebSocketUrl } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Performance Tests', () => {
   let wsUtils: WebSocketTestUtils;
@@ -14,14 +15,14 @@ test.describe('WebSocket Performance Tests', () => {
     wsUtils = new WebSocketTestUtils(page);
     
     // Navigate to bridge page
-    await page.goto(`${TEST_URLS.FRONTEND.LOCAL_DEV}/bridge`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${getFrontendUrl('localDev')}/bridge`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
   });
 
   test.describe('Connection Establishment Timing', () => {
     test('should establish connection within acceptable time limits', async ({ page }) => {
       const startTime = Date.now();
-      const connectionResult = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY);
+      const connectionResult = await wsUtils.testConnection(getWebSocketUrl('gateway'));
       const totalTime = Date.now() - startTime;
       
       expect(connectionResult.connected).toBe(true);
@@ -36,7 +37,7 @@ test.describe('WebSocket Performance Tests', () => {
       const startTime = Date.now();
       
       const connectionPromises = Array.from({ length: concurrentConnections }, () => 
-        wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY)
+        wsUtils.testConnection(getWebSocketUrl('gateway'))
       );
       
       const results = await Promise.all(connectionPromises);
@@ -60,7 +61,7 @@ test.describe('WebSocket Performance Tests', () => {
       const connectionTimes: number[] = [];
       
       for (let i = 0; i < iterations; i++) {
-        const result = await wsUtils.testConnection(TEST_URLS.WEBSOCKET.GATEWAY);
+        const result = await wsUtils.testConnection(getWebSocketUrl('gateway'));
         expect(result.connected).toBe(true);
         connectionTimes.push(result.connectionTime);
         
@@ -85,7 +86,7 @@ test.describe('WebSocket Performance Tests', () => {
 
   test.describe('Message Throughput Testing', () => {
     test('should handle high message throughput (100+ msg/sec)', async ({ page }) => {
-      const throughputResult = await page.evaluate(async () => {
+      const throughputResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           messagesSent: 0,
           messagesReceived: 0,
@@ -96,7 +97,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(wsUrl);
           
           await new Promise<void>((resolve) => {
             const testDuration = 5000; // 5 seconds
@@ -154,7 +155,7 @@ test.describe('WebSocket Performance Tests', () => {
     });
 
     test('should maintain performance under sustained load', async ({ page }) => {
-      const sustainedLoadResult = await page.evaluate(async () => {
+      const sustainedLoadResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           phases: [] as Array<{ phase: number; throughput: number; latency: number }>,
           overallPerformance: 'good',
@@ -162,7 +163,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(wsUrl);
           
           await new Promise<void>((resolve) => {
             const phaseDuration = 3000; // 3 seconds per phase
@@ -268,7 +269,7 @@ test.describe('WebSocket Performance Tests', () => {
 
   test.describe('Memory Usage Monitoring', () => {
     test('should monitor memory usage under high load', async ({ page }) => {
-      const memoryResult = await page.evaluate(async () => {
+      const memoryResult = await evaluateWithConfig(page, async (config) => {
         const result = {
           initialMemory: 0,
           peakMemory: 0,
@@ -284,7 +285,7 @@ test.describe('WebSocket Performance Tests', () => {
             result.initialMemory = (performance as any).memory.usedJSHeapSize;
           }
           
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(config.urls.websocket.gateway);
           
           await new Promise<void>((resolve) => {
             const testDuration = 8000; // 8 seconds
@@ -366,7 +367,7 @@ test.describe('WebSocket Performance Tests', () => {
 
   test.describe('Concurrent Operations Performance', () => {
     test('should handle concurrent subscriptions efficiently', async ({ page }) => {
-      const concurrentResult = await page.evaluate(async () => {
+      const concurrentResult = await evaluateWithConfig(page, async (config) => {
         const result = {
           subscriptionsCreated: 0,
           subscriptionsConfirmed: 0,
@@ -376,7 +377,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(config.urls.websocket.gateway);
           
           await new Promise<void>((resolve) => {
             const startTime = Date.now();
@@ -463,7 +464,7 @@ test.describe('WebSocket Performance Tests', () => {
 
   test.describe('Reconnection Performance Testing', () => {
     test('should reconnect quickly after disconnection', async ({ page }) => {
-      const reconnectionResult = await page.evaluate(async () => {
+      const reconnectionResult = await evaluateWithConfig(page, async (config) => {
         const result = {
           disconnectionTime: 0,
           reconnectionTime: 0,
@@ -473,7 +474,7 @@ test.describe('WebSocket Performance Tests', () => {
         };
         
         try {
-          let ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          let ws = new WebSocket(config.urls.websocket.gateway);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -488,7 +489,7 @@ test.describe('WebSocket Performance Tests', () => {
               // Attempt immediate reconnection
               const reconnectStart = Date.now();
               
-              ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+              ws = new WebSocket(config.urls.websocket.gateway);
               
               ws.onopen = () => {
                 result.reconnectionTime = Date.now();

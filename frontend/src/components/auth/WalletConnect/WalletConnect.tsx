@@ -3,11 +3,12 @@
  * Main wallet selection and connection interface
  */
 
-import React from "react";
+import { FC } from "react";
 import { WalletButton } from "../WalletButton/WalletButton";
 import { Modal } from "../../ui/Modal/Modal";
 import { useWallet } from "../../../hooks/wallet/useWallet";
-import "./WalletConnect.scss";
+import "@near-wallet-selector/modal-ui/styles.css";
+import styles from "./WalletConnect.module.scss";
 
 export interface WalletConnectProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export interface WalletConfig {
   isInstalled?: boolean;
 }
 
-export const WalletConnect: React.FC<WalletConnectProps> = ({
+export const WalletConnect: FC<WalletConnectProps> = ({
   isOpen,
   onClose,
   onSuccess,
@@ -101,22 +102,22 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Connect Wallet"
-      className="wallet-connect-modal"
+      className={styles.modal}
     >
-      <div className="wallet-connect">
-        <div className="wallet-connect__header">
+      <div className={styles.walletConnect}>
+        <div className={styles.header}>
           <h3>Choose your wallet</h3>
           <p>Connect with one of our supported wallet providers</p>
         </div>
 
         {state.error && (
-          <div className="wallet-connect__error">
-            <span className="error-icon">⚠️</span>
+          <div className={styles.error}>
+            <span className={styles.errorIcon}>⚠️</span>
             <span>{state.error}</span>
           </div>
         )}
 
-        <div className="wallet-connect__options">
+        <div className={styles.options}>
           {wallets.map((wallet) => (
             <WalletButton
               key={wallet.id}
@@ -129,8 +130,8 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
           ))}
         </div>
 
-        <div className="wallet-connect__footer">
-          <p className="wallet-connect__disclaimer">
+        <div className={styles.footer}>
+          <p className={styles.disclaimer}>
             By connecting a wallet, you agree to our Terms of Service and
             Privacy Policy.
           </p>

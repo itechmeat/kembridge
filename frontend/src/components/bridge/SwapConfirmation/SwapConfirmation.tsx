@@ -1,11 +1,8 @@
-/**
- * SwapConfirmation Component - Mobile-First
- * Confirmation modal optimized for mobile with full-screen approach
- */
-
-import React, { useState, useEffect } from "react";
+import { useState, FC, memo, useMemo } from "react";
+import cn from "classnames";
+import { Modal } from "../../ui/Modal/Modal";
 import type { BridgeQuote, BridgeSwapRequest } from "../../../types/bridge";
-import "./SwapConfirmation.scss";
+import styles from "./SwapConfirmation.module.scss";
 
 export interface SwapConfirmationProps {
   isOpen: boolean;
@@ -16,94 +13,52 @@ export interface SwapConfirmationProps {
   className?: string;
 }
 
-export const SwapConfirmation: React.FC<SwapConfirmationProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  quote,
-  loading = false,
-  className = "",
-}) => {
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [recipient, setRecipient] = useState("");
+export const SwapConfirmation: FC<SwapConfirmationProps> = memo(
+  ({ isOpen, onClose, onConfirm, quote, loading = false, className = "" }) => {
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [recipient, setRecipient] = useState("");
 
-  // Mobile: Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    // Мемоизация request объекта для избежания пересоздания
+    const swapRequest = useMemo((): BridgeSwapRequest | null => {
+      if (!quote) return null;
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+      return {
+        quoteId: quote.id,
+        fromChain: quote.fromChain,
+        toChain: quote.toChain,
+        fromToken: quote.fromToken,
+        toToken: quote.toToken,
+        amount: quote.fromAmount,
+        recipient: recipient || "", // TODO: Get from wallet
+        maxSlippage: parseFloat(quote.slippage),
+      };
+    }, [quote, recipient]);
 
-  // Handle escape key and overlay click
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
+    if (!isOpen || !quote) return null;
+
+    const handleConfirm = () => {
+      if (!termsAccepted || !swapRequest) return;
+      onConfirm(swapRequest);
     };
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !quote) return null;
-
-  const handleConfirm = () => {
-    if (!termsAccepted) return;
-
-    const request: BridgeSwapRequest = {
-      quoteId: quote.id,
-      fromChain: quote.fromChain,
-      toChain: quote.toChain,
-      fromToken: quote.fromToken,
-      toToken: quote.toToken,
-      amount: quote.fromAmount,
-      recipient: recipient || "", // TODO: Get from wallet
-      maxSlippage: parseFloat(quote.slippage),
-    };
-
-    onConfirm(request);
-  };
-
-  // Handle overlay click to close modal
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return (
-    <div className="swap-confirmation-overlay" onClick={handleOverlayClick}>
-      <div className={`swap-confirmation ${className}`}>
-        <div className="swap-confirmation__header">
-          <h3>Confirm Swap</h3>
-          <button onClick={onClose} className="swap-confirmation__close">
-            ×
-          </button>
-        </div>
-
-        <div className="swap-confirmation__content">
-          <div className="swap-confirmation__transaction">
-            <div className="swap-confirmation__amount">
-              <div className="swap-confirmation__from">
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Confirm Swap"
+        className={cn(styles.swapConfirmation, className)}
+      >
+        <div className={styles.content}>
+          <div className={styles.transaction}>
+            <div className={styles.amount}>
+              <div className={styles.from}>
                 <span>
                   {quote.fromAmount} {quote.fromToken}
                 </span>
                 <span>on {quote.fromChain}</span>
               </div>
-              <div className="swap-confirmation__arrow">↓</div>
-              <div className="swap-confirmation__to">
+              <div className={styles.arrow}>↓</div>
+              <div className={styles.to}>
                 <span>
                   {quote.toAmount} {quote.toToken}
                 </span>
@@ -111,32 +66,32 @@ export const SwapConfirmation: React.FC<SwapConfirmationProps> = ({
               </div>
             </div>
 
-            <div className="swap-confirmation__details">
-              <div className="swap-confirmation__detail">
+            <div className={styles.details}>
+              <div className={styles.detail}>
                 <span>Exchange Rate</span>
                 <span>{quote.exchangeRate}</span>
               </div>
-              <div className="swap-confirmation__detail">
+              <div className={styles.detail}>
                 <span>Total Fees</span>
                 <span>{quote.totalFees}</span>
               </div>
-              <div className="swap-confirmation__detail">
+              <div className={styles.detail}>
                 <span>Price Impact</span>
                 <span>{quote.priceImpact}%</span>
               </div>
-              <div className="swap-confirmation__detail">
+              <div className={styles.detail}>
                 <span>Estimated Time</span>
                 <span>{Math.ceil(quote.estimatedTime / 60)} minutes</span>
               </div>
             </div>
 
             {quote.quantumProtected && (
-              <div className="swap-confirmation__security">
+              <div className={styles.security}>
                 🔒 This transaction will be protected with quantum cryptography
               </div>
             )}
 
-            <div className="swap-confirmation__recipient">
+            <div className={styles.recipient}>
               <label>
                 Recipient Address (optional)
                 <input
@@ -149,8 +104,8 @@ export const SwapConfirmation: React.FC<SwapConfirmationProps> = ({
             </div>
           </div>
 
-          <div className="swap-confirmation__terms">
-            <label className="swap-confirmation__checkbox">
+          <div className={styles.terms}>
+            <label className={styles.checkbox}>
               <input
                 type="checkbox"
                 checked={termsAccepted}
@@ -160,10 +115,10 @@ export const SwapConfirmation: React.FC<SwapConfirmationProps> = ({
             </label>
           </div>
 
-          <div className="swap-confirmation__actions">
+          <div className={styles.actions}>
             <button
               onClick={onClose}
-              className="swap-confirmation__cancel"
+              className={styles.cancel}
               disabled={loading}
             >
               Cancel
@@ -171,13 +126,14 @@ export const SwapConfirmation: React.FC<SwapConfirmationProps> = ({
             <button
               onClick={handleConfirm}
               disabled={!termsAccepted || loading}
-              className="swap-confirmation__confirm"
+              className={styles.confirm}
+              data-testid="confirm-swap-button"
             >
               {loading ? "Processing..." : "Confirm Swap"}
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
+      </Modal>
+    );
+  }
+);

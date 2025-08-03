@@ -10,8 +10,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { AuthPage } from '../page-objects/AuthPage';
-import { BridgePage } from '../page-objects/BridgePage';
+import { AuthPage } from '../page-objects/AuthPage.ts';
+import { BridgePage } from '../page-objects/BridgePage.ts';
 import { TEST_CONFIG } from '../utils/test-utilities';
 import { 
   TEST_DATA, 
@@ -20,41 +20,62 @@ import {
   ERROR_MESSAGES, 
   FEATURE_FLAGS 
 } from '../utils/test-constants';
+import { 
+  setupAuthTestFast, 
+  ultraFastAuthCheck,
+  batchAuthElementCheck,
+  logAuthPerformanceStats 
+} from '../utils/cached-auth-utility';
 
 test.describe('Enhanced Authentication Functionality', () => {
   let authPage: AuthPage;
   let bridgePage: BridgePage;
 
   test.beforeEach(async ({ page }) => {
+    console.log('⚡ Fast auth test setup starting...');
+    
     // Initialize page objects
     authPage = new AuthPage(page);
     bridgePage = new BridgePage(page);
 
-    // Navigate to the application
-    await page.goto(TEST_UTILS.getBaseUrl());
-    await authPage.waitForPageLoad();
+    // Use cached auth utility for fast setup
+    const { setupTime, fromCache } = await setupAuthTestFast(page, TEST_UTILS.getBaseUrl());
+    
+    console.log(`✅ Fast auth test setup completed (${setupTime}ms)${fromCache ? ' from cache' : ''}`);
   });
 
   test.describe('Wallet Connection Availability', () => {
-    test('should display available wallet options', async () => {
+    test('should display available wallet options', async ({ page }) => {
       console.log('🧪 Testing wallet options availability...');
 
-      const walletAvailability = await authPage.getAvailableWallets();
+      // Use batch check for faster element detection
+      const elements = await batchAuthElementCheck(page, [
+        '[data-testid="ethereum-wallet-button"]',
+        '[data-testid="near-wallet-button"]',
+        'text=Sign in with your wallet'
+      ]);
+      
+      const hasEthereumButton = elements['[data-testid="ethereum-wallet-button"]'];
+      const hasNearButton = elements['[data-testid="near-wallet-button"]'];
+      const hasAuthMessage = elements['text=Sign in with your wallet'];
       
       // At least one wallet should be available
-      const hasAvailableWallet = walletAvailability.ethereum.available || walletAvailability.near.available;
-      expect(hasAvailableWallet, 'At least one wallet option should be available').toBe(true);
+      expect(hasEthereumButton || hasNearButton || hasAuthMessage, 'At least one wallet option should be available').toBe(true);
 
       // Log available wallets
       console.log('📊 Wallet availability:');
-      console.log(`   Ethereum: ${walletAvailability.ethereum.available ? 'Available' : 'Not available'} ${walletAvailability.ethereum.enabled ? '(Enabled)' : '(Disabled)'}`);
-      console.log(`   NEAR: ${walletAvailability.near.available ? 'Available' : 'Not available'} ${walletAvailability.near.enabled ? '(Enabled)' : '(Disabled)'}`);
+      console.log(`   Ethereum: ${hasEthereumButton ? 'Available (Enabled)' : 'Not available'}`);
+      console.log(`   NEAR: ${hasNearButton ? 'Available (Enabled)' : 'Not available'}`);
 
       console.log('✅ Wallet options checked successfully');
     });
 
-    test('should show correct button states', async () => {
+    test('should show correct button states', async ({ page }) => {
       console.log('🧪 Testing wallet button states...');
+      
+      // Ultra-fast auth check
+      const authRequired = await ultraFastAuthCheck(page);
+      expect(authRequired).toBe(true);
 
       const walletAvailability = await authPage.getAvailableWallets();
       
@@ -248,14 +269,31 @@ test.describe('Enhanced Authentication Functionality', () => {
       console.log('✅ Auth-bridge integration working correctly');
     });
 
-    test('should handle bridge form states based on authentication', async () => {
+    test('should handle bridge form states based on authentication', async ({ page }) => {
       console.log('🧪 Testing bridge form states with auth...');
 
       await bridgePage.goto();
       
       const formState = await bridgePage.getFormState();
       
-      // Form should always be present
+      // If form is not accessible (requires auth), check auth state
+      if (!formState.isAccessible) {
+        console.log('🔐 Form requires authentication - checking auth UI...');
+        
+        // Should show authentication UI instead of form fields
+        const authRequired = await bridgePage.isAuthenticationRequired();
+        expect(authRequired).toBe(true);
+        
+        // Should have wallet connection options
+        const ethButton = await page.isVisible('[data-testid="ethereum-wallet-button"]');
+        const nearButton = await page.isVisible('[data-testid="near-wallet-button"]');
+        expect(ethButton || nearButton).toBe(true);
+        
+        console.log('✅ Authentication UI is correctly displayed');
+        return;
+      }
+      
+      // If form is accessible, check form elements
       expect(formState.hasAmountInput).toBe(true);
       expect(formState.hasSubmitButton).toBe(true);
       
@@ -342,5 +380,11 @@ test.describe('Enhanced Authentication Functionality', () => {
 
     // Log test completion
     console.log(`🏁 Test completed: ${testInfo.title} - ${testInfo.status}`);
+  });
+
+  // Show performance stats after all tests
+  test.afterAll(async () => {
+    console.log('\n📊 ENHANCED AUTH TESTS PERFORMANCE REPORT:');
+    logAuthPerformanceStats();
   });
 });

@@ -1,0 +1,62 @@
+@import "../../../styles/abstracts/variables";
+
+.coinIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: $gray-100;
+  position: relative;
+
+  // Sizes
+  &.small {
+    width: 20px;
+    height: 20px;
+  }
+
+  &.medium {
+    width: 32px;
+    height: 32px;
+  }
+
+  &.large {
+    width: 48px;
+    height: 48px;
+  }
+
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      $primary-color 0%,
+      $secondary-color 100%
+    );
+    color: $white;
+    font-weight: $font-weight-semibold;
+
+    .small & {
+      font-size: 0.75rem;
+    }
+
+    .medium & {
+      font-size: 0.875rem;
+    }
+
+    .large & {
+      font-size: 1.25rem;
+    }
+  }
+}

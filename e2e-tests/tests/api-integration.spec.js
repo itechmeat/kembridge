@@ -72,8 +72,8 @@ test.describe('KEMBridge API Integration', () => {
       }
     });
     console.log(`   Invalid chain type: ${responseInvalidChain.status()} status`);
-    // Should still work as we don't validate chain type in current implementation
-    expect(responseInvalidChain.ok()).toBeTruthy();
+    // Should return 400 for invalid chain type
+    expect(responseInvalidChain.status()).toBe(400);
     
     console.log('✅ Invalid request handling test completed');
   });

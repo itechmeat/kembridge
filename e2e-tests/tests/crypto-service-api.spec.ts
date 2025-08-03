@@ -7,8 +7,9 @@
 
 import { test, expect } from "@playwright/test";
 import { TEST_URLS } from '../utils/test-constants';
+import { getBackendUrl } from '../utils/page-evaluate-utils';
 
-const CRYPTO_SERVICE_URL = TEST_URLS.BACKEND.CRYPTO;
+const CRYPTO_SERVICE_URL = getBackendUrl('crypto');
 
 test.describe("Crypto Service HTTP API Tests", () => {
   test.describe("Health and Status Endpoints", () => {

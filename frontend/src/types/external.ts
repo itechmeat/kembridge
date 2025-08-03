@@ -1,8 +1,3 @@
-/**
- * Types for external wallet APIs
- * Defines interfaces for MetaMask, NEAR and other external providers
- */
-
 // Ethereum accounts response type
 export type EthereumAccounts = string[];
 

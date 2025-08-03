@@ -1,5 +1,3 @@
-// Application constants
-
 import { Network } from "../types";
 
 export const SUPPORTED_NETWORKS: Network[] = [

@@ -1,0 +1,345 @@
+.transactionProgress {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+
+  &Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+  }
+
+  &Id {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+  }
+
+  &Overview {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  &Status {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+
+    .statusCompleted {
+      color: #10b981;
+    }
+
+    .statusInProgress {
+      color: #f59e0b;
+    }
+
+    .statusFailed {
+      color: #ef4444;
+    }
+
+    .statusPending {
+      color: #6b7280;
+    }
+  }
+
+  &Bar {
+    position: relative;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    height: 0.75rem;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  &Fill {
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    height: 100%;
+    border-radius: 0.5rem;
+    transition: width 0.3s ease;
+    position: relative;
+
+    &:after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: shimmer 2s infinite;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  &Percentage {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  &Current {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+
+  &Eta {
+    font-size: 0.8rem;
+    color: #6366f1;
+    font-weight: 500;
+  }
+
+  &Steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &Step {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+
+    &Pending {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    &InProgress {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    &Completed {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    &Failed {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+  }
+
+  &StepIcon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  &StepContent {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &StepName {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &StepDescription {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+  }
+
+  &StepTx {
+    margin-bottom: 0.5rem;
+
+    a {
+      font-size: 0.7rem;
+      color: #6366f1;
+      text-decoration: none;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.2);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &StepTime {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-family: monospace;
+  }
+
+  &Error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    color: #dc2626;
+    font-size: 0.9rem;
+
+    strong {
+      font-weight: 700;
+    }
+  }
+
+  &Hashes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      justify-content: space-around;
+    }
+  }
+
+  &Hash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+
+    span {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    a {
+      font-size: 0.7rem;
+      color: #6366f1;
+      text-decoration: none;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+      font-family: monospace;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.2);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Loading state
+  &Loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  // Empty state
+  &Empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+  }
+
+  &Spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: #64748b;
+    font-style: italic;
+
+    &:before {
+      content: "";
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #e2e8f0;
+      border-top: 2px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+// Small screens adjustments
+@media (max-width: 480px) {
+  .transactionProgress {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+
+    &Header h3 {
+      font-size: 1rem;
+    }
+
+    &Step {
+      padding: 0.5rem;
+    }
+
+    &StepIcon {
+      font-size: 1rem;
+    }
+
+    &Hash a {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+}

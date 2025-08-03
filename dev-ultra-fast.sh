@@ -1,6 +1,6 @@
 #!/bin/bash
 # ULTRA-FAST KEMBridge development mode
-# Runs only PostgreSQL/Redis in Docker, backend/frontend natively
+# Runs only PostgreSQL/Redis in Docker, frontend natively
 
 set -e
 
@@ -31,21 +31,7 @@ if ! command -v cargo-watch &> /dev/null; then
     cargo install cargo-watch
 fi
 
-# Run backend natively with cargo-watch
-echo "⚡ Starting backend natively with hot reload..."
-cd backend
-
-# Set environment variables
-export DATABASE_URL="postgresql://postgres:dev_password@localhost:5432/kembridge_dev"
-export REDIS_URL="redis://:dev_redis_password@localhost:6379"
-export JWT_SECRET="hackathon-super-secret-key-change-in-production"
-export AI_ENGINE_URL="http://localhost:4003"
-export RUST_LOG="debug"
-export RUST_BACKTRACE="1"
-
-# Run migrations
-echo "🔧 Applying database migrations..."
-sqlx migrate run || echo "⚠️ Migrations failed, but continuing..."
+# Backend removed - using microservices architecture
 
 echo ""
 echo "🎯 ULTRA-FAST DEVELOPMENT COMMANDS:"
@@ -53,11 +39,8 @@ echo "======================================"
 echo ""
 echo "Run in separate terminals:"
 echo ""
-echo "1. 🦀 Backend (instant check):"
-echo "   cd backend && bacon check"
-echo ""
-echo "2. 🦀 Backend (run server):"
-echo "   cd backend && cargo run --bin kembridge-backend"
+echo "1. 🦀 Microservices (use make dev):"
+echo "   make dev"
 echo ""
 echo "3. ⚛️ Frontend (hot reload):"
 echo "   cd frontend && pnpm run dev"

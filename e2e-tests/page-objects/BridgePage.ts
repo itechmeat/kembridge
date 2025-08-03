@@ -8,7 +8,7 @@
  */
 
 import { Page, expect, Locator } from '@playwright/test';
-import { MODERN_SELECTORS } from '../utils/modern-selectors';
+import { MODERN_SELECTORS } from '../utils/selectors';
 import { 
   BaseTestUtility, 
   TEST_CONFIG, 
@@ -64,11 +64,10 @@ export class BridgePage extends BaseTestUtility {
   async goto(): Promise<void> {
     console.log('🌉 Navigating to bridge page...');
     
-    const success = await this.utilities.navigation.navigateToBridge();
-    if (!success) {
-      throw new Error('Failed to navigate to bridge page');
-    }
-
+    // Use direct navigation as most reliable method
+    await this.page.goto('/bridge');
+    await this.page.waitForTimeout(3000);
+    
     await this.waitForPageLoad();
   }
 
@@ -337,6 +336,56 @@ export class BridgePage extends BaseTestUtility {
     }
 
     return result;
+  }
+
+  /**
+   * Check if sign-in message is visible
+   */
+  async isSignInMessageVisible(): Promise<boolean> {
+    return await this.page.locator('text=Sign in with your wallet').isVisible();
+  }
+
+  /**
+   * Check if connect button is visible and get its text
+   */
+  async getConnectButtonInfo(): Promise<{ visible: boolean; text: string }> {
+    // Use more specific selector to avoid multiple matches
+    const connectButton = this.page.locator('.wallet-connect-button, button.btn--primary:has-text("Connect")').first();
+    const visible = await connectButton.isVisible();
+    const text = visible ? await connectButton.textContent() || '' : '';
+    
+    return { visible, text };
+  }
+
+  /**
+   * Get token button texts for verification after switching
+   */
+  async getTokenButtonTexts(): Promise<{ fromToken: string; toToken: string }> {
+    const tokenButtons = await this.page.locator('button').all();
+    let fromTokenText = '';
+    let toTokenText = '';
+    
+    // Find token buttons by their content
+    for (const button of tokenButtons) {
+      const text = await button.textContent();
+      if (text && (text.includes('NEAR Protocol') || text.includes('ETH') || text.includes('USDC'))) {
+        if (!fromTokenText) {
+          fromTokenText = text;
+        } else if (!toTokenText) {
+          toTokenText = text;
+          break;
+        }
+      }
+    }
+    
+    return { fromToken: fromTokenText, toToken: toTokenText };
+  }
+
+  /**
+   * Get page instance for advanced operations
+   */
+  getPage() {
+    return this.page;
   }
 
   /**

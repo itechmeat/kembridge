@@ -7,7 +7,7 @@
 export * from "./auth";
 
 // UI components
-export { Spinner } from "./ui/Spinner";
+export { Spinner } from "./ui/Spinner/Spinner";
 export { Modal } from "./ui/Modal/Modal";
 
 // Security components

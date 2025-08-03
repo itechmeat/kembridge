@@ -4,7 +4,7 @@
  */
 
 import { Page, expect, Locator } from '@playwright/test';
-import { MODERN_SELECTORS, selectorHelpers } from './modern-selectors';
+import { MODERN_SELECTORS, selectorHelpers } from './selectors';
 import { TEST_ENV, TEST_DATA, TEST_UTILS } from './test-constants';
 
 /**

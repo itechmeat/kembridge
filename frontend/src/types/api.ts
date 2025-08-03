@@ -1,5 +1,3 @@
-// API-related types
-
 import { BaseResponse, Token } from "./common";
 
 export interface SwapQuoteRequest {

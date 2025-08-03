@@ -1,8 +1,3 @@
-/**
- * Wallet Providers Setup
- * Configures Wagmi, RainbowKit, and TanStack Query for wallet connections
- */
-
 import React, { ReactNode } from "react";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";

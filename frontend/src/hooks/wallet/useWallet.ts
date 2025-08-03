@@ -1,8 +1,3 @@
-/**
- * Modern Wallet Hook
- * Unified wallet management with Wagmi + NEAR support
- */
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useAuthStatus, useEthereumAuth, useNearAuth } from "../api/useAuth";
@@ -79,8 +74,25 @@ export const useWallet = (): UseWalletReturn => {
 
   // Determine connection state (memoized)
   const isConnected = useMemo(() => {
-    return walletType === "near" ? nearWallet.isConnected : isEthConnected;
-  }, [walletType, nearWallet.isConnected, isEthConnected]);
+    const connected =
+      walletType === "near" ? nearWallet.isConnected : isEthConnected;
+
+    // Log wallet state changes for debugging
+    console.log("🔍 useWallet: Connection state check:", {
+      walletType,
+      nearWalletConnected: nearWallet.isConnected,
+      nearAccountId: nearWallet.accountId,
+      isEthConnected,
+      finalConnected: connected,
+    });
+
+    return connected;
+  }, [
+    walletType,
+    nearWallet.isConnected,
+    nearWallet.accountId,
+    isEthConnected,
+  ]);
 
   const currentAddress = useMemo(() => {
     return walletType === "near" ? nearWallet.accountId : address;
@@ -228,7 +240,22 @@ export const useWallet = (): UseWalletReturn => {
           if (!nearWallet.selector) {
             throw new Error("NEAR wallet selector not ready");
           }
+          console.log("🔗 useWallet: Initiating NEAR sign in...");
           await nearWallet.signIn();
+
+          // Wait for NEAR wallet to actually connect
+          console.log("⏳ useWallet: Waiting for NEAR connection...");
+          let attempts = 0;
+          while (!nearWallet.isConnected && attempts < 10) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            attempts++;
+          }
+
+          if (!nearWallet.isConnected) {
+            throw new Error("NEAR wallet failed to connect within timeout");
+          }
+
+          console.log("✅ useWallet: NEAR wallet connected successfully");
         } else {
           // Ethereum wallets
           const connector = connectors.find((c) => {
@@ -247,10 +274,11 @@ export const useWallet = (): UseWalletReturn => {
           await connectWagmi({ connector });
         }
 
+        // Set wallet type AFTER successful connection
         setWalletType(type);
         localStorage.setItem(STORAGE_KEYS.LAST_CONNECTED_WALLET, type);
 
-        console.log(`✅ useWallet: Connected to ${type}`);
+        console.log(`✅ useWallet: Connected to ${type}, wallet type set`);
 
         // Auto-authenticate after successful connection
         try {
@@ -289,6 +317,13 @@ export const useWallet = (): UseWalletReturn => {
   // Disconnect wallet
   const disconnect = useCallback(async (): Promise<void> => {
     try {
+      // Clear auth token BEFORE disconnecting wallet to prevent race conditions
+      console.log("🔐 useWallet: Clearing auth token before disconnect");
+
+      // Import authService dynamically to avoid circular dependencies
+      const authModule = await import("../../services/api/authService");
+      await authModule.authService.logout();
+
       if (walletType === "near") {
         await nearWallet.signOut();
       } else {
@@ -313,12 +348,20 @@ export const useWallet = (): UseWalletReturn => {
   // Switch wallet
   const switchWallet = useCallback(
     async (type: WalletType): Promise<void> => {
+      console.log(`🔄 useWallet: Switching from ${walletType} to ${type}`);
+
       if (isConnected) {
+        console.log("🔌 useWallet: Disconnecting current wallet before switch");
         await disconnect();
+
+        // Wait a bit to ensure disconnect is fully processed
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
+
+      console.log("🔌 useWallet: Connecting new wallet");
       await connect(type);
     },
-    [isConnected, disconnect, connect]
+    [isConnected, disconnect, connect, walletType]
   );
 
   // Auto-connect

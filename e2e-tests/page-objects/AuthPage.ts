@@ -8,7 +8,7 @@
  */
 
 import { Page, expect, Locator } from '@playwright/test';
-import { MODERN_SELECTORS } from '../utils/modern-selectors';
+import { MODERN_SELECTORS } from '../utils/selectors';
 import { 
   BaseTestUtility, 
   TEST_CONFIG, 

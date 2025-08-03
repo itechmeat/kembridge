@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     cors_origins: List[str] = [
         "http://localhost:4001",  # Frontend
         "http://localhost:4000",  # Backend
+        "http://localhost:4100",  # Frontend dev
         "http://frontend:4001",   # Docker frontend
         "http://backend:4000",    # Docker backend
     ]
@@ -23,4 +24,4 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
 
-settings = Settings() 
+settings = Settings()

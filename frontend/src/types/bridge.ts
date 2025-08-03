@@ -1,8 +1,3 @@
-/**
- * Bridge Interface Types
- * TypeScript definitions for cross-chain bridge operations
- */
-
 export type ChainType = "ethereum" | "near";
 
 export interface BridgeToken {
@@ -79,6 +74,7 @@ export interface BridgeSwapResponse {
 
 export type TransactionStatus =
   | "pending"
+  | "in_progress"
   | "validating"
   | "locked"
   | "processing"

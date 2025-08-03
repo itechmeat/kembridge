@@ -1,8 +1,3 @@
-/**
- * Wallet utility functions
- * Centralized wallet metadata and helper functions
- */
-
 import { WalletType } from "../services/wallet/types";
 import { WALLET_METADATA } from "../constants/wallet";
 

@@ -124,6 +124,11 @@ This ensures clean separation between Docker and local development environments.
 - **REASON**: User manages frontend development process manually
 - **ALLOWED**: Only reading frontend files and making edits when requested
 
+**MANDATORY**: Frontend testing and browsermcp usage:
+- **ONLY USE**: http://localhost:4100 for all frontend testing and browsermcp navigation
+- **FORBIDDEN**: Using any other ports (4010, 3000, etc.) for frontend access
+- **REASON**: User runs local development server on port 4100 only
+
 ## Key Technologies
 
 - **Rust 1.88+**: Latest stable with let chains support
@@ -193,15 +198,15 @@ The project uses environment variables defined in docker-compose.yml:
 
 ### E2E Testing Guidelines
 
-**CRITICAL**: E2E тесты должны запускаться ТОЛЬКО в Chromium браузере:
+**CRITICAL**: E2E tests should run ONLY in Chromium browser:
 
-- **НИКОГДА не добавлять** кроссбраузерные тесты (Firefox, Safari, WebKit)
-- **НИКОГДА не добавлять** мобильные браузеры в конфигурацию
-- **ВСЕГДА использовать** только `chromium` проект в `playwright.config.js`
-- **ПРИЧИНА**: Экономия времени разработки и фокус на основном браузере
+- **NEVER add** cross-browser tests (Firefox, Safari, WebKit)
+- **NEVER add** mobile browsers to configuration
+- **ALWAYS use** only `chromium` project in `playwright.config.js`
+- **REASON**: Save development time and focus on primary browser
 
 ```javascript
-// ПРАВИЛЬНО - только Chromium
+// CORRECT - Chromium only
 projects: [
   {
     name: 'chromium',
@@ -209,8 +214,27 @@ projects: [
   }
 ],
 
-// НЕПРАВИЛЬНО - НЕ добавлять другие браузеры
-// firefox, webkit, mobile-chrome, mobile-safari и т.д.
+// INCORRECT - DO NOT add other browsers
+// firefox, webkit, mobile-chrome, mobile-safari etc.
+```
+
+**ABSOLUTELY FORBIDDEN**: Using Playwright for application testing:
+
+- **NEVER use** Playwright/mcp__playwright for testing KEMBridge
+- **REASON**: Application requires Web3 wallet authentication (MetaMask, NEAR Wallet)
+- **Playwright CANNOT** connect to wallets or sign transactions
+- **USE ONLY**: browsermcp for navigation and UI viewing
+- **FOR TESTING**: API endpoints via curl or manual UI testing
+
+```bash
+# CORRECT - API testing
+curl -X POST http://localhost:4000/api/swaps/init
+
+# CORRECT - UI viewing
+mcp__browsermcp__browser_navigate
+
+# INCORRECT - Playwright for Web3 application
+mcp__playwright__browser_click # DOES NOT WORK with wallets!
 ```
 
 ## Deployment Notes
@@ -229,7 +253,14 @@ This is a hackathon version with simplified architecture. Production deployment 
 
 ### ABSOLUTE PROHIBITIONS - NO EXCEPTIONS
 
-**1. NEVER USE MOCK DATA AS FALLBACK IN PRODUCTION PATHS**
+**1. ALWAYS USE TESTNET - NEVER MAINNET DATA**
+- MANDATORY: All blockchain integrations MUST use testnet (Sepolia for Ethereum, testnet for NEAR)
+- FORBIDDEN: Any mainnet addresses, chain IDs, or API endpoints in development/testing code
+- REASON: Safety, cost, and proper testing environment
+- REQUIRED: Research testnet-specific addresses and endpoints when needed
+- IF UNCERTAIN: Google/search for testnet equivalents before using any blockchain data
+
+**2. NEVER USE MOCK DATA AS FALLBACK IN PRODUCTION PATHS**
 - FORBIDDEN: Any fallback to mock/fake data when real APIs are unavailable
 - REASON: This destroys user trust and can cause financial losses
 - ACCEPTABLE: Mock data ONLY during development with clear TODO comments for removal
@@ -268,6 +299,30 @@ let timeout = HTTP_CLIENT_TIMEOUT;
 let api_url = EXTERNAL_API_BASE_URL;
 let max_retries = DEFAULT_MAX_RETRIES;
 ```
+
+## Frontend Environment Variables
+
+**CRITICAL**: This project uses Vite, NOT Node.js environment variables:
+
+- **FORBIDDEN**: Using `process.env` in frontend code
+- **REQUIRED**: Use `import.meta.env` for Vite environment variables
+- **REASON**: Vite uses different environment variable system than Node.js
+
+**Examples:**
+```typescript
+// BAD - Node.js style (will cause errors)
+if (process.env.NODE_ENV === 'development') { ... }
+
+// GOOD - Vite style
+if (import.meta.env.DEV) { ... }
+if (import.meta.env.MODE === 'development') { ... }
+```
+
+**Available Vite environment variables:**
+- `import.meta.env.DEV` - boolean, true in development
+- `import.meta.env.PROD` - boolean, true in production
+- `import.meta.env.MODE` - string, current mode (development/production)
+- `import.meta.env.VITE_*` - custom variables prefixed with VITE_
 
 ## Language Guidelines
 

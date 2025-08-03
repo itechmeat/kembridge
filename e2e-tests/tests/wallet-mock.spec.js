@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { setupFullTestEnvironment, performAuthenticationFlow } from '../utils/test-base.js';
 import { AuthPage } from '../page-objects/AuthPage.js';
 import { logTestResults } from '../utils/test-base.js';
+import { isMockWalletAvailable } from '../utils/mock-wallet-utility.js';
 
 test.describe('Wallet Mock Testing', () => {
   let testEnv;
@@ -20,11 +21,7 @@ test.describe('Wallet Mock Testing', () => {
     await page.waitForTimeout(3000);
     
     // Check if mock wallet is available
-    const hasEthereum = await page.evaluate(() => {
-      console.log('Checking window.ethereum:', typeof window.ethereum);
-      console.log('Window object keys:', Object.keys(window));
-      return typeof window.ethereum !== 'undefined';
-    });
+    const hasEthereum = await isMockWalletAvailable(page);
     
     console.log(`🔍 Mock Ethereum Provider Available: ${hasEthereum ? '✅' : '❌'}`);
     
@@ -73,7 +70,7 @@ test.describe('Wallet Mock Testing', () => {
     console.log('🚀 Testing complete authentication flow with mock wallet...');
 
     // First check if mock wallet is available
-    const hasEthereum = await page.evaluate(() => typeof window.ethereum !== 'undefined');
+    const hasEthereum = await isMockWalletAvailable(page);
     
     if (!hasEthereum) {
       console.log('⚠️ Mock wallet not available, skipping authentication flow test');

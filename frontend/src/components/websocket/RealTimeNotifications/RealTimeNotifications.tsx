@@ -1,11 +1,10 @@
-/**
- * Real-time Notifications Component
- * Displays live notifications from WebSocket events
- */
-
-import React, { useState, useEffect } from 'react';
-import { useRiskAlerts, useSystemNotifications } from '../../../hooks/websocket/useWebSocket';
-import './RealTimeNotifications.scss';
+import { useState, useEffect, FC } from "react";
+import cn from "classnames";
+import {
+  useRiskAlerts,
+  useSystemNotifications,
+} from "../../../hooks/websocket/useWebSocket";
+import styles from "./RealTimeNotifications.module.scss";
 
 export interface RealTimeNotificationsProps {
   className?: string;
@@ -14,27 +13,33 @@ export interface RealTimeNotificationsProps {
   autoHideDelay?: number;
 }
 
-export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
-  className = '',
+export const RealTimeNotifications: FC<RealTimeNotificationsProps> = ({
+  className = "",
   maxNotifications = 5,
   autoHide = true,
   autoHideDelay = 5000,
 }) => {
-  const { alerts, unreadCount: alertCount, markAsRead: markAlertsRead } = useRiskAlerts();
+  const {
+    alerts,
+    unreadCount: alertCount,
+    markAsRead: markAlertsRead,
+  } = useRiskAlerts();
   const { notifications, systemStatus } = useSystemNotifications();
   const [isVisible, setIsVisible] = useState(false);
-  const [hiddenNotifications, setHiddenNotifications] = useState<Set<string>>(new Set());
+  const [hiddenNotifications, setHiddenNotifications] = useState<Set<string>>(
+    new Set()
+  );
 
   // Show notifications when there are new alerts or notifications
   useEffect(() => {
     if (alertCount > 0 || notifications.length > 0) {
       setIsVisible(true);
-      
+
       if (autoHide) {
         const timer = setTimeout(() => {
           setIsVisible(false);
         }, autoHideDelay);
-        
+
         return () => clearTimeout(timer);
       }
     }
@@ -46,7 +51,7 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
   };
 
   const hideNotification = (id: string) => {
-    setHiddenNotifications(prev => new Set(prev).add(id));
+    setHiddenNotifications((prev) => new Set(prev).add(id));
   };
 
   interface SystemNotification {
@@ -58,28 +63,28 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
 
   const getNotificationIcon = (level: string) => {
     switch (level) {
-      case 'critical':
-        return '🚨';
-      case 'error':
-        return '❌';
-      case 'warning':
-        return '⚠️';
-      case 'info':
+      case "critical":
+        return "🚨";
+      case "error":
+        return "❌";
+      case "warning":
+        return "⚠️";
+      case "info":
       default:
-        return 'ℹ️';
+        return "ℹ️";
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-      case 'high':
-      case 'critical':
-        return '🔴';
-      case 'medium':
-        return '🟡';
-      case 'low':
+      case "high":
+      case "critical":
+        return "🔴";
+      case "medium":
+        return "🟡";
+      case "low":
       default:
-        return '🟢';
+        return "🟢";
     }
   };
 
@@ -89,22 +94,27 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
 
   const visibleAlerts = alerts.slice(0, maxNotifications);
   const visibleNotifications = notifications
-    .filter(n => !hiddenNotifications.has((n as SystemNotification)?.id || ''))
+    .filter(
+      (n) => !hiddenNotifications.has((n as SystemNotification)?.id || "")
+    )
     .slice(0, maxNotifications) as SystemNotification[];
 
   return (
-    <div className={`realtime-notifications ${className}`} data-testid="realtime-notifications">
-      <div className="realtime-notifications__header">
-        <h3 className="realtime-notifications__title">
+    <div
+      className={cn(styles.realTimeNotifications, className.trim())}
+      data-testid="realtime-notifications"
+    >
+      <div className={styles.header}>
+        <h3 className={styles.title}>
           🔔 Real-time Alerts
           {(alertCount > 0 || visibleNotifications.length > 0) && (
-            <span className="realtime-notifications__count">
+            <span className={styles.count}>
               {alertCount + visibleNotifications.length}
             </span>
           )}
         </h3>
         <button
-          className="realtime-notifications__close"
+          className={styles.close}
           onClick={handleClose}
           data-testid="notifications-close-button"
         >
@@ -112,31 +122,30 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
         </button>
       </div>
 
-      <div className="realtime-notifications__content">
+      <div className={styles.content}>
         {/* Risk Alerts */}
         {visibleAlerts.map((alert, index) => (
           <div
             key={`alert-${index}`}
-            className={`realtime-notifications__item realtime-notifications__item--alert realtime-notifications__item--${alert.risk_level}`}
+            className={cn(styles.item, styles.alert, styles[alert.risk_level])}
             data-testid="risk-alert-item"
           >
-            <div className="realtime-notifications__item-icon">
+            <div className={styles.itemIcon}>
               {getRiskIcon(alert.risk_level)}
             </div>
-            <div className="realtime-notifications__item-content">
-              <div className="realtime-notifications__item-title">
+            <div className={styles.itemContent}>
+              <div className={styles.itemTitle}>
                 Risk Alert: {alert.risk_level.toUpperCase()}
               </div>
-              <div className="realtime-notifications__item-message">
-                {alert.message}
-              </div>
-              <div className="realtime-notifications__item-meta">
+              <div className={styles.itemMessage}>{alert.message}</div>
+              <div className={styles.itemMeta}>
                 Risk Score: {Math.round(alert.risk_score * 100)}%
-                {alert.transaction_id && ` • TX: ${alert.transaction_id.slice(0, 8)}...`}
+                {alert.transaction_id &&
+                  ` • TX: ${alert.transaction_id.slice(0, 8)}...`}
               </div>
             </div>
             <button
-              className="realtime-notifications__item-dismiss"
+              className={styles.itemDismiss}
               onClick={() => hideNotification(`alert-${index}`)}
               data-testid="dismiss-alert-button"
             >
@@ -149,25 +158,29 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
         {visibleNotifications.map((notification, index) => (
           <div
             key={`notification-${index}`}
-            className={`realtime-notifications__item realtime-notifications__item--notification realtime-notifications__item--${notification.level || 'info'}`}
+            className={cn(
+              styles.item,
+              styles.notification,
+              styles[notification.level || "info"]
+            )}
             data-testid="system-notification-item"
           >
-            <div className="realtime-notifications__item-icon">
-              {getNotificationIcon(notification.level || 'info')}
+            <div className={styles.itemIcon}>
+              {getNotificationIcon(notification.level || "info")}
             </div>
-            <div className="realtime-notifications__item-content">
-              <div className="realtime-notifications__item-title">
-                {notification.title || 'System Notification'}
+            <div className={styles.itemContent}>
+              <div className={styles.itemTitle}>
+                {notification.title || "System Notification"}
               </div>
-              <div className="realtime-notifications__item-message">
+              <div className={styles.itemMessage}>
                 {notification.message || JSON.stringify(notification)}
               </div>
-              <div className="realtime-notifications__item-meta">
+              <div className={styles.itemMeta}>
                 System Status: {systemStatus}
               </div>
             </div>
             <button
-              className="realtime-notifications__item-dismiss"
+              className={styles.itemDismiss}
               onClick={() => hideNotification(`notification-${index}`)}
               data-testid="dismiss-notification-button"
             >
@@ -177,7 +190,7 @@ export const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({
         ))}
 
         {visibleAlerts.length === 0 && visibleNotifications.length === 0 && (
-          <div className="realtime-notifications__empty" data-testid="notifications-empty">
+          <div className={styles.empty} data-testid="notifications-empty">
             No new notifications
           </div>
         )}

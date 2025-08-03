@@ -1,8 +1,3 @@
-/**
- * API Configuration
- * Centralized configuration for backend API communication
- */
-
 // Use constants from global project settings
 export const API_CONFIG = {
   // Backend URL - from constants.rs DEFAULT_SERVER_URL
@@ -46,10 +41,11 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: "/user/profile",
   },
 
-  // Bridge endpoints - from bridge.rs routes
+  // Bridge endpoints - direct to 1inch service for real blockchain transactions
   BRIDGE: {
-    INIT_SWAP: "/bridge/swap",
+    INIT_SWAP: "/api/swaps/execute", // Direct to 1inch service
     STATUS: "/bridge/status",
+    TRANSACTION_STATUS: "/bridge/transaction",
     QUOTE: "/bridge/quote",
     HISTORY: "/bridge/history",
     SUPPORTED_TOKENS: "/bridge/tokens",
@@ -62,10 +58,11 @@ export const API_ENDPOINTS = {
     DECAPSULATE: "/crypto/decapsulate",
   },
 
-  // Risk analysis endpoints - from risk.rs routes
+  // Risk analysis endpoints - from Gateway risk routes
   RISK: {
-    ANALYZE: "/risk/analyze",
-    PROFILE: "/risk/profile",
+    ANALYZE: "/api/v1/risk/analyze",
+    PROFILE: "/api/v1/risk/profile",
+    PROFILE_BY_ID: "/api/v1/risk/profile",
     BLACKLIST_CHECK: "/risk/blacklist/check",
     THRESHOLDS: "/risk/thresholds",
   },

@@ -1,11 +1,8 @@
-/**
- * PriceQuote Component - Mobile-First
- * Dynamic price display optimized for mobile with simplified UI
- */
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FC } from "react";
+import cn from "classnames";
 import type { BridgeQuote } from "../../../types/bridge";
-import "./PriceQuote.scss";
+import { CoinIcon } from "../../ui";
+import styles from "./PriceQuote.module.scss";
 
 export interface PriceQuoteProps {
   quote?: BridgeQuote;
@@ -16,7 +13,7 @@ export interface PriceQuoteProps {
   compact?: boolean; // Mobile-first: option for compact display
 }
 
-export const PriceQuote: React.FC<PriceQuoteProps> = ({
+export const PriceQuote: FC<PriceQuoteProps> = ({
   quote,
   loading = false,
   error,
@@ -109,9 +106,9 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
 
   if (loading) {
     return (
-      <div className={`price-quote price-quote--loading ${className}`}>
-        <div className="price-quote__spinner">
-          <div className="price-quote__spinner-icon">⏳</div>
+      <div className={cn(styles.priceQuote, styles.loading, className.trim())}>
+        <div className={styles.spinner}>
+          <div className={styles.spinnerIcon}>⏳</div>
           <span>Getting best quote...</span>
         </div>
       </div>
@@ -120,10 +117,10 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
 
   if (error) {
     return (
-      <div className={`price-quote price-quote--error ${className}`}>
-        <div className="price-quote__error">
-          <span className="price-quote__error-icon">⚠️</span>
-          <span className="price-quote__error-message">{error}</span>
+      <div className={cn(styles.priceQuote, styles.error, className.trim())}>
+        <div className={styles.errorMsg}>
+          <span className={styles.errorIcon}>⚠️</span>
+          <span>{error}</span>
         </div>
       </div>
     );
@@ -131,9 +128,9 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
 
   if (!quote) {
     return (
-      <div className={`price-quote price-quote--empty ${className}`}>
-        <div className="price-quote__empty">
-          <span className="price-quote__empty-icon">💱</span>
+      <div className={cn(styles.priceQuote, styles.empty, className.trim())}>
+        <div className={styles.empty}>
+          <span className={styles.emptyIcon}>💱</span>
           <p>Enter amount to get quote</p>
         </div>
       </div>
@@ -144,96 +141,109 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
   const riskLevel = getRiskLevel(quote.riskScore);
 
   return (
-    <div className={`price-quote ${className}`}>
+    <div
+      className={cn(styles.priceQuote, className.trim())}
+      data-testid="price-quote"
+    >
       {/* Main Quote Display */}
-      <div className="price-quote__main">
-        <div className="price-quote__header">
-          <div className="price-quote__rate">
-            <span className="price-quote__rate-label">You'll receive</span>
-            <span className="price-quote__rate-value">
-              {formatAmount(quote.toAmount)} {quote.toToken}
-            </span>
+      <div className={styles.main}>
+        <div className={styles.header}>
+          <div className={styles.rate}>
+            <span className={styles.rateLabel}>You'll receive</span>
+            <div className={styles.rateValue}>
+              <span>{formatAmount(quote.toAmount)}</span>
+              <div className={styles.tokenDisplay}>
+                <CoinIcon symbol={quote.toToken} size="small" />
+                <span>{quote.toToken}</span>
+              </div>
+            </div>
           </div>
 
           {timeRemaining > 0 && (
-            <div className="price-quote__timer">
-              <span className="price-quote__timer-icon">⏱️</span>
-              <span className="price-quote__timer-value">
-                {formatTimeRemaining(timeRemaining)}
-              </span>
+            <div className={styles.timer}>
+              <span className={styles.timerIcon}>⏱️</span>
+              <span>{formatTimeRemaining(timeRemaining)}</span>
             </div>
           )}
         </div>
 
-        <div className="price-quote__exchange-rate">
-          1 {quote.fromToken} = {formatExchangeRate(quote.exchangeRate)}{" "}
-          {quote.toToken}
+        <div className={styles.exchangeRate}>
+          <div className={styles.exchangeTokens}>
+            <div className={styles.tokenDisplay}>
+              <CoinIcon symbol={quote.fromToken} size="small" />
+              <span>1 {quote.fromToken}</span>
+            </div>
+            <span>=</span>
+            <div className={styles.tokenDisplay}>
+              <span>{formatExchangeRate(quote.exchangeRate)}</span>
+              <CoinIcon symbol={quote.toToken} size="small" />
+              <span>{quote.toToken}</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="price-quote__quick-stats">
-        <div className="price-quote__stat-item">
-          <span className="price-quote__stat-label">Fees</span>
-          <span className="price-quote__stat-value">
+      <div className={styles.quickStats}>
+        <div className={styles.statItem}>
+          <span className={styles.statLabel}>Fees</span>
+          <span className={styles.statValue}>
             {formatFee(quote.totalFees)} ETH
           </span>
         </div>
 
-        <div className="price-quote__stat-item">
-          <span className="price-quote__stat-label">Time</span>
-          <span className="price-quote__stat-value">
+        <div className={styles.statItem}>
+          <span className={styles.statLabel}>Time</span>
+          <span className={styles.statValue}>
             {Math.ceil(quote.estimatedTime / 60)} min
           </span>
         </div>
 
-        <div
-          className={`price-quote__stat-item price-quote__stat-item--${priceImpactSeverity}`}
-        >
-          <span className="price-quote__stat-label">Impact</span>
-          <span className="price-quote__stat-value">{quote.priceImpact}%</span>
+        <div className={cn(styles.statItem, styles[priceImpactSeverity])}>
+          <span className={styles.statLabel}>Impact</span>
+          <span className={styles.statValue}>{quote.priceImpact}%</span>
         </div>
       </div>
 
       {/* Expandable Details - Mobile Optimized */}
       {showDetails && (
-        <div className="price-quote__details-section">
+        <div className={styles.detailsSection}>
           <button
             type="button"
-            className="price-quote__details-toggle"
+            className={styles.detailsToggle}
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-label={expanded ? "Hide quote details" : "Show quote details"}
           >
             <span>{compact ? "Details" : "Quote Details"}</span>
             <span
-              className={`price-quote__toggle-arrow ${
-                expanded ? "price-quote__toggle-arrow--up" : ""
-              }`}
+              className={cn(styles.toggleArrow, {
+                [styles.up]: expanded,
+              })}
             >
               ▼
             </span>
           </button>
 
           {expanded && (
-            <div className="price-quote__details">
+            <div className={styles.details}>
               {/* Fee Breakdown */}
-              <div className="price-quote__section">
-                <h4 className="price-quote__section-title">Fee Breakdown</h4>
-                <div className="price-quote__fees">
-                  <div className="price-quote__fee-item">
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Fee Breakdown</h4>
+                <div className={styles.fees}>
+                  <div className={styles.feeItem}>
                     <span>Bridge Fee</span>
                     <span>{formatFee(quote.bridgeFee)} ETH</span>
                   </div>
-                  <div className="price-quote__fee-item">
+                  <div className={styles.feeItem}>
                     <span>Protocol Fee</span>
                     <span>{formatFee(quote.protocolFee)} ETH</span>
                   </div>
-                  <div className="price-quote__fee-item">
+                  <div className={styles.feeItem}>
                     <span>Gas Estimate</span>
                     <span>{formatFee(quote.estimatedGas)} ETH</span>
                   </div>
-                  <div className="price-quote__fee-item price-quote__fee-item--total">
+                  <div className={cn(styles.feeItem, styles.total)}>
                     <span>Total Fees</span>
                     <span>{formatFee(quote.totalFees)} ETH</span>
                   </div>
@@ -241,45 +251,35 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
               </div>
 
               {/* Additional Stats */}
-              <div className="price-quote__section">
-                <h4 className="price-quote__section-title">Transaction Info</h4>
-                <div className="price-quote__info-grid">
-                  <div className="price-quote__info-item">
-                    <span className="price-quote__info-label">
-                      Max Slippage
-                    </span>
-                    <span className="price-quote__info-value">
-                      {quote.slippage}%
-                    </span>
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Transaction Info</h4>
+                <div className={styles.infoGrid}>
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>Max Slippage</span>
+                    <span className={styles.infoValue}>{quote.slippage}%</span>
                   </div>
 
                   <div
-                    className={`price-quote__info-item price-quote__info-item--${priceImpactSeverity}`}
+                    className={cn(styles.infoItem, styles[priceImpactSeverity])}
                   >
-                    <span className="price-quote__info-label">
-                      Price Impact
-                    </span>
-                    <span className="price-quote__info-value">
+                    <span className={styles.infoLabel}>Price Impact</span>
+                    <span className={styles.infoValue}>
                       {quote.priceImpact}%
                       {priceImpactSeverity === "high" && " ⚠️"}
                     </span>
                   </div>
 
-                  <div className="price-quote__info-item">
-                    <span className="price-quote__info-label">Route</span>
-                    <span className="price-quote__info-value">
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>Route</span>
+                    <span className={styles.infoValue}>
                       {quote.fromChain} → {quote.toChain}
                     </span>
                   </div>
 
                   {quote.riskScore && (
-                    <div
-                      className={`price-quote__info-item price-quote__info-item--${riskLevel}`}
-                    >
-                      <span className="price-quote__info-label">
-                        Risk Score
-                      </span>
-                      <span className="price-quote__info-value">
+                    <div className={cn(styles.infoItem, styles[riskLevel])}>
+                      <span className={styles.infoLabel}>Risk Score</span>
+                      <span className={styles.infoValue}>
                         {quote.riskScore}/100
                       </span>
                     </div>
@@ -289,44 +289,34 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
 
               {/* Security Features - Mobile Simplified */}
               {!compact && (
-                <div className="price-quote__section">
-                  <h4 className="price-quote__section-title">Security</h4>
-                  <div className="price-quote__security-features">
+                <div className={styles.section}>
+                  <h4 className={styles.sectionTitle}>Security</h4>
+                  <div className={styles.securityFeatures}>
                     {quote.quantumProtected && (
-                      <div className="price-quote__security-item">
-                        <span className="price-quote__security-icon">🔒</span>
-                        <div className="price-quote__security-info">
-                          <div className="price-quote__security-name">
+                      <div className={styles.securityItem}>
+                        <span className={styles.securityIcon}>🔒</span>
+                        <div className={styles.securityInfo}>
+                          <div className={styles.securityName}>
                             Quantum Protected
                           </div>
-                          <div className="price-quote__security-desc">
-                            ML-KEM-1024
-                          </div>
+                          <div className={styles.securityDesc}>ML-KEM-1024</div>
                         </div>
                       </div>
                     )}
 
-                    <div className="price-quote__security-item">
-                      <span className="price-quote__security-icon">⛓️</span>
-                      <div className="price-quote__security-info">
-                        <div className="price-quote__security-name">
-                          Atomic Swap
-                        </div>
-                        <div className="price-quote__security-desc">
-                          Guaranteed
-                        </div>
+                    <div className={styles.securityItem}>
+                      <span className={styles.securityIcon}>⛓️</span>
+                      <div className={styles.securityInfo}>
+                        <div className={styles.securityName}>Atomic Swap</div>
+                        <div className={styles.securityDesc}>Guaranteed</div>
                       </div>
                     </div>
 
-                    <div className="price-quote__security-item">
-                      <span className="price-quote__security-icon">🧠</span>
-                      <div className="price-quote__security-info">
-                        <div className="price-quote__security-name">
-                          AI Monitored
-                        </div>
-                        <div className="price-quote__security-desc">
-                          Risk analysis
-                        </div>
+                    <div className={styles.securityItem}>
+                      <span className={styles.securityIcon}>🧠</span>
+                      <div className={styles.securityInfo}>
+                        <div className={styles.securityName}>AI Monitored</div>
+                        <div className={styles.securityDesc}>Risk analysis</div>
                       </div>
                     </div>
                   </div>
@@ -339,9 +329,9 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
 
       {/* Warning for high impact */}
       {priceImpactSeverity === "high" && (
-        <div className="price-quote__warning">
-          <span className="price-quote__warning-icon">⚠️</span>
-          <span className="price-quote__warning-text">
+        <div className={styles.warning}>
+          <span className={styles.warningIcon}>⚠️</span>
+          <span className={styles.warningText}>
             High price impact. Consider smaller amount or check market
             conditions.
           </span>
@@ -351,9 +341,9 @@ export const PriceQuote: React.FC<PriceQuoteProps> = ({
       {/* Expiry warning */}
       {timeRemaining > 0 &&
         timeRemaining < 60000 && ( // Less than 1 minute
-          <div className="price-quote__expiry-warning">
-            <span className="price-quote__warning-icon">⏰</span>
-            <span className="price-quote__warning-text">
+          <div className={styles.expiryWarning}>
+            <span className={styles.warningIcon}>⏰</span>
+            <span className={styles.warningText}>
               Quote expires soon. Confirm swap to lock in this rate.
             </span>
           </div>

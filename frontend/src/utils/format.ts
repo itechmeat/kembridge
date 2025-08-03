@@ -1,5 +1,3 @@
-// Formatting utilities
-
 export const formatNumber = (
   value: number | string,
   decimals: number = 2

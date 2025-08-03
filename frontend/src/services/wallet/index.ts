@@ -1,8 +1,3 @@
-/**
- * Wallet service entry point
- * Exports all wallet-related functionality
- */
-
 // Types
 export * from "./types";
 

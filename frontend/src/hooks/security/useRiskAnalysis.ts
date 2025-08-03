@@ -56,7 +56,7 @@ export const useUserRiskProfile = (userId?: string) => {
   return {
     ...query,
     riskProfile: query.data,
-    currentRiskScore: query.data?.currentRiskScore.value ?? 0,
+    currentRiskScore: query.data?.currentRiskScore?.value ?? 0,
     riskHistory: query.data?.riskHistory ?? [],
     totalTransactions: query.data?.totalTransactions ?? 0,
     avgRiskScore: query.data?.avgRiskScore ?? 0,

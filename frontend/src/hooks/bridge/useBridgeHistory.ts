@@ -1,9 +1,3 @@
-/**
- * Bridge History Hook
- * User transaction history with pagination
- * Only fetches when user is authenticated since endpoint requires auth
- */
-
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { bridgeService, SwapHistory } from "../../services/api/bridgeService";
 import { useAuthStatus } from "../api/useAuth";

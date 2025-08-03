@@ -1,6 +1,6 @@
 .PHONY: dev dev-detached prod down clean logs health health-quick build migrate test test-e2e test-install
 
-# 🔥 Development with HOT RELOAD (микросервисы + cargo-watch)
+# 🔥 Development with HOT RELOAD (microservices + cargo-watch)
 dev:
 	@echo "🔥 Starting KEMBridge microservices with HOT RELOAD..."
 	@echo "Services: Gateway + 1inch + Blockchain + Crypto + Auth + Infrastructure"
@@ -81,6 +81,11 @@ test-e2e-ui:
 	@echo "🧪 Running E2E tests with UI..."
 	cd e2e-tests && npm run test:ui
 
+test-e2e-fast:
+	@echo "⚡ Running E2E tests in fast mode (without server rebuild)..."
+	@echo "Prerequisites: Services should be running (make dev)"
+	cd e2e-tests && npx playwright test --config=playwright.config.fast.ts --reporter=line
+
 test:
 	@echo "🧪 Running all tests..."
 	@echo "1️⃣ Health check..."
@@ -118,10 +123,11 @@ help:
 	@echo "  migrate        - 🗄️ Run database migrations"
 	@echo ""
 	@echo "🧪 TESTING:"
-	@echo "  test-install   - 📦 Install E2E test dependencies"
-	@echo "  test-e2e       - 🧪 Run E2E tests (headless)"
-	@echo "  test-e2e-ui    - 🧪 Run E2E tests with UI"
-	@echo "  test           - 🧪 Run all tests (health + E2E)"
+	@echo "  test-install      - 📦 Install E2E test dependencies"
+	@echo "  test-e2e          - 🧪 Run E2E tests (headless)"
+	@echo "  test-e2e-ui       - 🧪 Run E2E tests with UI"
+	@echo "  test-e2e-fast  - ⚡ Run E2E tests in fast mode (no server rebuild)"
+	@echo "  test              - 🧪 Run all tests (health + E2E)"
 	@echo ""
 	@echo "🌐 ENDPOINTS:"
 	@echo "  Gateway:       http://localhost:4000"

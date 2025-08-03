@@ -1,75 +1,106 @@
-/**
- * WebSocket Status Component
- * Displays real-time WebSocket connection status
- */
-
-import React from 'react';
-import { useWebSocketConnection } from '../../../hooks/websocket/useWebSocket';
-import './WebSocketStatus.scss';
+import { FC } from "react";
+import cn from "classnames";
+import { useWebSocketContext } from "../../../contexts/WebSocketContext";
+import styles from "./WebSocketStatus.module.scss";
 
 export interface WebSocketStatusProps {
   className?: string;
   showDetails?: boolean;
+  compact?: boolean; // Новый пропс для компактного отображения
 }
 
-export const WebSocketStatus: React.FC<WebSocketStatusProps> = ({
-  className = '',
-  showDetails = false
+export const WebSocketStatus: FC<WebSocketStatusProps> = ({
+  className = "",
+  showDetails = false,
+  compact = false,
 }) => {
-  const { isConnected, connectionState, error, reconnect } = useWebSocketConnection();
+  const { isConnected, connectionQuality, errors, retry } =
+    useWebSocketContext();
+
+  // Mapping connectionQuality to connection state for compatibility
+  const connectionState = isConnected
+    ? "connected"
+    : connectionQuality === "unknown"
+    ? "disconnected"
+    : "connecting";
+
+  // Get latest error if any
+  const error = errors.length > 0 ? errors[errors.length - 1].message : null;
 
   const getStatusIcon = () => {
     switch (connectionState) {
-      case 'connected':
-        return '🟢';
-      case 'connecting':
-        return '🟡';
-      case 'disconnected':
-      case 'closed':
-        return '🔴';
+      case "connected":
+        return "🟢";
+      case "connecting":
+        return "🟡";
+      case "disconnected":
       default:
-        return '⚪';
+        return "🔴";
     }
   };
 
   const getStatusText = () => {
     switch (connectionState) {
-      case 'connected':
-        return 'Connected';
-      case 'connecting':
-        return 'Connecting...';
-      case 'disconnected':
-        return 'Disconnected';
-      case 'closed':
-        return 'Closed';
+      case "connected":
+        return "Connected";
+      case "connecting":
+        return "Connecting...";
+      case "disconnected":
+        return "Disconnected";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
-  const getStatusClass = () => {
-    return `websocket-status--${connectionState}`;
-  };
-
-  return (
-    <div className={`websocket-status ${getStatusClass()} ${className}`} data-testid="websocket-status">
-      <div className="websocket-status__indicator">
-        <span className="websocket-status__icon" data-testid="websocket-status-icon">
+  // Компактный режим для отображения в шапке
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          styles.webSocketStatus,
+          styles.compact,
+          styles[connectionState],
+          className.trim()
+        )}
+        data-testid="websocket-status"
+        title={`WebSocket: ${getStatusText()}`}
+      >
+        <span className={styles.icon} data-testid="websocket-status-icon">
           {getStatusIcon()}
         </span>
-        <span className="websocket-status__text" data-testid="websocket-status-text">
+        <span className={styles.text} data-testid="websocket-status-text">
+          {getStatusText()}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        styles.webSocketStatus,
+        styles[connectionState],
+        className.trim()
+      )}
+      data-testid="websocket-status"
+    >
+      <div className={styles.indicator}>
+        <span className={styles.icon} data-testid="websocket-status-icon">
+          {getStatusIcon()}
+        </span>
+        <span className={styles.text} data-testid="websocket-status-text">
           {showDetails ? `Real-time: ${getStatusText()}` : getStatusText()}
         </span>
       </div>
 
       {error && (
-        <div className="websocket-status__error" data-testid="websocket-status-error">
-          <span className="websocket-status__error-icon">⚠️</span>
-          <span className="websocket-status__error-text">{error}</span>
+        <div className={styles.error} data-testid="websocket-status-error">
+          <span className={styles.errorIcon}>⚠️</span>
+          <span className={styles.errorText}>{error}</span>
           {!isConnected && (
             <button
-              className="websocket-status__retry"
-              onClick={reconnect}
+              className={styles.retry}
+              onClick={retry}
               data-testid="websocket-retry-button"
             >
               Retry
@@ -79,15 +110,15 @@ export const WebSocketStatus: React.FC<WebSocketStatusProps> = ({
       )}
 
       {showDetails && (
-        <div className="websocket-status__details" data-testid="websocket-status-details">
-          <div className="websocket-status__detail">
-            <span className="websocket-status__detail-label">Status:</span>
-            <span className="websocket-status__detail-value">{getStatusText()}</span>
+        <div className={styles.details} data-testid="websocket-status-details">
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>Status:</span>
+            <span className={styles.detailValue}>{getStatusText()}</span>
           </div>
-          <div className="websocket-status__detail">
-            <span className="websocket-status__detail-label">Real-time Updates:</span>
-            <span className="websocket-status__detail-value">
-              {isConnected ? 'Enabled' : 'Disabled'}
+          <div className={styles.detail}>
+            <span className={styles.detailLabel}>Real-time Updates:</span>
+            <span className={styles.detailValue}>
+              {isConnected ? "Enabled" : "Disabled"}
             </span>
           </div>
         </div>

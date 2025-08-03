@@ -1,8 +1,3 @@
-/**
- * Authentication service
- * Integrates wallet signing with backend authentication
- */
-
 import {
   apiClient,
   type VerifyWalletRequest,

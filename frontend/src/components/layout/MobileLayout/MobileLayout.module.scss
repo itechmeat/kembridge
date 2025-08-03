@@ -1,0 +1,27 @@
+.mobileLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+  position: relative;
+  width: 100vw;
+  overflow-x: hidden;
+
+  @supports (padding: max(0px)) {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px; /* space for bottom navigation */
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+
+  @supports (padding: max(0px)) {
+    padding-bottom: max(0, calc(80px + env(safe-area-inset-bottom)));
+  }
+}

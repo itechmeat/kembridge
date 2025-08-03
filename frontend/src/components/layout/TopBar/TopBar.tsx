@@ -1,38 +1,38 @@
-/**
- * Mobile Top Bar Component
- * App header with wallet status and notifications
- */
-
 import { FC } from "react";
 import { useWallet } from "../../../hooks/wallet/useWallet";
+import { useSecurityStatus } from "../../../hooks/security/useSecurityStatus";
+import { useUserInfo } from "../../../hooks/api/useUser";
 import { WalletConnectButton } from "../../wallet/WalletConnectButton/WalletConnectButton";
 import { WalletInfo } from "../../wallet/WalletInfo/WalletInfo";
-import { APP_TEXT } from "../../../constants";
-import "./TopBar.scss";
+import { SecurityStatusBadge } from "../../security/SecurityStatusBadge/SecurityStatusBadge";
+import styles from "./TopBar.module.scss";
 
 export const TopBar: FC = () => {
   const { isConnected } = useWallet();
-  
-  // For TopBar, we consider connected when wallet is connected (regardless of backend auth)
-  const isBackendConnected = true; // Backend is always connected for this demo
+  const { securityStatus, isOnline, quantumProtection } = useSecurityStatus();
+  const { riskScore, transactionCount } = useUserInfo();
 
   return (
-    <header className="top-bar">
-      <div className="top-bar__container">
-        <div className="top-bar__brand">
-          <h1 className="top-bar__title">
-            {APP_TEXT.TITLE}
-            <span className="top-bar__quantum">⚛️</span>
+    <header className={styles.topBar}>
+      <div className={styles.container}>
+        <div className={styles.brand}>
+          <h1 className={styles.logo}>
+            <span className={styles.logoStart}>KEM</span>
+            <span className={styles.logoEnd}>Bridge</span>
           </h1>
         </div>
 
-        <div className="top-bar__actions">
-          <div
-            className={`status-dot ${
-              isBackendConnected
-                ? "status-dot--connected"
-                : "status-dot--disconnected"
-            }`}
+        <div className={styles.actions}>
+          <SecurityStatusBadge
+            quantumProtection={quantumProtection}
+            riskScore={riskScore}
+            isOnline={isOnline}
+            quantumKeyId={securityStatus?.quantumProtection?.algorithm}
+            encryptionScheme={
+              securityStatus?.quantumProtection?.algorithm ?? "N/A"
+            }
+            lastKeyRotation={securityStatus?.quantumProtection?.keyRotationDate}
+            transactionCount={transactionCount || 0}
           />
 
           {isConnected ? (

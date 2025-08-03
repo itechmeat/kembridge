@@ -1,5 +1,3 @@
-// Common types used throughout the application
-
 // Base response interface for API calls
 export interface BaseResponse {
   success: boolean;

@@ -11,7 +11,7 @@ export const useSecurityStatus = (options?: {
   const query = useQuery({
     queryKey: ['security', 'status'],
     queryFn: SecurityService.getSecurityStatus,
-    refetchInterval: options?.refetchInterval ?? 10000, // 10 seconds
+    refetchInterval: options?.refetchInterval ?? 300000, // 5 minutes
     enabled: options?.enabled ?? true,
     staleTime: 5000, // Data is fresh for 5 seconds
     retry: 3,
@@ -32,7 +32,7 @@ export const useSecurityStatus = (options?: {
     refreshSecurityStatus,
     updateSecurityStatus,
     isOnline: query.data?.isOnline ?? false,
-    quantumProtection: query.data?.quantumProtection.isActive ?? false,
+    quantumProtection: query.data?.quantumProtection?.isActive ?? false,
     securityLevel: query.data?.overall,
   };
 };

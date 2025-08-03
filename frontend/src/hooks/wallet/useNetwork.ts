@@ -1,8 +1,3 @@
-/**
- * Network management hook
- * Handles network switching and validation
- */
-
 import { useCallback, useMemo } from "react";
 import { useWallet } from "./useWallet";
 
@@ -26,16 +21,16 @@ const SUPPORTED_NETWORKS: Record<string, NetworkInfo> = {
     chainId: 1,
   },
   "11155111": {
-    name: "Sepolia Testnet", 
+    name: "Sepolia Testnet",
     type: NetworkType.ETHEREUM,
     chainId: 11155111,
   },
   "137": {
     name: "Polygon",
-    type: NetworkType.ETHEREUM, 
+    type: NetworkType.ETHEREUM,
     chainId: 137,
   },
-  "near": {
+  near: {
     name: "NEAR Protocol",
     type: NetworkType.NEAR,
     chainId: "near",
@@ -65,15 +60,15 @@ export const useNetwork = (): UseNetworkReturn => {
     if (account?.network) {
       return account.network as NetworkInfo;
     }
-    
+
     if (state.walletType === "near") {
       return SUPPORTED_NETWORKS["near"];
     }
-    
+
     if (state.chainId) {
       return SUPPORTED_NETWORKS[state.chainId.toString()] || null;
     }
-    
+
     return null;
   }, [account, state]);
 
@@ -98,14 +93,11 @@ export const useNetwork = (): UseNetworkReturn => {
   }, [currentNetwork]);
 
   // Switch network
-  const switchNetwork = useCallback(
-    async (): Promise<void> => {
-      // TODO: Implement network switching
-      console.warn("Network switching not yet implemented in new useWallet");
-      throw new Error("Network switching not implemented");
-    },
-    []
-  );
+  const switchNetwork = useCallback(async (): Promise<void> => {
+    // TODO: Implement network switching
+    console.warn("Network switching not yet implemented in new useWallet");
+    throw new Error("Network switching not implemented");
+  }, []);
 
   // Get networks filtered by type
   const getSupportedNetworks = useCallback(

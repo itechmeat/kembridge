@@ -12,15 +12,17 @@ use kembridge_gateway_service::{
     event_listener::create_event_listener,
     event_api::{EventApiState, trigger_crypto_event, trigger_risk_analysis, trigger_system_notification, 
                 get_websocket_stats, cleanup_connections, send_heartbeat, disconnect_user, test_user_broadcast},
-    middleware::{security_headers, error_handling_middleware}
+    middleware::{security_headers, error_handling_middleware, csrf_protection, enhanced_rate_limiting, input_validation, input_sanitization}
 };
 use kembridge_common::ServiceResponse;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, Level};
 use chrono;
 use std::time::{SystemTime, UNIX_EPOCH};
+use axum::http::Method;
+use axum::http::header::{AUTHORIZATION, CONTENT_TYPE, HeaderName};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -74,14 +76,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // API routes
         .route("/api/v1/auth/nonce", get(handlers::get_nonce))
         .route("/api/v1/auth/verify-wallet", post(handlers::verify_wallet))
+        .route("/api/v1/auth/csrf-token", get(handlers::get_csrf_token))
         // Bridge routes
         .route("/api/v1/bridge/tokens", get(handlers::get_bridge_tokens))
         .route("/api/v1/bridge/quote", get(handlers::get_bridge_quote))
         .route("/api/v1/bridge/history", get(handlers::get_bridge_history))
+        .route("/api/v1/bridge/initiate", post(handlers::initiate_bridge))
+        .route("/api/v1/bridge/swap", post(handlers::handle_bridge_swap))
+        .route("/api/v1/bridge/status", get(handlers::get_bridge_status))
+        .route("/api/v1/bridge/transaction/{transaction_id}", get(handlers::get_bridge_transaction_status))
+        // User routes (protected with JWT)
+        .route("/api/v1/user/profile", get(handlers::get_user_profile))
+        .route("/api/v1/user/transactions", get(handlers::get_user_transactions))
+        .route("/api/v1/user/balance", get(handlers::get_user_balance))
         // Crypto routes (matching old backend)
-        .route("/api/v1/crypto/status", get(handlers::get_crypto_status))  
+        .route("/api/v1/crypto/status", get(handlers::get_crypto_status))
         .route("/api/v1/crypto/keys/check-rotation", get(handlers::check_key_rotation))
         .route("/api/v1/crypto/keys/rotate", post(handlers::trigger_key_rotation))
+        // Risk analysis routes (proxy to AI Engine)
+        .route("/api/v1/risk/analyze", post(handlers::analyze_transaction_risk))
+        .route("/api/v1/risk/profile", get(handlers::get_current_user_risk_profile))
+        .route("/api/v1/risk/profile/{user_id}", get(handlers::get_user_risk_profile_by_id))
         // Error handling test endpoint
         .route("/api/v1/test/error-handling", get(handlers::test_error_handling))
         // WebSocket route
@@ -100,8 +115,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .with_state(event_api_state)
         )
         .layer(middleware::from_fn(error_handling_middleware))
+        .layer(middleware::from_fn(csrf_protection))
+        .layer(middleware::from_fn(enhanced_rate_limiting))
         .layer(middleware::from_fn(security_headers))
-        .layer(CorsLayer::permissive());
+        .layer(middleware::from_fn(input_validation))
+        .layer(middleware::from_fn(input_sanitization))
+        // Строгая и единообразная настройка CORS для всего сервиса
+        // Разрешаем только нужный origin, методы, заголовки и включаем credentials
+        // Важно: при allow_credentials(true) нельзя использовать expose_headers(*)
+        .layer({
+            use axum::http::HeaderValue;
+            // Разрешаем несколько фронт-оригинов: 5173 (vite) и 4100 (текущий фронт)
+            let origins = [
+                "http://localhost:5173",
+                "http://localhost:4100",
+            ];
+            let xsrf_header = HeaderName::from_static("x-csrf-token");
+
+            // Собираем HeaderValue для каждого origin
+            let mut cors = CorsLayer::new()
+                .allow_credentials(true)
+                .allow_methods([
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::PATCH,
+                    Method::DELETE,
+                    Method::OPTIONS,
+                ])
+                .allow_headers([CONTENT_TYPE, AUTHORIZATION, xsrf_header])
+                // по необходимости можно экспонировать служебные заголовки
+                .expose_headers([HeaderName::from_static("x-request-id")]);
+
+            {
+                use axum::http::HeaderValue;
+                let allowed: Vec<HeaderValue> = origins
+                    .iter()
+                    .map(|o| HeaderValue::from_str(o).expect("valid origin"))
+                    .collect();
+                cors = cors.allow_origin(allowed);
+            }
+
+            cors
+        });
 
     // Start server
     info!("🌐 Gateway Service listening on port {}", port);

@@ -1,4 +1,3 @@
-// Wallet-related types and interfaces
 import { Network, TokenBalance, WalletProvider } from "./common";
 
 export type TransactionStatus = "pending" | "confirmed" | "failed";

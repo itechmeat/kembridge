@@ -1,10 +1,7 @@
-/**
- * TransactionProgress Component
- * Step-by-step progress visualization with real-time updates
- */
-
 import { FC } from "react";
+import cn from "classnames";
 import type { TransactionProgress as TransactionProgressType } from "../../../types/bridge";
+import styles from "./TransactionProgress.module.scss";
 
 export interface TransactionProgressProps {
   transaction?: TransactionProgressType;
@@ -20,9 +17,13 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
   if (loading) {
     return (
       <div
-        className={`transaction-progress transaction-progress--loading ${className}`}
+        className={cn(
+          styles.transactionProgress,
+          styles.loading,
+          className.trim()
+        )}
       >
-        <div className="transaction-progress__spinner">
+        <div className={styles.spinner} data-testid="loading-spinner">
           Loading transaction status...
         </div>
       </div>
@@ -32,7 +33,11 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
   if (!transaction) {
     return (
       <div
-        className={`transaction-progress transaction-progress--empty ${className}`}
+        className={cn(
+          styles.transactionProgress,
+          styles.empty,
+          className.trim()
+        )}
       >
         <p>No active transaction</p>
       </div>
@@ -53,61 +58,69 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
   };
 
   return (
-    <div className={`transaction-progress ${className}`}>
-      <div className="transaction-progress__header">
+    <div className={cn(styles.transactionProgress, className.trim())}>
+      <div className={styles.header}>
         <h3>Transaction Progress</h3>
-        <div className="transaction-progress__id">
+        <div className={styles.id}>
           ID: {transaction.transactionId.substring(0, 8)}...
         </div>
       </div>
 
-      <div className="transaction-progress__overview">
-        <div className="transaction-progress__status">
+      <div className={styles.overview}>
+        <div className={styles.status} data-testid="transaction-status">
           Status:{" "}
-          <span className={`status-${transaction.status}`}>
+          <span
+            className={cn({
+              [styles.statusCompleted]: transaction.status === "completed",
+              [styles.statusInProgress]: transaction.status === "in_progress",
+              [styles.statusFailed]: transaction.status === "failed",
+              [styles.statusPending]: transaction.status === "pending",
+            })}
+          >
             {transaction.status}
           </span>
         </div>
 
-        <div className="transaction-progress__bar">
+        <div className={styles.bar}>
           <div
-            className="transaction-progress__fill"
+            className={styles.fill}
             style={{ width: `${transaction.progress}%` }}
           />
-          <span className="transaction-progress__percentage">
-            {transaction.progress}%
-          </span>
+          <span className={styles.percentage}>{transaction.progress}%</span>
         </div>
 
-        <div className="transaction-progress__current">
+        <div className={styles.current}>
           Current Step: {transaction.currentStep}
         </div>
 
         {transaction.estimatedTimeRemaining && (
-          <div className="transaction-progress__eta">
+          <div className={styles.eta}>
             ETA: {Math.ceil(transaction.estimatedTimeRemaining / 60)} minutes
           </div>
         )}
       </div>
 
-      <div className="transaction-progress__steps">
+      <div className={styles.steps}>
         {transaction.steps.map((step, index) => (
           <div
             key={index}
-            className={`transaction-progress__step transaction-progress__step--${step.status}`}
+            className={cn(styles.step, {
+              [styles.stepPending]: step.status === "pending",
+              [styles.stepInProgress]: step.status === "in_progress",
+              [styles.stepCompleted]: step.status === "completed",
+              [styles.stepFailed]: step.status === "failed",
+            })}
           >
-            <div className="transaction-progress__step-icon">
+            <div className={styles.stepIcon}>
               {getStepStatusIcon(step.status)}
             </div>
 
-            <div className="transaction-progress__step-content">
-              <div className="transaction-progress__step-name">{step.name}</div>
-              <div className="transaction-progress__step-description">
-                {step.description}
-              </div>
+            <div className={styles.stepContent}>
+              <div className={styles.stepName}>{step.name}</div>
+              <div className={styles.stepDescription}>{step.description}</div>
 
               {step.txHash && (
-                <div className="transaction-progress__step-tx">
+                <div className={styles.stepTx}>
                   <a
                     href={`#/tx/${step.txHash}`}
                     target="_blank"
@@ -119,7 +132,7 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
               )}
 
               {step.timestamp && (
-                <div className="transaction-progress__step-time">
+                <div className={styles.stepTime}>
                   {new Date(step.timestamp).toLocaleTimeString()}
                 </div>
               )}
@@ -129,14 +142,14 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
       </div>
 
       {transaction.errorMessage && (
-        <div className="transaction-progress__error">
+        <div className={styles.error}>
           <strong>Error:</strong> {transaction.errorMessage}
         </div>
       )}
 
-      <div className="transaction-progress__hashes">
+      <div className={styles.hashes}>
         {transaction.fromTxHash && (
-          <div className="transaction-progress__hash">
+          <div className={styles.hash}>
             <span>Source TX:</span>
             <a
               href={`#/tx/${transaction.fromTxHash}`}
@@ -149,7 +162,7 @@ export const TransactionProgress: FC<TransactionProgressProps> = ({
         )}
 
         {transaction.toTxHash && (
-          <div className="transaction-progress__hash">
+          <div className={styles.hash}>
             <span>Destination TX:</span>
             <a
               href={`#/tx/${transaction.toTxHash}`}

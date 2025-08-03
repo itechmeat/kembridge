@@ -1,14 +1,10 @@
-/**
- * User Hooks
- * React hooks for user profile and account management with TanStack Query
- */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   userService,
   type UpdateProfileRequest,
 } from "../../services/api/userService";
-import { useAuthStatus } from "./useAuth";
+import { useWalletAuthStatus } from "./useAuth";
 
 // Query keys for caching
 export const USER_QUERY_KEYS = {
@@ -20,7 +16,8 @@ export const USER_QUERY_KEYS = {
  * Hook for getting user profile
  */
 export const useUserProfile = () => {
-  const { isAuthenticated } = useAuthStatus();
+  const { hasAnyAuth } = useWalletAuthStatus();
+  const [has401Error, setHas401Error] = useState(false);
 
   return useQuery({
     queryKey: [USER_QUERY_KEYS.PROFILE],
@@ -28,11 +25,16 @@ export const useUserProfile = () => {
       console.log("👤 User Profile: Fetching user profile...");
       return userService.getProfile();
     },
-    enabled: isAuthenticated, // Only fetch if user is authenticated
+    enabled: hasAnyAuth && !has401Error, // Disabled on 401 error
     staleTime: 60000, // Cache for 1 minute
+    refetchInterval: false, // Disable automatic refetching
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch on window focus
     retry: (failureCount, error: unknown) => {
-      // Don't retry on 401 errors
-      if ((error as { response?: { status?: number } })?.response?.status === 401) {
+      const errorStatus = (error as { response?: { status?: number } })?.response?.status;
+      if (errorStatus === 401) {
+        console.log("🚫 User Profile: 401 error, stopping all requests");
+        setHas401Error(true); // This will re-render and disable enabled
         return false;
       }
       return failureCount < 3;
@@ -63,16 +65,15 @@ export const useUpdateProfile = () => {
 
 /**
  * Hook for getting user statistics
+ * TODO: Implement proper statistics endpoint on backend
  */
 export const useUserStatistics = () => {
-  const { isAuthenticated } = useAuthStatus();
-
   return useQuery({
     queryKey: [USER_QUERY_KEYS.STATISTICS],
     queryFn: async () => {
       return userService.getStatistics();
     },
-    enabled: isAuthenticated,
+    enabled: true, // Re-enabled since service now returns mock data
     staleTime: 300000, // Cache for 5 minutes
   });
 };
@@ -124,11 +125,37 @@ export const useUserPreferences = () => {
 export const useUserRisk = () => {
   const { data: profile } = useUserProfile();
 
+  // Try to get real risk data from new API first
+  const newRiskProfileQuery = useQuery({
+    queryKey: ["risk", "profile", "current"],
+    queryFn: async () => {
+      const { RiskService } = await import("../../services/security");
+      return RiskService.getUserRiskProfile();
+    },
+    staleTime: 60000, // 1 minute
+    retry: 1, // Only try once, fallback to old data if failed
+  });
+
+  // Use new API data if available, fallback to profile data
+  if (newRiskProfileQuery.data && !newRiskProfileQuery.isError) {
+    return {
+      riskProfile: newRiskProfileQuery.data,
+      riskLevel: newRiskProfileQuery.data.overall_risk_level,
+      riskScore: newRiskProfileQuery.data.avg_risk_score,
+      hasRiskData: true,
+      transactionCount: newRiskProfileQuery.data.transaction_count,
+      isLoading: newRiskProfileQuery.isLoading,
+    };
+  }
+
+  // Fallback to old profile data
   return {
     riskProfile: profile?.risk_profile,
     riskLevel: profile ? userService.getRiskLevel(profile) : "unknown",
     riskScore: profile ? userService.getRiskScore(profile) : 0,
     hasRiskData: !!profile?.risk_profile,
+    transactionCount: 0,
+    isLoading: newRiskProfileQuery.isLoading,
   };
 };
 
@@ -155,7 +182,7 @@ export const useUserInfo = () => {
   const profileQuery = useUserProfile();
   const statisticsQuery = useUserStatistics();
   const { tier, isPremium, isAdmin } = useUserTier();
-  const { riskLevel, riskScore } = useUserRisk();
+  const { riskLevel, riskScore, transactionCount } = useUserRisk();
   const { walletAddresses, primaryWallet } = useUserWallets();
 
   return {
@@ -176,6 +203,7 @@ export const useUserInfo = () => {
     riskScore,
     walletAddresses,
     primaryWallet,
+    transactionCount,
 
     // Methods for updating
     refetch: () => {

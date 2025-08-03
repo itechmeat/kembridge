@@ -1,0 +1,181 @@
+.amountInput {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &.error {
+    .wrapper {
+      border-color: #dc2626;
+    }
+  }
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0 1rem;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+
+  &:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:hover:not(:focus-within) {
+    border-color: #cbd5e1;
+  }
+}
+
+.field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 1rem 0;
+  min-width: 0;
+
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  &:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+
+  // Remove number input arrows
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+.maxButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  gap: 1rem;
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-weight: 500;
+
+  .tokenInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+  }
+}
+
+.usdValue {
+  color: #10b981;
+  font-weight: 600;
+  text-align: right;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: -0.25rem;
+
+  &::before {
+    content: "⚠️";
+    font-size: 0.9rem;
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 640px) {
+  .field {
+    font-size: 1.25rem;
+    padding: 0.75rem 0;
+  }
+
+  .wrapper {
+    padding: 0 0.75rem;
+  }
+
+  .maxButton {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .usdValue {
+    text-align: left;
+  }
+}
+
+// Very small screens
+@media (max-width: 360px) {
+  .field {
+    font-size: 1.1rem;
+  }
+
+  .wrapper {
+    padding: 0 0.5rem;
+  }
+
+  .maxButton {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}

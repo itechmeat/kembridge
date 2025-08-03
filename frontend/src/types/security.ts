@@ -1,11 +1,9 @@
-// Security and Risk related types
-
 // Security Status Types
 export enum SecurityLevel {
-  SECURE = 'secure',
-  WARNING = 'warning',
-  DANGER = 'danger',
-  OFFLINE = 'offline'
+  SECURE = "secure",
+  WARNING = "warning",
+  DANGER = "danger",
+  OFFLINE = "offline",
 }
 
 export interface QuantumProtectionStatus {
@@ -31,7 +29,7 @@ export interface SecurityStatus {
 // Risk Analysis Types
 export interface RiskScore {
   value: number; // 0.0 - 1.0
-  level: 'low' | 'medium' | 'high';
+  level: "low" | "medium" | "high";
   confidence: number;
   timestamp: string;
 }
@@ -40,7 +38,7 @@ export interface RiskFactor {
   type: string;
   weight: number;
   description: string;
-  impact: 'positive' | 'negative' | 'neutral';
+  impact: "positive" | "negative" | "neutral";
 }
 
 export interface RiskAnalysisResult {
@@ -67,20 +65,20 @@ export interface RiskAnalysisResult {
 
 // Security Alert Types
 export enum AlertType {
-  QUANTUM_OFFLINE = 'quantum_offline',
-  HIGH_RISK_TRANSACTION = 'high_risk_transaction',
-  SUSPICIOUS_ADDRESS = 'suspicious_address',
-  RATE_LIMIT_WARNING = 'rate_limit_warning',
-  SYSTEM_MAINTENANCE = 'system_maintenance',
-  KEY_ROTATION_DUE = 'key_rotation_due',
-  BLACKLIST_DETECTED = 'blacklist_detected'
+  QUANTUM_OFFLINE = "quantum_offline",
+  HIGH_RISK_TRANSACTION = "high_risk_transaction",
+  SUSPICIOUS_ADDRESS = "suspicious_address",
+  RATE_LIMIT_WARNING = "rate_limit_warning",
+  SYSTEM_MAINTENANCE = "system_maintenance",
+  KEY_ROTATION_DUE = "key_rotation_due",
+  BLACKLIST_DETECTED = "blacklist_detected",
 }
 
 export enum AlertPriority {
-  CRITICAL = 'critical',
-  HIGH = 'high',
-  MEDIUM = 'medium',
-  LOW = 'low'
+  CRITICAL = "critical",
+  HIGH = "high",
+  MEDIUM = "medium",
+  LOW = "low",
 }
 
 export interface SecurityAlert {
@@ -99,13 +97,13 @@ export interface SecurityAlert {
 export interface SecurityAlertAction {
   id: string;
   label: string;
-  type: 'primary' | 'secondary' | 'danger';
+  type: "primary" | "secondary" | "danger";
   handler: () => void;
 }
 
 // Security Settings Types
 export interface SecuritySettings {
-  riskTolerance: 'low' | 'medium' | 'high';
+  riskTolerance: "low" | "medium" | "high";
   autoBlockHighRisk: boolean;
   alertPreferences: {
     [key in AlertType]: boolean;
@@ -137,12 +135,19 @@ export interface RiskAnalysisResponse {
 
 export interface UserRiskProfileResponse {
   data: {
-    userId: string;
-    currentRiskScore: RiskScore;
-    riskHistory: RiskScore[];
-    totalTransactions: number;
-    avgRiskScore: number;
-    thresholds: {
+    user_id: string;
+    overall_risk_level: string;
+    transaction_count: number;
+    avg_risk_score: number;
+    high_risk_transactions: number;
+    last_analysis_date: string;
+    // Legacy fields for backward compatibility
+    userId?: string;
+    currentRiskScore?: RiskScore;
+    riskHistory?: RiskScore[];
+    totalTransactions?: number;
+    avgRiskScore?: number;
+    thresholds?: {
       lowRisk: number;
       mediumRisk: number;
       highRisk: number;
@@ -167,6 +172,10 @@ export interface SecurityIndicatorProps {
   encryptionScheme?: string;
   lastKeyRotation?: string;
   transactionCount?: number;
+  // WebSocket fields
+  wsConnected?: boolean;
+  connectionQuality?: "excellent" | "good" | "poor" | "unknown";
+  wsErrors?: Array<{ message: string; timestamp: number }>;
 }
 
 export interface RiskAnalysisDisplayProps {
@@ -179,7 +188,7 @@ export interface RiskAnalysisDisplayProps {
 export interface SecurityAlertsProps {
   alerts: SecurityAlert[];
   maxVisible?: number;
-  position?: 'top' | 'bottom' | 'floating';
+  position?: "top" | "bottom" | "floating";
   onDismiss: (alertId: string) => void;
   onAction: (alertId: string, actionId: string) => void;
 }
@@ -187,7 +196,7 @@ export interface SecurityAlertsProps {
 export interface RiskScoreVisualizationProps {
   score: number;
   animated?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   showLabel?: boolean;
   showTrend?: boolean;
   previousScore?: number;
@@ -201,12 +210,12 @@ export interface SecuritySettingsProps {
 }
 
 // Utility Types
-export type SecurityComponent = 
-  | 'indicator' 
-  | 'risk-display' 
-  | 'alerts' 
-  | 'score-viz' 
-  | 'settings';
+export type SecurityComponent =
+  | "indicator"
+  | "risk-display"
+  | "alerts"
+  | "score-viz"
+  | "settings";
 
 export interface SecurityMetrics {
   uptime: number;

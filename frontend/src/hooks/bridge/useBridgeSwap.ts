@@ -1,8 +1,3 @@
-/**
- * Bridge Swap Hook
- * Swap execution with mutation handling
- */
-
 import {
   useMutation,
   UseMutationResult,

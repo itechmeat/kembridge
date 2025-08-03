@@ -1,8 +1,3 @@
-/**
- * Global error handler utilities
- * Handles uncaught errors and WebSocket connection issues
- */
-
 // Handle WebSocket connection errors gracefully
 const handleWebSocketError = (error: Error) => {
   // Don't show WebSocket errors to users in development

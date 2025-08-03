@@ -6,6 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { WebSocketTestUtils } from '../utils/websocket-utils';
 import { TEST_URLS } from '../utils/test-constants';
+import { evaluateWithWebSocket } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Security Tests', () => {
   let wsUtils: WebSocketTestUtils;
@@ -19,7 +20,7 @@ test.describe('WebSocket Security Tests', () => {
 
   test.describe('Authentication Security', () => {
     test('should reject connections without valid JWT token', async ({ page }) => {
-      const authResult = await page.evaluate(async () => {
+      const authResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionAttempted: false,
           connectionEstablished: false,
@@ -29,7 +30,7 @@ test.describe('WebSocket Security Tests', () => {
         };
         
         try {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(wsUrl);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -81,7 +82,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should reject expired JWT tokens', async ({ page }) => {
-      const expiredTokenResult = await page.evaluate(async () => {
+      const expiredTokenResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionAttempted: false,
           authenticationFailed: false,
@@ -92,7 +93,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Use an obviously expired token
           const expiredToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNTE2MjM5MDIyfQ.invalid';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${expiredToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${expiredToken}`);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -148,7 +149,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should reject malformed JWT tokens', async ({ page }) => {
-      const malformedTokenResult = await page.evaluate(async () => {
+      const malformedTokenResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           tokensTestedCount: 0,
           rejectedCount: 0,
@@ -166,7 +167,7 @@ test.describe('WebSocket Security Tests', () => {
           result.tokensTestedCount++;
           
           try {
-            const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${encodeURIComponent(token)}`);
+            const ws = new WebSocket(`${wsUrl}?token=${encodeURIComponent(token)}`);
             
             await new Promise<void>((resolve) => {
               let rejected = false;
@@ -227,7 +228,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should validate token signature', async ({ page }) => {
-      const signatureResult = await page.evaluate(async () => {
+      const signatureResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionAttempted: false,
           signatureRejected: false,
@@ -237,7 +238,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Token with invalid signature but valid structure
           const invalidSignatureToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.invalid_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${invalidSignatureToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${invalidSignatureToken}`);
           result.connectionAttempted = true;
           
           await new Promise<void>((resolve) => {
@@ -295,7 +296,7 @@ test.describe('WebSocket Security Tests', () => {
 
   test.describe('Authorization Security', () => {
     test('should enforce subscription permissions', async ({ page }) => {
-      const permissionResult = await page.evaluate(async () => {
+      const permissionResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           subscriptionAttempted: false,
@@ -306,7 +307,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Create a basic token without admin permissions
           const basicToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwicGVybWlzc2lvbnMiOlsicmVhZDpiYXNpYyJdLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6OTk5OTk5OTk5OX0.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${basicToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${basicToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -364,7 +365,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should validate user context in messages', async ({ page }) => {
-      const contextResult = await page.evaluate(async () => {
+      const contextResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           messagesSent: 0,
@@ -375,7 +376,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Use a token with specific user context
           const userToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwidXNlcl9pZCI6InVzZXIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6OTk5OTk5OTk5OX0.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${userToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${userToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -450,7 +451,7 @@ test.describe('WebSocket Security Tests', () => {
 
   test.describe('Input Validation Security', () => {
     test('should sanitize and validate message payloads', async ({ page }) => {
-      const sanitizationResult = await page.evaluate(async () => {
+      const sanitizationResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           dangerousPayloadsSent: 0,
@@ -460,7 +461,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -534,7 +535,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should prevent message flooding (rate limiting)', async ({ page }) => {
-      const floodResult = await page.evaluate(async () => {
+      const floodResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           messagesSent: 0,
@@ -545,7 +546,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -631,7 +632,7 @@ test.describe('WebSocket Security Tests', () => {
 
   test.describe('Connection Security', () => {
     test('should enforce secure WebSocket protocols', async ({ page }) => {
-      const protocolResult = await page.evaluate(async () => {
+      const protocolResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionTested: false,
           protocolValidated: false,
@@ -641,7 +642,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Test current connection protocol
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           result.connectionTested = true;
           
           await new Promise<void>((resolve) => {
@@ -693,7 +694,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should validate origin headers', async ({ page }) => {
-      const originResult = await page.evaluate(async () => {
+      const originResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionTested: false,
           originValidated: false,
@@ -703,7 +704,7 @@ test.describe('WebSocket Security Tests', () => {
         try {
           // Test connection with current origin (should be valid)
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           result.connectionTested = true;
           
           await new Promise<void>((resolve) => {
@@ -755,7 +756,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should implement connection timeout security', async ({ page }) => {
-      const timeoutResult = await page.evaluate(async () => {
+      const timeoutResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           connectionMaintained: false,
@@ -765,7 +766,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -835,7 +836,7 @@ test.describe('WebSocket Security Tests', () => {
 
   test.describe('Data Privacy Security', () => {
     test('should not leak sensitive data in error messages', async ({ page }) => {
-      const privacyResult = await page.evaluate(async () => {
+      const privacyResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           errorMessagesReceived: 0,
@@ -856,7 +857,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {
@@ -931,7 +932,7 @@ test.describe('WebSocket Security Tests', () => {
     });
 
     test('should implement proper session management', async ({ page }) => {
-      const sessionResult = await page.evaluate(async () => {
+      const sessionResult = await evaluateWithWebSocket(page, async (wsUrl) => {
         const result = {
           connectionEstablished: false,
           sessionActive: false,
@@ -941,7 +942,7 @@ test.describe('WebSocket Security Tests', () => {
         
         try {
           const validToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjk5OTk5OTk5OTl9.test_signature';
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=${validToken}`);
+          const ws = new WebSocket(`${wsUrl}?token=${validToken}`);
           
           await new Promise<void>((resolve) => {
             ws.onopen = () => {

@@ -2,10 +2,12 @@
  * Simple check of what elements actually exist
  */
 import { test, expect } from '@playwright/test';
+import { TestSelectors } from '../utils/selectors.ts';
 
 test.describe('Simple DOM Check', () => {
   test('should check what elements exist on homepage', async ({ page }) => {
     console.log('🔍 Loading homepage...');
+    const selectors = new TestSelectors(page);
     
     try {
       await page.goto('/', { timeout: 30000 });
@@ -16,40 +18,33 @@ test.describe('Simple DOM Check', () => {
       const title = await page.title();
       console.log(`📄 Page title: "${title}"`);
       
-      // Count basic elements
-      const buttonCount = await page.locator('button').count();
-      const inputCount = await page.locator('input').count();
-      const linkCount = await page.locator('a').count();
+      // Count basic elements using TestSelectors
+      const ethWalletButton = selectors.ethWalletButton;
+      const nearWalletButton = selectors.nearWalletButton;
+      const connectWalletButton = selectors.connectWalletButton;
       
-      console.log(`📊 Elements found:`);
-      console.log(`   Buttons: ${buttonCount}`);
-      console.log(`   Inputs: ${inputCount}`);
-      console.log(`   Links: ${linkCount}`);
+      const ethButtonVisible = await ethWalletButton.isVisible().catch(() => false);
+      const nearButtonVisible = await nearWalletButton.isVisible().catch(() => false);
+      const connectButtonVisible = await connectWalletButton.isVisible().catch(() => false);
+      
+      console.log(`📊 Wallet buttons found:`);
+      console.log(`   ETH Wallet: ${ethButtonVisible ? '✅' : '❌'}`);
+      console.log(`   NEAR Wallet: ${nearButtonVisible ? '✅' : '❌'}`);
+      console.log(`   Connect Wallet: ${connectButtonVisible ? '✅' : '❌'}`);
       
       // Get button texts
-      if (buttonCount > 0) {
-        console.log('🔘 Button texts:');
-        for (let i = 0; i < Math.min(buttonCount, 5); i++) {
-          const button = page.locator('button').nth(i);
-          const text = await button.textContent();
-          const isVisible = await button.isVisible();
-          console.log(`   ${i + 1}. "${text}" (visible: ${isVisible})`);
-        }
+      if (ethButtonVisible) {
+        const text = await ethWalletButton.textContent();
+        console.log(`🔘 ETH Wallet button text: "${text}"`);
       }
       
-      // Check for wallet-related text
-      const walletTexts = ['wallet', 'connect', 'ethereum', 'near', 'bridge', 'swap'];
-      
-      for (const text of walletTexts) {
-        const elements = page.locator(`:has-text("${text}")`);
-        const count = await elements.count();
-        if (count > 0) {
-          console.log(`💰 Found "${text}": ${count} times`);
-        }
+      if (nearButtonVisible) {
+        const text = await nearWalletButton.textContent();
+        console.log(`🔘 NEAR Wallet button text: "${text}"`);
       }
       
-      // Basic assertions
-      expect(buttonCount).toBeGreaterThan(0);
+      // Basic assertions - at least one wallet button should be present
+      expect(ethButtonVisible || nearButtonVisible || connectButtonVisible).toBeTruthy();
       console.log('✅ Basic DOM check passed');
       
     } catch (error) {
@@ -60,6 +55,7 @@ test.describe('Simple DOM Check', () => {
 
   test('should check bridge page elements', async ({ page }) => {
     console.log('🌉 Loading bridge page...');
+    const selectors = new TestSelectors(page);
     
     try {
       await page.goto('/bridge', { timeout: 30000 });
@@ -69,42 +65,39 @@ test.describe('Simple DOM Check', () => {
       // Wait a bit for dynamic content
       await page.waitForTimeout(3000);
       
-      // Check for form elements
-      const forms = await page.locator('form').count();
-      const inputs = await page.locator('input').count();
-      const selects = await page.locator('select').count();
+      // Check for bridge-specific elements using TestSelectors
+      const swapForm = selectors.swapForm;
+      const tokenSelector = selectors.tokenSelector;
+      const amountInput = selectors.amountInput;
+      const bridgeForm = selectors.bridgeForm;
+      const submitButton = selectors.submitButton;
       
-      console.log(`📋 Form elements:`);
-      console.log(`   Forms: ${forms}`);
-      console.log(`   Inputs: ${inputs}`);
-      console.log(`   Selects: ${selects}`);
+      const swapFormVisible = await swapForm.isVisible().catch(() => false);
+      const tokenSelectorVisible = await tokenSelector.isVisible().catch(() => false);
+      const amountInputVisible = await amountInput.isVisible().catch(() => false);
+      const bridgeFormVisible = await bridgeForm.isVisible().catch(() => false);
+      const submitButtonVisible = await submitButton.isVisible().catch(() => false);
       
-      // Check for bridge-specific classes
-      const bridgeClasses = [
-        '.swap-form',
-        '.token-selector', 
-        '.amount-input',
-        '.bridge-form',
-        '.swap-section'
-      ];
+      console.log(`📋 Bridge form elements:`);
+      console.log(`   Swap Form: ${swapFormVisible ? '✅' : '❌'}`);
+      console.log(`   Token Selector: ${tokenSelectorVisible ? '✅' : '❌'}`);
+      console.log(`   Amount Input: ${amountInputVisible ? '✅' : '❌'}`);
+      console.log(`   Bridge Form: ${bridgeFormVisible ? '✅' : '❌'}`);
+      console.log(`   Submit Button: ${submitButtonVisible ? '✅' : '❌'}`);
       
-      for (const className of bridgeClasses) {
-        const count = await page.locator(className).count();
-        if (count > 0) {
-          console.log(`🎯 Found ${className}: ${count} elements`);
-        }
-      }
+      // Check for wallet connection elements
+      const ethWalletButton = selectors.ethWalletButton;
+      const nearWalletButton = selectors.nearWalletButton;
+      const connectWalletButton = selectors.connectWalletButton;
       
-      // Look for any authentication required messages
-      const authTexts = ['connect', 'authenticate', 'required', 'wallet'];
-      for (const text of authTexts) {
-        const elements = page.locator(`:has-text("${text}")`).first();
-        const visible = await elements.isVisible().catch(() => false);
-        if (visible) {
-          const content = await elements.textContent().catch(() => '');
-          console.log(`🔐 Auth-related text: "${content}"`);
-        }
-      }
+      const ethButtonVisible = await ethWalletButton.isVisible().catch(() => false);
+      const nearButtonVisible = await nearWalletButton.isVisible().catch(() => false);
+      const connectButtonVisible = await connectWalletButton.isVisible().catch(() => false);
+      
+      console.log(`🔐 Wallet connection elements:`);
+      console.log(`   ETH Wallet: ${ethButtonVisible ? '✅' : '❌'}`);
+      console.log(`   NEAR Wallet: ${nearButtonVisible ? '✅' : '❌'}`);
+      console.log(`   Connect Wallet: ${connectButtonVisible ? '✅' : '❌'}`);
       
       console.log('✅ Bridge page check completed');
       

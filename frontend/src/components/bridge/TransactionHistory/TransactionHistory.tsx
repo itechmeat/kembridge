@@ -1,10 +1,7 @@
-/**
- * TransactionHistory Component
- * History with basic functionality (virtualization for Phase 8.2)
- */
-
 import { FC } from "react";
+import cn from "classnames";
 import type { TransactionHistoryItem } from "../../../types/bridge";
+import styles from "./TransactionHistory.module.scss";
 
 export interface TransactionHistoryProps {
   transactions: TransactionHistoryItem[];
@@ -47,81 +44,75 @@ export const TransactionHistory: FC<TransactionHistoryProps> = ({
   if (error) {
     return (
       <div
-        className={`transaction-history transaction-history--error ${className}`}
+        className={cn(
+          styles.transactionHistory,
+          styles.error,
+          className.trim()
+        )}
       >
-        <div className="transaction-history__error">{error}</div>
+        <div className={styles.errorMessage}>{error}</div>
       </div>
     );
   }
 
   return (
-    <div className={`transaction-history ${className}`}>
-      <div className="transaction-history__header">
+    <div className={cn(styles.transactionHistory, className.trim())}>
+      <div className={styles.header}>
         <h3>Transaction History</h3>
-        <span className="transaction-history__count">
-          {transactions.length} transactions
-        </span>
+        <span className={styles.count}>{transactions.length} transactions</span>
       </div>
 
       {loading && transactions.length === 0 ? (
-        <div className="transaction-history__loading">
-          Loading transactions...
-        </div>
+        <div className={styles.loading}>Loading transactions...</div>
       ) : (
-        <div className="transaction-history__list">
+        <div className={styles.list}>
           {transactions.length === 0 ? (
-            <div className="transaction-history__empty">
-              No transactions found
-            </div>
+            <div className={styles.empty}>No transactions found</div>
           ) : (
             transactions.map((transaction) => (
-              <div key={transaction.id} className="transaction-history__item">
-                <div className="transaction-history__main">
-                  <div className="transaction-history__route">
-                    <span className="transaction-history__chain">
+              <div key={transaction.id} className={styles.item}>
+                <div className={styles.main}>
+                  <div className={styles.route}>
+                    <span className={styles.chain}>
                       {transaction.fromChain}
                     </span>
-                    <span className="transaction-history__arrow">→</span>
-                    <span className="transaction-history__chain">
-                      {transaction.toChain}
-                    </span>
+                    <span className={styles.arrow}>→</span>
+                    <span className={styles.chain}>{transaction.toChain}</span>
                   </div>
 
-                  <div className="transaction-history__amounts">
-                    <div className="transaction-history__from">
+                  <div className={styles.amounts}>
+                    <div className={styles.from}>
                       {transaction.fromAmount} {transaction.fromToken}
                     </div>
-                    <div className="transaction-history__to">
+                    <div className={styles.to}>
                       {transaction.toAmount} {transaction.toToken}
                     </div>
                   </div>
 
                   <div
-                    className="transaction-history__status"
+                    className={styles.status}
                     style={{ color: getStatusColor(transaction.status) }}
                   >
                     {transaction.status}
                   </div>
                 </div>
 
-                <div className="transaction-history__details">
-                  <div className="transaction-history__date">
+                <div className={styles.details}>
+                  <div className={styles.date}>
                     {formatDate(transaction.createdAt)}
                   </div>
 
                   {transaction.usdValue && (
-                    <div className="transaction-history__usd">
-                      ≈ ${transaction.usdValue}
-                    </div>
+                    <div className={styles.usd}>≈ ${transaction.usdValue}</div>
                   )}
 
-                  <div className="transaction-history__hashes">
+                  <div className={styles.hashes}>
                     {transaction.fromTxHash && (
                       <a
                         href={`#/tx/${transaction.fromTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="transaction-history__hash"
+                        className={styles.hash}
                       >
                         Source TX
                       </a>
@@ -132,7 +123,7 @@ export const TransactionHistory: FC<TransactionHistoryProps> = ({
                         href={`#/tx/${transaction.toTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="transaction-history__hash"
+                        className={styles.hash}
                       >
                         Destination TX
                       </a>
@@ -144,11 +135,11 @@ export const TransactionHistory: FC<TransactionHistoryProps> = ({
           )}
 
           {hasMore && (
-            <div className="transaction-history__load-more">
+            <div className={styles.loadMore}>
               <button
                 onClick={onLoadMore}
                 disabled={loading}
-                className="transaction-history__load-button"
+                className={styles.loadButton}
               >
                 {loading ? "Loading..." : "Load More"}
               </button>

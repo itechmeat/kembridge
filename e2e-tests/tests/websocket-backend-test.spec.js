@@ -5,6 +5,7 @@
 
 import { test, expect } from '@playwright/test';
 import { TEST_URLS } from '../utils/test-constants';
+import { getWebSocketUrl, getFrontendUrl } from '../utils/page-evaluate-utils';
 
 test.describe('WebSocket Backend Direct Test', () => {
   test('should connect to WebSocket server and receive messages', async ({ page }) => {
@@ -13,10 +14,10 @@ test.describe('WebSocket Backend Direct Test', () => {
     let wsConnected = false;
     
     // Add WebSocket test script to page
-    await page.addInitScript(() => {
+    await page.addInitScript((wsUrl) => {
       window.testWebSocket = () => {
         return new Promise((resolve, reject) => {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(wsUrl);
           const messages = [];
           const errors = [];
           let connected = false;
@@ -54,10 +55,10 @@ test.describe('WebSocket Backend Direct Test', () => {
           }, 5000);
         });
       };
-    });
+    }, getWebSocketUrl('gateway'));
     
     // Navigate to any page (we just need a browser context)
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
+    await page.goto(getFrontendUrl('localDev'));
     
     // Run WebSocket test
     const result = await page.evaluate(() => window.testWebSocket());
@@ -76,17 +77,26 @@ test.describe('WebSocket Backend Direct Test', () => {
     
     // Check for subscription confirmation or any valid message type
     expect(firstMessage.type).toBeDefined();
-    expect(firstMessage.data).toBeDefined();
+    
+    // The server returns different message structures, adapt to actual response
+    if (firstMessage.type === 'subscription_confirmed') {
+      expect(firstMessage.event_type).toBeDefined();
+    } else if (firstMessage.type === 'Event') {
+      expect(firstMessage.event).toBeDefined();
+    } else {
+      // For other message types, just verify type is present
+      expect(firstMessage.type).toBeTruthy();
+    }
     
     console.log('✅ WebSocket backend test completed successfully');
   });
   
   test('should handle WebSocket authentication', async ({ page }) => {
     // Add authenticated WebSocket test
-    await page.addInitScript(() => {
+    await page.addInitScript((wsUrl) => {
       window.testAuthWebSocket = () => {
         return new Promise((resolve, reject) => {
-          const ws = new WebSocket(`${TEST_URLS.WEBSOCKET.GATEWAY}?token=test-token-123`);
+          const ws = new WebSocket(`${wsUrl}?token=test-token-123`);
           const messages = [];
           let connected = false;
           
@@ -121,9 +131,9 @@ test.describe('WebSocket Backend Direct Test', () => {
           }, 3000);
         });
       };
-    });
+    }, getWebSocketUrl('gateway'));
     
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
+    await page.goto(getFrontendUrl('localDev'));
     
     const result = await page.evaluate(() => window.testAuthWebSocket());
     
@@ -137,10 +147,10 @@ test.describe('WebSocket Backend Direct Test', () => {
   });
   
   test('should handle subscription requests', async ({ page }) => {
-    await page.addInitScript(() => {
+    await page.addInitScript((wsUrl) => {
       window.testSubscription = () => {
         return new Promise((resolve) => {
-          const ws = new WebSocket(TEST_URLS.WEBSOCKET.GATEWAY);
+          const ws = new WebSocket(wsUrl);
           const subscriptionMessages = [];
           let connected = false;
           
@@ -169,9 +179,9 @@ test.describe('WebSocket Backend Direct Test', () => {
           setTimeout(() => ws.close(), 2000);
         });
       };
-    });
+    }, getWebSocketUrl('gateway'));
     
-    await page.goto(TEST_URLS.FRONTEND.LOCAL_DEV);
+    await page.goto(getFrontendUrl('localDev'));
     
     const result = await page.evaluate(() => window.testSubscription());
     

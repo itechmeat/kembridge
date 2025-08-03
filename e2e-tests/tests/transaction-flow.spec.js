@@ -1,23 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { installMockWallet } from '@johanneskares/wallet-mock';
-import { privateKeyToAccount } from 'viem/accounts';
-import { http } from 'viem';
-import { sepolia } from 'viem/chains';
+import { setupMockWalletAndNavigate } from '../utils/mock-wallet-utility.js';
 
 test.describe('Complete Transaction Flow Testing', () => {
   test.beforeEach(async ({ page }) => {
-    // Install mock wallet for each test
-    await installMockWallet({
-      page,
-      account: privateKeyToAccount(
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-      ),
-      defaultChain: sepolia,
-      transports: { [sepolia.id]: http() },
+    // Setup mock wallet and navigate to home page
+    const setupSuccess = await setupMockWalletAndNavigate(page, '/', {
+      waitAfterSetup: 3000,
+      waitAfterNavigation: 3000
     });
-
-    await page.goto('/');
-    await page.waitForTimeout(3000);
+    
+    if (!setupSuccess) {
+      throw new Error('Failed to setup mock wallet');
+    }
   });
 
   test('should complete ETH→NEAR transaction flow with form interaction', async ({ page }) => {

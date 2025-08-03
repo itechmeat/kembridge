@@ -1,33 +1,24 @@
-/**
- * Mobile App Layout
- * Mobile-first layout with bottom navigation
- */
-
 import { FC, ReactNode } from "react";
+import cn from "classnames";
 import { ErrorBoundary } from "../../ui/ErrorBoundary/ErrorBoundary";
-import { BottomNavigation } from "../BottomNavigation/BottomNavigation";
 import { TopBar } from "../TopBar/TopBar";
-import "./MobileLayout.scss";
+import styles from "./MobileLayout.module.scss";
 
 interface MobileLayoutProps {
   children: ReactNode;
-  showBottomNav?: boolean;
   className?: string;
 }
 
 export const MobileLayout: FC<MobileLayoutProps> = ({
   children,
-  showBottomNav = true,
   className = "",
 }) => {
   return (
     <ErrorBoundary>
-      <div className={`mobile-layout ${className}`}>
+      <div className={cn(styles.mobileLayout, className?.trim())}>
         <TopBar />
 
-        <main className="mobile-layout__main">{children}</main>
-
-        {showBottomNav && <BottomNavigation />}
+        <main className={styles.main}>{children}</main>
       </div>
     </ErrorBoundary>
   );

@@ -9,11 +9,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']  # Internal Prometheus port
 
-  - job_name: 'kembridge-backend'
-    static_configs:
-      - targets: ['backend:4000']
-    metrics_path: /metrics
-    scrape_interval: 10s
+  # Backend monitoring removed
 
   - job_name: 'kembridge-ai-engine'
     static_configs:
